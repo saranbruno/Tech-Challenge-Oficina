@@ -4,7 +4,7 @@
 
 - Projeto: Tech-Challenge-Oficina
 - Autor: Bruno da Silva Saran
-- Dia atual: 1
+- Dia atual: 2
 - Estado atual: Concluído
 
 ## Roadmap
@@ -12,7 +12,7 @@
 | Dia | Etapa | Estado | Inicio | Conclusao |
 | --- | --- | --- | --- | --- |
 | 1 | Base executavel e ambiente local | Concluído | 2026-07-13 | 2026-07-13 |
-| 2 | Arquitetura e convencoes do projeto | Pendente |  |  |
+| 2 | Arquitetura e convencoes do projeto | Concluído | 2026-07-14 | 2026-07-14 |
 | 3 | Autenticacao administrativa JWT | Pendente |  |  |
 | 4 | Dominio e CRUD de clientes | Pendente |  |  |
 | 5 | Dominio e CRUD de veiculos | Pendente |  |  |
@@ -89,6 +89,58 @@ Nenhum endpoint de API implementado.
 
 Nao medida no Dia 1.
 
+## Dia 2
+
+### Resumo
+
+Arquitetura em camadas definida para Dominio, Aplicacao, Infraestrutura e Interface HTTP. Os grupos de rotas administrativas e do cliente foram carregados sem publicar endpoints ficticios. O tratamento de erros da API recebeu envelope consistente e a especificacao OpenAPI inicial foi criada somente com os metadados e o schema de erro disponiveis.
+
+### Arquivos principais alterados
+
+- `bootstrap/app.php`
+- `app/Interfaces/Http/Responses/ApiErrorResponse.php`
+- `routes/api.php`
+- `routes/api/admin.php`
+- `routes/api/client.php`
+- `docs/architecture.md`
+- `docs/openapi.yaml`
+- `README.md`
+- Testes da fundacao HTTP
+
+### Migrations criadas
+
+Nenhuma migration criada.
+
+### Endpoints implementados
+
+Nenhum endpoint de dominio implementado. Os prefixos `/api/admin` e `/api/client` estao configurados para receber as rotas das etapas correspondentes.
+
+### Testes executados
+
+- `docker compose build app`
+- `docker compose up -d --force-recreate app`
+- `docker compose exec -T app php artisan route:list`
+- `docker compose exec -T app ./vendor/bin/phpunit --display-warnings`
+- `docker compose exec -T app ./vendor/bin/pint --test`
+- Requisicao HTTP para `http://localhost:8081/api/unknown`
+- Busca por comentarios nos arquivos de codigo alterados
+- `git diff --check`
+
+### Resultado real dos testes
+
+- Build Docker concluido com sucesso.
+- PostgreSQL permaneceu saudavel e a aplicacao iniciou com a imagem atualizada.
+- Lista de rotas confirmou que nenhum endpoint de dominio foi publicado.
+- PHPUnit: 5 testes aprovados e 7 assercoes, sem falhas.
+- Pint: 31 arquivos aprovados, sem problemas de estilo.
+- Rota inexistente da API respondeu HTTP 404 com o envelope padronizado.
+- Nenhum comentario foi encontrado nos arquivos de codigo alterados; as ocorrencias da busca eram apenas o padrao de rota `api/*`.
+- `git diff --check` nao encontrou erros.
+
+### Cobertura
+
+Nao medida no Dia 2.
+
 ## Decisoes confirmadas
 
 - Usar as versoes estaveis mais atuais possiveis.
@@ -120,4 +172,4 @@ Nenhum bloqueio funcional para o Dia 1.
 
 ## Escopo previsto para o proximo dia
 
-Dia 2: estruturar as camadas de Dominio, Aplicacao, Infraestrutura e Interface HTTP; documentar dependencias; configurar rotas sem endpoints ficticios; padronizar erros; iniciar OpenAPI; validar autoload, inicializacao e testes basicos.
+Dia 3: confirmar e instalar a biblioteca JWT; criar a entidade administrativa minima e suas migrations; definir a criacao segura do primeiro administrador; implementar login, emissao e validacao do token; proteger uma rota administrativa minima; testar autenticacao valida, credenciais invalidas e tokens ausentes, invalidos e expirados; documentar a configuracao.
