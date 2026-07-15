@@ -1,0 +1,18 @@
+<?php
+
+namespace App\Application\Customer\Contracts;
+
+use App\Domain\Customer\Customer;
+
+interface CustomerRepository
+{
+    public function paginate(int $perPage): mixed;
+
+    public function findOrFail(int $id): Customer;
+
+    public function documentExists(string $document, ?int $exceptId = null): bool;
+
+    public function save(Customer $customer): Customer;
+
+    public function delete(int $id): void;
+}

@@ -2,6 +2,8 @@
 
 use App\Application\Auth\Exceptions\InvalidCredentials;
 use App\Application\Auth\Exceptions\InvalidRefreshToken;
+use App\Application\Customer\Exceptions\DuplicateCustomerDocument;
+use App\Domain\Customer\Exceptions\InvalidDocument;
 use App\Interfaces\Http\Responses\ApiErrorResponse;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Foundation\Application;
@@ -63,6 +65,22 @@ return Application::configure(basePath: dirname(__DIR__))
                 'invalid_token',
                 'Token ausente, invalido ou fora da janela de renovacao.',
                 401,
+            );
+        });
+
+        $exceptions->render(function (InvalidDocument $exception, Request $request) {
+            return ApiErrorResponse::make(
+                'invalid_document',
+                $exception->getMessage(),
+                422,
+            );
+        });
+
+        $exceptions->render(function (DuplicateCustomerDocument $exception, Request $request) {
+            return ApiErrorResponse::make(
+                'duplicate_document',
+                $exception->getMessage(),
+                409,
             );
         });
 

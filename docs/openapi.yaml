@@ -69,6 +69,124 @@ paths:
                 $ref: '#/components/schemas/AdminResponse'
         '401':
           $ref: '#/components/responses/Unauthorized'
+  /admin/customers:
+    get:
+      operationId: listCustomers
+      summary: Lista clientes
+      tags:
+        - Customers
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: per_page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 15
+      responses:
+        '200':
+          description: Lista paginada de clientes
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomerCollection'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    post:
+      operationId: createCustomer
+      summary: Cadastra um cliente
+      tags:
+        - Customers
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CustomerRequest'
+      responses:
+        '201':
+          description: Cliente cadastrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomerResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+  /admin/customers/{customer}:
+    parameters:
+      - name: customer
+        in: path
+        required: true
+        schema:
+          type: integer
+    get:
+      operationId: showCustomer
+      summary: Detalha um cliente
+      tags:
+        - Customers
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Cliente encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomerResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      operationId: updateCustomer
+      summary: Atualiza um cliente
+      tags:
+        - Customers
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CustomerRequest'
+      responses:
+        '200':
+          description: Cliente atualizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomerResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+    delete:
+      operationId: deleteCustomer
+      summary: Exclui um cliente
+      tags:
+        - Customers
+      security:
+        - bearerAuth: []
+      responses:
+        '204':
+          description: Cliente excluido
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
 components:
   securitySchemes:
     bearerAuth:
@@ -84,6 +202,18 @@ components:
             $ref: '#/components/schemas/ApiError'
     ValidationError:
       description: Dados de entrada invalidos
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiError'
+    Conflict:
+      description: Conflito com o estado persistido
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiError'
+    NotFound:
+      description: Recurso nao encontrado
       content:
         application/json:
           schema:
@@ -140,6 +270,65 @@ components:
             email:
               type: string
               format: email
+    CustomerRequest:
+      type: object
+      required:
+        - name
+        - document
+      properties:
+        name:
+          type: string
+          maxLength: 255
+          example: Maria da Silva
+        document:
+          type: string
+          maxLength: 18
+          description: CPF ou CNPJ, com ou sem pontuacao.
+          example: 529.982.247-25
+    Customer:
+      type: object
+      required:
+        - id
+        - name
+        - document
+        - document_type
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        document:
+          type: string
+          description: CPF ou CNPJ normalizado, somente com digitos.
+        document_type:
+          type: string
+          enum:
+            - cpf
+            - cnpj
+    CustomerResponse:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          $ref: '#/components/schemas/Customer'
+    CustomerCollection:
+      type: object
+      required:
+        - data
+        - links
+        - meta
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Customer'
+        links:
+          type: object
+          additionalProperties: true
+        meta:
+          type: object
+          additionalProperties: true
     ApiError:
       type: object
       required:

@@ -21,7 +21,7 @@ class ApiFoundationTest extends TestCase
             ]);
     }
 
-    public function test_only_authentication_endpoints_are_exposed(): void
+    public function test_only_implemented_endpoints_are_exposed(): void
     {
         $apiRoutes = collect(Route::getRoutes()->getRoutes())
             ->filter(fn ($route) => str_starts_with($route->uri(), 'api/'))
@@ -34,6 +34,11 @@ class ApiFoundationTest extends TestCase
             'api/admin/auth/login',
             'api/admin/auth/me',
             'api/admin/auth/refresh',
+            'api/admin/customers',
+            'api/admin/customers',
+            'api/admin/customers/{customer}',
+            'api/admin/customers/{customer}',
+            'api/admin/customers/{customer}',
         ], $apiRoutes);
     }
 }
