@@ -21,11 +21,19 @@ class ApiFoundationTest extends TestCase
             ]);
     }
 
-    public function test_no_domain_endpoints_are_exposed_yet(): void
+    public function test_only_authentication_endpoints_are_exposed(): void
     {
         $apiRoutes = collect(Route::getRoutes()->getRoutes())
-            ->filter(fn ($route) => str_starts_with($route->uri(), 'api/'));
+            ->filter(fn ($route) => str_starts_with($route->uri(), 'api/'))
+            ->map(fn ($route) => $route->uri())
+            ->sort()
+            ->values()
+            ->all();
 
-        $this->assertCount(0, $apiRoutes);
+        $this->assertSame([
+            'api/admin/auth/login',
+            'api/admin/auth/me',
+            'api/admin/auth/refresh',
+        ], $apiRoutes);
     }
 }

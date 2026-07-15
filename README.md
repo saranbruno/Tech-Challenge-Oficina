@@ -6,7 +6,7 @@ Autor: Bruno da Silva Saran.
 
 ## Estado atual
 
-O Dia 2 fornece a base executavel e a arquitetura em camadas, com grupos de rotas da API, formato consistente de erros e especificacao OpenAPI inicial. Autenticacao, dominio, CRUDs e ordens de servico ainda nao foram implementados.
+O Dia 3 fornece a base executavel, a arquitetura em camadas e autenticacao administrativa JWT. Entidades do dominio, CRUDs e ordens de servico ainda nao foram implementados.
 
 ## Tecnologias
 
@@ -41,11 +41,20 @@ docker compose build
 docker compose run --rm app php artisan key:generate
 ```
 
+Gere um segredo JWT e configure a senha do administrador inicial no arquivo `.env`:
+
+```bash
+docker compose run --rm app php artisan jwt:secret
+```
+
+As variaveis `JWT_TTL` e `JWT_REFRESH_TTL` representam minutos. O valor anterior de `ADMIN_PASSWORD` deve ser substituido por uma senha local segura e nao deve ser versionado.
+
 ## Execucao
 
 ```bash
 docker compose up -d
 docker compose exec app php artisan migrate
+docker compose exec app php artisan db:seed
 ```
 
 A aplicacao fica disponivel em `http://localhost:8081` com a configuracao padrao.
@@ -88,7 +97,25 @@ As futuras rotas administrativas e do cliente estao separadas sob `/api/admin` e
 
 ## OpenAPI
 
-A especificacao inicial esta em `docs/openapi.yaml`. Ela possui somente os metadados e o schema de erro realmente disponiveis; os endpoints serao documentados de forma incremental quando forem implementados.
+A especificacao incremental esta em `docs/openapi.yaml`. Ela documenta somente os endpoints implementados.
+
+## Autenticacao JWT
+
+A API administrativa utiliza `php-open-source-saver/jwt-auth` 2.9.2 com algoritmo HS256 e segredo obtido de `JWT_SECRET`.
+
+O administrador inicial e criado pelo seeder com nome e e-mail configuraveis. Os valores padrao de identidade sao `Administrator` e `dev@email.com`; a senha e obrigatoriamente lida de `ADMIN_PASSWORD`.
+
+```bash
+docker compose exec app php artisan db:seed
+```
+
+Endpoints disponiveis:
+
+- `POST /api/admin/auth/login`: recebe `email` e `password` e emite o JWT.
+- `POST /api/admin/auth/refresh`: recebe o JWT anterior no header Bearer e emite um novo token dentro da janela de renovacao.
+- `GET /api/admin/auth/me`: valida o JWT e retorna os dados minimos do administrador.
+
+O refresh usa o proprio JWT anterior. Depois do prazo de acesso ele nao autentica rotas protegidas, mas pode ser enviado ao endpoint de refresh enquanto estiver dentro de `JWT_REFRESH_TTL`.
 
 ## Progresso
 

@@ -1,5 +1,7 @@
 <?php
 
+use App\Application\Auth\Exceptions\InvalidCredentials;
+use App\Application\Auth\Exceptions\InvalidRefreshToken;
 use App\Interfaces\Http\Responses\ApiErrorResponse;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Foundation\Application;
@@ -44,6 +46,22 @@ return Application::configure(basePath: dirname(__DIR__))
             return ApiErrorResponse::make(
                 'unauthenticated',
                 'Autenticacao necessaria.',
+                401,
+            );
+        });
+
+        $exceptions->render(function (InvalidCredentials $exception, Request $request) {
+            return ApiErrorResponse::make(
+                'invalid_credentials',
+                'Credenciais invalidas.',
+                401,
+            );
+        });
+
+        $exceptions->render(function (InvalidRefreshToken $exception, Request $request) {
+            return ApiErrorResponse::make(
+                'invalid_token',
+                'Token ausente, invalido ou fora da janela de renovacao.',
                 401,
             );
         });

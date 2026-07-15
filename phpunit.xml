@@ -30,6 +30,9 @@
         <env name="DB_USERNAME" value="oficina"/>
         <env name="DB_PASSWORD" value="change_me"/>
         <env name="DB_URL" value=""/>
+        <env name="JWT_SECRET" value="testing-jwt-secret-with-at-least-thirty-two-characters"/>
+        <env name="JWT_TTL" value="60"/>
+        <env name="JWT_REFRESH_TTL" value="20160"/>
         <env name="MAIL_MAILER" value="array"/>
         <env name="QUEUE_CONNECTION" value="sync"/>
         <env name="SESSION_DRIVER" value="array"/>

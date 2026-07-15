@@ -3,12 +3,143 @@ info:
   title: Tech-Challenge-Oficina API
   version: 0.1.0
   description: API do Sistema Integrado de Atendimento e Execucao de Servicos da oficina.
+  license:
+    name: MIT
+    identifier: MIT
 servers:
-  - url: http://localhost:8081/api
-    description: Ambiente local com Docker
-paths: {}
+  - url: /api
+    description: Servidor da aplicacao
+paths:
+  /admin/auth/login:
+    post:
+      operationId: loginAdmin
+      summary: Autentica um administrador
+      tags:
+        - Authentication
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Autenticacao concluida
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+  /admin/auth/refresh:
+    post:
+      operationId: refreshAdminToken
+      summary: Renova um JWT dentro da janela de renovacao
+      description: O proprio JWT anterior deve ser enviado como Bearer, mesmo se o prazo de acesso estiver expirado.
+      tags:
+        - Authentication
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Token renovado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /admin/auth/me:
+    get:
+      operationId: getAuthenticatedAdmin
+      summary: Valida o JWT e retorna o administrador autenticado
+      tags:
+        - Authentication
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Administrador autenticado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
 components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  responses:
+    Unauthorized:
+      description: Credenciais ou token invalidos
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiError'
+    ValidationError:
+      description: Dados de entrada invalidos
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiError'
   schemas:
+    LoginRequest:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+          example: dev@email.com
+        password:
+          type: string
+          format: password
+    TokenResponse:
+      type: object
+      required:
+        - access_token
+        - token_type
+        - expires_in
+        - refresh_expires_in
+      properties:
+        access_token:
+          type: string
+        token_type:
+          type: string
+          const: bearer
+        expires_in:
+          type: integer
+          description: Validade do acesso em segundos.
+        refresh_expires_in:
+          type: integer
+          description: Janela total de renovacao em segundos.
+    AdminResponse:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          type: object
+          required:
+            - id
+            - name
+            - email
+          properties:
+            id:
+              type: integer
+            name:
+              type: string
+            email:
+              type: string
+              format: email
     ApiError:
       type: object
       required:

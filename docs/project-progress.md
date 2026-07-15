@@ -4,7 +4,7 @@
 
 - Projeto: Tech-Challenge-Oficina
 - Autor: Bruno da Silva Saran
-- Dia atual: 2
+- Dia atual: 3
 - Estado atual: Concluído
 
 ## Roadmap
@@ -13,7 +13,7 @@
 | --- | --- | --- | --- | --- |
 | 1 | Base executavel e ambiente local | Concluído | 2026-07-13 | 2026-07-13 |
 | 2 | Arquitetura e convencoes do projeto | Concluído | 2026-07-14 | 2026-07-14 |
-| 3 | Autenticacao administrativa JWT | Pendente |  |  |
+| 3 | Autenticacao administrativa JWT | Concluído | 2026-07-14 | 2026-07-14 |
 | 4 | Dominio e CRUD de clientes | Pendente |  |  |
 | 5 | Dominio e CRUD de veiculos | Pendente |  |  |
 | 6 | Catalogo de servicos | Pendente |  |  |
@@ -141,6 +141,72 @@ Nenhum endpoint de dominio implementado. Os prefixos `/api/admin` e `/api/client
 
 Nao medida no Dia 2.
 
+## Dia 3
+
+### Resumo
+
+Autenticacao administrativa implementada com JWT real por meio de `php-open-source-saver/jwt-auth` 2.9.2. O fluxo inclui login, rota protegida de validacao e renovacao usando o proprio JWT anterior dentro da janela configurada. O administrador inicial e criado por seeder com identidade generica e senha obrigatoria obtida do ambiente.
+
+### Arquivos principais alterados
+
+- `composer.json` e `composer.lock`
+- `app/Models/User.php`
+- `app/Application/Auth`
+- `app/Infrastructure/Auth/JwtAdminTokenProvider.php`
+- `app/Interfaces/Http/Controllers/Auth/AdminAuthController.php`
+- `app/Interfaces/Http/Requests/Auth/LoginRequest.php`
+- `config/auth.php`
+- `config/jwt.php`
+- `config/initial_admin.php`
+- `database/seeders/AdminUserSeeder.php`
+- `routes/api/admin.php`
+- `.env.example`
+- `docs/openapi.yaml`
+- `README.md`
+- Testes de autenticacao e do seeder
+
+### Migrations criadas
+
+Nenhuma migration criada. A tabela padrao `users` foi adaptada como entidade administrativa minima.
+
+### Endpoints implementados
+
+- `POST /api/admin/auth/login`
+- `POST /api/admin/auth/refresh`
+- `GET /api/admin/auth/me`
+
+### Testes executados
+
+- `docker compose build app`
+- `docker compose up -d --force-recreate app`
+- `docker compose exec -T app php artisan migrate --force`
+- `docker compose exec -T -e ADMIN_PASSWORD=<senha-local> app php artisan db:seed --force`
+- `docker compose exec -T app php artisan route:list --path=api`
+- `docker compose exec -T app ./vendor/bin/phpunit --display-warnings`
+- `docker compose exec -T app ./vendor/bin/pint --test`
+- `docker compose exec -T app composer audit`
+- `redocly lint docs/openapi.yaml`
+- Requisicao HTTP para `/up`
+- Busca por comentarios nos arquivos de codigo alterados
+- `git diff --check`
+
+### Resultado real dos testes
+
+- Build Docker concluido com sucesso.
+- PostgreSQL permaneceu saudavel e a aplicacao respondeu HTTP 200 em `/up`.
+- Migrations estavam atualizadas e o seeder criou ou atualizou o administrador generico.
+- Lista de rotas exibiu somente os tres endpoints administrativos de autenticacao.
+- PHPUnit: 14 testes aprovados e 37 assercoes, sem falhas, usando PostgreSQL.
+- Pint: 45 arquivos aprovados, sem problemas de estilo.
+- Composer audit: nenhum advisory de seguranca encontrado.
+- OpenAPI validado sem erros ou avisos.
+- Nenhum comentario foi encontrado nos arquivos de codigo alterados.
+- `git diff --check` nao encontrou erros.
+
+### Cobertura
+
+Nao medida no Dia 3.
+
 ## Decisoes confirmadas
 
 - Usar as versoes estaveis mais atuais possiveis.
@@ -157,14 +223,16 @@ Nao medida no Dia 2.
 - Nao ha grupo; Discord do participante: saranbruno.
 - Repositorio: https://github.com/saranbruno/Tech-Challenge-Oficina.
 - Diagramas previstos: Contexto Estrategico, Agregados, Classes de Dominio e Sequencia dos fluxos principais.
+- Biblioteca JWT: `php-open-source-saver/jwt-auth` 2.9.2.
+- Implementar refresh token na autenticacao administrativa.
+- Criar o administrador inicial por seeder com identidade generica e senha obtida do ambiente.
 
 ## Duvidas e bloqueios
 
-Nenhum bloqueio funcional para o Dia 1.
+Nenhum bloqueio atual.
 
 ## Pendencias tecnicas
 
-- Selecionar o pacote JWT recomendado no Dia 3.
 - Definir os campos minimos concretos do cliente no Dia 4.
 - Selecionar a ferramenta de scan no Dia 23.
 - Criar o link da documentacao quando ela existir.
@@ -172,4 +240,4 @@ Nenhum bloqueio funcional para o Dia 1.
 
 ## Escopo previsto para o proximo dia
 
-Dia 3: confirmar e instalar a biblioteca JWT; criar a entidade administrativa minima e suas migrations; definir a criacao segura do primeiro administrador; implementar login, emissao e validacao do token; proteger uma rota administrativa minima; testar autenticacao valida, credenciais invalidas e tokens ausentes, invalidos e expirados; documentar a configuracao.
+Dia 4: confirmar os campos minimos do cliente; implementar dominio, normalizacao e validacao real de CPF e CNPJ; criar migration e constraints; implementar CRUD administrativo protegido por JWT com Form Requests e API Resources; criar testes unitarios e de integracao; atualizar OpenAPI e README.
