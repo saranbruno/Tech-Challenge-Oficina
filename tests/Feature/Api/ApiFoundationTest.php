@@ -39,6 +39,11 @@ class ApiFoundationTest extends TestCase
             'api/admin/customers/{customer}',
             'api/admin/customers/{customer}',
             'api/admin/customers/{customer}',
+            'api/admin/vehicles',
+            'api/admin/vehicles',
+            'api/admin/vehicles/{vehicle}',
+            'api/admin/vehicles/{vehicle}',
+            'api/admin/vehicles/{vehicle}',
         ], $apiRoutes);
     }
 }
