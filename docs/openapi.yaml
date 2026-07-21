@@ -307,6 +307,120 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
+  /admin/services:
+    get:
+      operationId: listServices
+      summary: Lista servicos
+      tags:
+        - Services
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: per_page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 15
+      responses:
+        '200':
+          description: Lista paginada de servicos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceCollection'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    post:
+      operationId: createService
+      summary: Cadastra um servico
+      tags:
+        - Services
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ServiceRequest'
+      responses:
+        '201':
+          description: Servico cadastrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+  /admin/services/{service}:
+    parameters:
+      - name: service
+        in: path
+        required: true
+        schema:
+          type: integer
+    get:
+      operationId: showService
+      summary: Detalha um servico
+      tags:
+        - Services
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Servico encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      operationId: updateService
+      summary: Atualiza um servico
+      tags:
+        - Services
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ServiceRequest'
+      responses:
+        '200':
+          description: Servico atualizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+    delete:
+      operationId: deleteService
+      summary: Exclui um servico
+      tags:
+        - Services
+      security:
+        - bearerAuth: []
+      responses:
+        '204':
+          description: Servico excluido
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
 components:
   securitySchemes:
     bearerAuth:
@@ -518,6 +632,62 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Vehicle'
+        links:
+          type: object
+          additionalProperties: true
+        meta:
+          type: object
+          additionalProperties: true
+    ServiceRequest:
+      type: object
+      required:
+        - name
+        - unit_price
+      properties:
+        name:
+          type: string
+          maxLength: 255
+          example: Troca de oleo
+        unit_price:
+          type: integer
+          format: int64
+          minimum: 0
+          description: Valor unitario exato em centavos.
+          example: 15990
+    Service:
+      type: object
+      required:
+        - id
+        - name
+        - unit_price
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        unit_price:
+          type: integer
+          format: int64
+          minimum: 0
+          description: Valor unitario exato em centavos.
+    ServiceResponse:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          $ref: '#/components/schemas/Service'
+    ServiceCollection:
+      type: object
+      required:
+        - data
+        - links
+        - meta
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Service'
         links:
           type: object
           additionalProperties: true

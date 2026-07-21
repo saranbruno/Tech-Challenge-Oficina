@@ -2,6 +2,7 @@
 
 use App\Interfaces\Http\Controllers\Auth\AdminAuthController;
 use App\Interfaces\Http\Controllers\Customer\CustomerController;
+use App\Interfaces\Http\Controllers\Service\ServiceController;
 use App\Interfaces\Http\Controllers\Vehicle\VehicleController;
 use Illuminate\Support\Facades\Route;
 
@@ -22,4 +23,9 @@ Route::middleware('auth:api')->group(function (): void {
     Route::get('vehicles/{vehicle}', [VehicleController::class, 'show'])->name('vehicles.show');
     Route::put('vehicles/{vehicle}', [VehicleController::class, 'update'])->name('vehicles.update');
     Route::delete('vehicles/{vehicle}', [VehicleController::class, 'destroy'])->name('vehicles.destroy');
+    Route::get('services', [ServiceController::class, 'index'])->name('services.index');
+    Route::post('services', [ServiceController::class, 'store'])->name('services.store');
+    Route::get('services/{service}', [ServiceController::class, 'show'])->name('services.show');
+    Route::put('services/{service}', [ServiceController::class, 'update'])->name('services.update');
+    Route::delete('services/{service}', [ServiceController::class, 'destroy'])->name('services.destroy');
 });

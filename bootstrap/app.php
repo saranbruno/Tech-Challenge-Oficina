@@ -3,8 +3,8 @@
 use App\Application\Auth\Exceptions\InvalidCredentials;
 use App\Application\Auth\Exceptions\InvalidRefreshToken;
 use App\Application\Customer\Exceptions\DuplicateCustomerDocument;
-use App\Domain\Customer\Exceptions\InvalidDocument;
 use App\Application\Vehicle\Exceptions\DuplicateLicensePlate;
+use App\Domain\Customer\Exceptions\InvalidDocument;
 use App\Domain\Vehicle\Exceptions\InvalidLicensePlate;
 use App\Interfaces\Http\Responses\ApiErrorResponse;
 use Illuminate\Auth\AuthenticationException;
