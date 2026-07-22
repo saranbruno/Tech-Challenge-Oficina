@@ -3,6 +3,7 @@
 use App\Application\Auth\Exceptions\InvalidCredentials;
 use App\Application\Auth\Exceptions\InvalidRefreshToken;
 use App\Application\Customer\Exceptions\DuplicateCustomerDocument;
+use App\Application\Inventory\Exceptions\InventoryItemHasMovements;
 use App\Application\Vehicle\Exceptions\DuplicateLicensePlate;
 use App\Domain\Customer\Exceptions\InvalidDocument;
 use App\Domain\Vehicle\Exceptions\InvalidLicensePlate;
@@ -84,6 +85,10 @@ return Application::configure(basePath: dirname(__DIR__))
                 $exception->getMessage(),
                 409,
             );
+        });
+
+        $exceptions->render(function (InventoryItemHasMovements $exception, Request $request) {
+            return ApiErrorResponse::make('inventory_item_has_movements', $exception->getMessage(), 409);
         });
 
         $exceptions->render(function (InvalidLicensePlate $exception, Request $request) {

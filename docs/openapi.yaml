@@ -421,7 +421,184 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
+  /admin/inventory-items:
+    get:
+      operationId: listInventoryItems
+      summary: Lista pecas e insumos
+      tags:
+        - Inventory
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: per_page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 15
+      responses:
+        '200':
+          description: Lista paginada de itens
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InventoryItemCollection'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    post:
+      operationId: createInventoryItem
+      summary: Cadastra uma peca ou insumo
+      tags:
+        - Inventory
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateInventoryItemRequest'
+      responses:
+        '201':
+          description: Item cadastrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InventoryItemResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+  /admin/inventory-items/{inventoryItem}:
+    parameters:
+      - $ref: '#/components/parameters/InventoryItemId'
+    get:
+      operationId: showInventoryItem
+      summary: Detalha uma peca ou insumo
+      tags:
+        - Inventory
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Item encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InventoryItemResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      operationId: updateInventoryItem
+      summary: Atualiza os dados de catalogo de uma peca ou insumo
+      tags:
+        - Inventory
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateInventoryItemRequest'
+      responses:
+        '200':
+          description: Item atualizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InventoryItemResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+    delete:
+      operationId: deleteInventoryItem
+      summary: Exclui um item sem historico de estoque
+      tags:
+        - Inventory
+      security:
+        - bearerAuth: []
+      responses:
+        '204':
+          description: Item excluido
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /admin/inventory-items/{inventoryItem}/stock:
+    parameters:
+      - $ref: '#/components/parameters/InventoryItemId'
+    put:
+      operationId: adjustInventoryItemStock
+      summary: Define manualmente o saldo de estoque e registra a movimentacao
+      tags:
+        - Inventory
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AdjustStockRequest'
+      responses:
+        '200':
+          description: Estoque atualizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InventoryItemResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+  /admin/inventory-items/{inventoryItem}/movements:
+    parameters:
+      - $ref: '#/components/parameters/InventoryItemId'
+    get:
+      operationId: listInventoryItemMovements
+      summary: Lista o historico de movimentacoes de um item
+      tags:
+        - Inventory
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: per_page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 15
+      responses:
+        '200':
+          description: Historico paginado de movimentacoes
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StockMovementCollection'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
 components:
+  parameters:
+    InventoryItemId:
+      name: inventoryItem
+      in: path
+      required: true
+      schema:
+        type: integer
   securitySchemes:
     bearerAuth:
       type: http
@@ -688,6 +865,163 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Service'
+        links:
+          type: object
+          additionalProperties: true
+        meta:
+          type: object
+          additionalProperties: true
+    CreateInventoryItemRequest:
+      type: object
+      required:
+        - name
+        - type
+        - unit_price
+        - quantity_available
+      properties:
+        name:
+          type: string
+          maxLength: 255
+          example: Filtro de oleo
+        type:
+          type: string
+          enum:
+            - part
+            - supply
+        unit_price:
+          type: integer
+          format: int64
+          minimum: 0
+          description: Valor unitario exato em centavos.
+          example: 4590
+        quantity_available:
+          type: integer
+          minimum: 0
+          maximum: 2147483647
+          example: 10
+    UpdateInventoryItemRequest:
+      type: object
+      required:
+        - name
+        - type
+        - unit_price
+      properties:
+        name:
+          type: string
+          maxLength: 255
+        type:
+          type: string
+          enum:
+            - part
+            - supply
+        unit_price:
+          type: integer
+          format: int64
+          minimum: 0
+          description: Valor unitario exato em centavos.
+    AdjustStockRequest:
+      type: object
+      required:
+        - quantity_available
+      properties:
+        quantity_available:
+          type: integer
+          minimum: 0
+          maximum: 2147483647
+    InventoryItem:
+      type: object
+      required:
+        - id
+        - name
+        - type
+        - unit_price
+        - quantity_available
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        type:
+          type: string
+          enum:
+            - part
+            - supply
+        unit_price:
+          type: integer
+          format: int64
+          minimum: 0
+        quantity_available:
+          type: integer
+          minimum: 0
+    InventoryItemResponse:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          $ref: '#/components/schemas/InventoryItem'
+    InventoryItemCollection:
+      type: object
+      required:
+        - data
+        - links
+        - meta
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/InventoryItem'
+        links:
+          type: object
+          additionalProperties: true
+        meta:
+          type: object
+          additionalProperties: true
+    StockMovement:
+      type: object
+      required:
+        - id
+        - inventory_item_id
+        - admin_user_id
+        - type
+        - quantity_change
+        - quantity_before
+        - quantity_after
+        - created_at
+      properties:
+        id:
+          type: integer
+        inventory_item_id:
+          type: integer
+        admin_user_id:
+          type: integer
+        type:
+          type: string
+          enum:
+            - initial_stock
+            - manual_adjustment
+        quantity_change:
+          type: integer
+        quantity_before:
+          type: integer
+          minimum: 0
+        quantity_after:
+          type: integer
+          minimum: 0
+        created_at:
+          type: string
+          format: date-time
+    StockMovementCollection:
+      type: object
+      required:
+        - data
+        - links
+        - meta
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/StockMovement'
         links:
           type: object
           additionalProperties: true
