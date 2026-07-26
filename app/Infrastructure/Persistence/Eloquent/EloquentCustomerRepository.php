@@ -19,6 +19,11 @@ class EloquentCustomerRepository implements CustomerRepository
         return $this->toDomain(CustomerModel::query()->findOrFail($id));
     }
 
+    public function findByDocumentOrFail(string $document): Customer
+    {
+        return $this->toDomain(CustomerModel::query()->where('document', $document)->firstOrFail());
+    }
+
     public function documentExists(string $document, ?int $exceptId = null): bool
     {
         return CustomerModel::query()

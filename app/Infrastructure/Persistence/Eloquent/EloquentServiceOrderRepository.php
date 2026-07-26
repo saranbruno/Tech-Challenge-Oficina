@@ -3,18 +3,33 @@
 namespace App\Infrastructure\Persistence\Eloquent;
 
 use App\Application\ServiceOrder\Contracts\ServiceOrderRepository;
+use App\Domain\Service\ValueObjects\UnitPrice;
 use App\Domain\ServiceOrder\Enums\ServiceOrderStatus;
 use App\Domain\ServiceOrder\ServiceOrder;
+use App\Domain\ServiceOrder\ServiceOrderService;
 use App\Infrastructure\Persistence\Eloquent\Models\ServiceOrderModel;
+use App\Infrastructure\Persistence\Eloquent\Models\ServiceOrderServiceModel;
+use Illuminate\Support\Facades\DB;
 
 class EloquentServiceOrderRepository implements ServiceOrderRepository
 {
     public function create(ServiceOrder $serviceOrder): ServiceOrder
     {
-        $model = new ServiceOrderModel;
-        $this->fill($model, $serviceOrder)->save();
+        return DB::transaction(function () use ($serviceOrder): ServiceOrder {
+            $model = new ServiceOrderModel;
+            $this->fill($model, $serviceOrder)->save();
 
-        return $this->toDomain($model);
+            foreach ($serviceOrder->services() as $service) {
+                ServiceOrderServiceModel::query()->create([
+                    'service_order_id' => $model->getKey(),
+                    'service_id' => $service->serviceId,
+                    'quantity' => $service->quantity,
+                    'unit_price_snapshot' => $service->unitPriceSnapshot->cents,
+                ]);
+            }
+
+            return $this->toDomain($model);
+        });
     }
 
     public function findOrFail(int $id): ServiceOrder
@@ -48,6 +63,17 @@ class EloquentServiceOrderRepository implements ServiceOrderRepository
 
     private function toDomain(ServiceOrderModel $model): ServiceOrder
     {
+        $services = ServiceOrderServiceModel::query()
+            ->where('service_order_id', $model->getKey())
+            ->orderBy('id')
+            ->get()
+            ->map(fn (ServiceOrderServiceModel $service) => new ServiceOrderService(
+                $service->service_id,
+                $service->quantity,
+                new UnitPrice($service->unit_price_snapshot),
+            ))
+            ->all();
+
         return ServiceOrder::reconstitute(
             $model->getKey(),
             $model->customer_id,
@@ -60,6 +86,7 @@ class EloquentServiceOrderRepository implements ServiceOrderRepository
             $model->finalized_at,
             $model->delivered_at,
             $model->cancelled_at,
+            $services,
         );
     }
 }

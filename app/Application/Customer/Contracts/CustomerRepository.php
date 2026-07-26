@@ -10,6 +10,8 @@ interface CustomerRepository
 
     public function findOrFail(int $id): Customer;
 
+    public function findByDocumentOrFail(string $document): Customer;
+
     public function documentExists(string $document, ?int $exceptId = null): bool;
 
     public function save(Customer $customer): Customer;

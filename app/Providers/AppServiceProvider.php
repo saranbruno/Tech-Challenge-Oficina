@@ -11,8 +11,8 @@ use App\Application\Vehicle\Contracts\VehicleRepository;
 use App\Infrastructure\Auth\JwtAdminTokenProvider;
 use App\Infrastructure\Persistence\Eloquent\EloquentCustomerRepository;
 use App\Infrastructure\Persistence\Eloquent\EloquentInventoryItemRepository;
-use App\Infrastructure\Persistence\Eloquent\EloquentServiceRepository;
 use App\Infrastructure\Persistence\Eloquent\EloquentServiceOrderRepository;
+use App\Infrastructure\Persistence\Eloquent\EloquentServiceRepository;
 use App\Infrastructure\Persistence\Eloquent\EloquentVehicleRepository;
 use Illuminate\Support\ServiceProvider;
 

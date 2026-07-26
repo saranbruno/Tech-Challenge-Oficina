@@ -8,6 +8,8 @@ use DateTimeImmutable;
 
 final class ServiceOrder
 {
+    private array $services = [];
+
     private function __construct(
         public readonly ?int $id,
         public readonly int $customerId,
@@ -39,8 +41,9 @@ final class ServiceOrder
         ?DateTimeImmutable $finalizedAt,
         ?DateTimeImmutable $deliveredAt,
         ?DateTimeImmutable $cancelledAt,
+        array $services = [],
     ): self {
-        return new self(
+        $serviceOrder = new self(
             $id,
             $customerId,
             $vehicleId,
@@ -53,6 +56,26 @@ final class ServiceOrder
             $deliveredAt,
             $cancelledAt,
         );
+
+        foreach ($services as $service) {
+            $serviceOrder->addService($service);
+        }
+
+        return $serviceOrder;
+    }
+
+    public function addService(ServiceOrderService $service): void
+    {
+        if (isset($this->services[$service->serviceId])) {
+            throw new \DomainException('O servico nao pode ser associado mais de uma vez a ordem de servico.');
+        }
+
+        $this->services[$service->serviceId] = $service;
+    }
+
+    public function services(): array
+    {
+        return array_values($this->services);
     }
 
     public function startDiagnosis(DateTimeImmutable $occurredAt): void
