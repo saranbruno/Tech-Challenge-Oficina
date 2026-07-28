@@ -20,4 +20,9 @@ final readonly class ServiceOrderService
             throw new DomainException('A quantidade do servico deve ser maior que zero.');
         }
     }
+
+    public function subtotal(): int
+    {
+        return $this->quantity * $this->unitPriceSnapshot->cents;
+    }
 }

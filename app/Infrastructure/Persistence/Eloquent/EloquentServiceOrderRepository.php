@@ -3,10 +3,13 @@
 namespace App\Infrastructure\Persistence\Eloquent;
 
 use App\Application\ServiceOrder\Contracts\ServiceOrderRepository;
+use App\Domain\Inventory\Enums\InventoryItemType;
 use App\Domain\Service\ValueObjects\UnitPrice;
 use App\Domain\ServiceOrder\Enums\ServiceOrderStatus;
 use App\Domain\ServiceOrder\ServiceOrder;
+use App\Domain\ServiceOrder\ServiceOrderInventoryItem;
 use App\Domain\ServiceOrder\ServiceOrderService;
+use App\Infrastructure\Persistence\Eloquent\Models\ServiceOrderInventoryItemModel;
 use App\Infrastructure\Persistence\Eloquent\Models\ServiceOrderModel;
 use App\Infrastructure\Persistence\Eloquent\Models\ServiceOrderServiceModel;
 use Illuminate\Support\Facades\DB;
@@ -25,6 +28,16 @@ class EloquentServiceOrderRepository implements ServiceOrderRepository
                     'service_id' => $service->serviceId,
                     'quantity' => $service->quantity,
                     'unit_price_snapshot' => $service->unitPriceSnapshot->cents,
+                ]);
+            }
+
+            foreach ($serviceOrder->inventoryItems() as $inventoryItem) {
+                ServiceOrderInventoryItemModel::query()->create([
+                    'service_order_id' => $model->getKey(),
+                    'inventory_item_id' => $inventoryItem->inventoryItemId,
+                    'type_snapshot' => $inventoryItem->typeSnapshot->value,
+                    'quantity' => $inventoryItem->quantity,
+                    'unit_price_snapshot' => $inventoryItem->unitPriceSnapshot->cents,
                 ]);
             }
 
@@ -51,6 +64,7 @@ class EloquentServiceOrderRepository implements ServiceOrderRepository
             'customer_id' => $serviceOrder->customerId,
             'vehicle_id' => $serviceOrder->vehicleId,
             'status' => $serviceOrder->status->value,
+            'total_amount' => $serviceOrder->totalAmount(),
             'received_at' => $serviceOrder->receivedAt,
             'diagnosis_started_at' => $serviceOrder->diagnosisStartedAt,
             'awaiting_approval_at' => $serviceOrder->awaitingApprovalAt,
@@ -74,6 +88,18 @@ class EloquentServiceOrderRepository implements ServiceOrderRepository
             ))
             ->all();
 
+        $inventoryItems = ServiceOrderInventoryItemModel::query()
+            ->where('service_order_id', $model->getKey())
+            ->orderBy('id')
+            ->get()
+            ->map(fn (ServiceOrderInventoryItemModel $inventoryItem) => new ServiceOrderInventoryItem(
+                $inventoryItem->inventory_item_id,
+                InventoryItemType::from($inventoryItem->type_snapshot),
+                $inventoryItem->quantity,
+                new UnitPrice($inventoryItem->unit_price_snapshot),
+            ))
+            ->all();
+
         return ServiceOrder::reconstitute(
             $model->getKey(),
             $model->customer_id,
@@ -87,6 +113,7 @@ class EloquentServiceOrderRepository implements ServiceOrderRepository
             $model->delivered_at,
             $model->cancelled_at,
             $services,
+            $inventoryItems,
         );
     }
 }

@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Model;
     'customer_id',
     'vehicle_id',
     'status',
+    'total_amount',
     'received_at',
     'diagnosis_started_at',
     'awaiting_approval_at',

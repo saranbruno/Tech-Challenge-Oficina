@@ -4,6 +4,7 @@ use App\Interfaces\Http\Controllers\Auth\AdminAuthController;
 use App\Interfaces\Http\Controllers\Customer\CustomerController;
 use App\Interfaces\Http\Controllers\Inventory\InventoryItemController;
 use App\Interfaces\Http\Controllers\Service\ServiceController;
+use App\Interfaces\Http\Controllers\ServiceOrder\ServiceOrderController;
 use App\Interfaces\Http\Controllers\Vehicle\VehicleController;
 use Illuminate\Support\Facades\Route;
 
@@ -36,4 +37,5 @@ Route::middleware('auth:api')->group(function (): void {
     Route::put('inventory-items/{inventoryItem}/stock', [InventoryItemController::class, 'adjustStock'])->name('inventory-items.stock.update');
     Route::get('inventory-items/{inventoryItem}/movements', [InventoryItemController::class, 'movements'])->name('inventory-items.movements.index');
     Route::delete('inventory-items/{inventoryItem}', [InventoryItemController::class, 'destroy'])->name('inventory-items.destroy');
+    Route::post('service-orders', [ServiceOrderController::class, 'store'])->name('service-orders.store');
 });

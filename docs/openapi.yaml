@@ -591,6 +591,34 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
+  /admin/service-orders:
+    post:
+      operationId: createServiceOrder
+      summary: Cria uma Ordem de Servico completa com orcamento calculado
+      description: Captura os valores atuais como snapshots e nao altera o estoque nesta etapa.
+      tags:
+        - Service Orders
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateServiceOrderRequest'
+      responses:
+        '201':
+          description: Ordem de Servico criada com status received
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceOrderResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationError'
 components:
   parameters:
     InventoryItemId:
@@ -1028,6 +1056,143 @@ components:
         meta:
           type: object
           additionalProperties: true
+    RequestedService:
+      type: object
+      required:
+        - service_id
+        - quantity
+      properties:
+        service_id:
+          type: integer
+        quantity:
+          type: integer
+          minimum: 1
+    RequestedInventoryItem:
+      type: object
+      required:
+        - inventory_item_id
+        - quantity
+      properties:
+        inventory_item_id:
+          type: integer
+        quantity:
+          type: integer
+          minimum: 1
+    CreateServiceOrderRequest:
+      type: object
+      required:
+        - customer_document
+        - vehicle_id
+        - services
+        - inventory_items
+      properties:
+        customer_document:
+          type: string
+          description: CPF ou CNPJ, com ou sem pontuacao.
+          example: 529.982.247-25
+        vehicle_id:
+          type: integer
+        services:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/RequestedService'
+        inventory_items:
+          type: array
+          items:
+            $ref: '#/components/schemas/RequestedInventoryItem'
+    ServiceOrderServiceItem:
+      type: object
+      required:
+        - service_id
+        - quantity
+        - unit_price
+        - subtotal
+      properties:
+        service_id:
+          type: integer
+        quantity:
+          type: integer
+          minimum: 1
+        unit_price:
+          type: integer
+          format: int64
+          minimum: 0
+        subtotal:
+          type: integer
+          format: int64
+          minimum: 0
+    ServiceOrderInventoryItem:
+      type: object
+      required:
+        - inventory_item_id
+        - type
+        - quantity
+        - unit_price
+        - subtotal
+      properties:
+        inventory_item_id:
+          type: integer
+        type:
+          type: string
+          enum:
+            - part
+            - supply
+        quantity:
+          type: integer
+          minimum: 1
+        unit_price:
+          type: integer
+          format: int64
+          minimum: 0
+        subtotal:
+          type: integer
+          format: int64
+          minimum: 0
+    ServiceOrder:
+      type: object
+      required:
+        - id
+        - customer_id
+        - vehicle_id
+        - status
+        - received_at
+        - services
+        - inventory_items
+        - total_amount
+      properties:
+        id:
+          type: integer
+        customer_id:
+          type: integer
+        vehicle_id:
+          type: integer
+        status:
+          type: string
+          const: received
+        received_at:
+          type: string
+          format: date-time
+        services:
+          type: array
+          items:
+            $ref: '#/components/schemas/ServiceOrderServiceItem'
+        inventory_items:
+          type: array
+          items:
+            $ref: '#/components/schemas/ServiceOrderInventoryItem'
+        total_amount:
+          type: integer
+          format: int64
+          minimum: 0
+          description: Total calculado pelo servidor em centavos.
+    ServiceOrderResponse:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          $ref: '#/components/schemas/ServiceOrder'
     ApiError:
       type: object
       required:

@@ -10,6 +10,8 @@ final class ServiceOrder
 {
     private array $services = [];
 
+    private array $inventoryItems = [];
+
     private function __construct(
         public readonly ?int $id,
         public readonly int $customerId,
@@ -42,6 +44,7 @@ final class ServiceOrder
         ?DateTimeImmutable $deliveredAt,
         ?DateTimeImmutable $cancelledAt,
         array $services = [],
+        array $inventoryItems = [],
     ): self {
         $serviceOrder = new self(
             $id,
@@ -61,6 +64,10 @@ final class ServiceOrder
             $serviceOrder->addService($service);
         }
 
+        foreach ($inventoryItems as $inventoryItem) {
+            $serviceOrder->addInventoryItem($inventoryItem);
+        }
+
         return $serviceOrder;
     }
 
@@ -76,6 +83,28 @@ final class ServiceOrder
     public function services(): array
     {
         return array_values($this->services);
+    }
+
+    public function addInventoryItem(ServiceOrderInventoryItem $inventoryItem): void
+    {
+        if (isset($this->inventoryItems[$inventoryItem->inventoryItemId])) {
+            throw new \DomainException('O item de estoque nao pode ser associado mais de uma vez a ordem de servico.');
+        }
+
+        $this->inventoryItems[$inventoryItem->inventoryItemId] = $inventoryItem;
+    }
+
+    public function inventoryItems(): array
+    {
+        return array_values($this->inventoryItems);
+    }
+
+    public function totalAmount(): int
+    {
+        return array_sum(array_map(
+            fn (ServiceOrderService|ServiceOrderInventoryItem $item): int => $item->subtotal(),
+            [...$this->services(), ...$this->inventoryItems()],
+        ));
     }
 
     public function startDiagnosis(DateTimeImmutable $occurredAt): void
