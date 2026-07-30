@@ -7,6 +7,8 @@ use App\Application\Inventory\Exceptions\InventoryItemHasMovements;
 use App\Application\ServiceOrder\Exceptions\VehicleDoesNotBelongToCustomer;
 use App\Application\Vehicle\Exceptions\DuplicateLicensePlate;
 use App\Domain\Customer\Exceptions\InvalidDocument;
+use App\Domain\ServiceOrder\Exceptions\InvalidServiceOrderBudget;
+use App\Domain\ServiceOrder\Exceptions\InvalidServiceOrderTransition;
 use App\Domain\Vehicle\Exceptions\InvalidLicensePlate;
 use App\Interfaces\Http\Responses\ApiErrorResponse;
 use Illuminate\Auth\AuthenticationException;
@@ -94,6 +96,14 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $exceptions->render(function (VehicleDoesNotBelongToCustomer $exception, Request $request) {
             return ApiErrorResponse::make('vehicle_not_owned_by_customer', $exception->getMessage(), 422);
+        });
+
+        $exceptions->render(function (InvalidServiceOrderTransition $exception, Request $request) {
+            return ApiErrorResponse::make('invalid_service_order_transition', $exception->getMessage(), 409);
+        });
+
+        $exceptions->render(function (InvalidServiceOrderBudget $exception, Request $request) {
+            return ApiErrorResponse::make('invalid_service_order_budget', $exception->getMessage(), 409);
         });
 
         $exceptions->render(function (InvalidLicensePlate $exception, Request $request) {

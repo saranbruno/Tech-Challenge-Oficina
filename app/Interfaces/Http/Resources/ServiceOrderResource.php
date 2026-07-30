@@ -15,6 +15,8 @@ class ServiceOrderResource extends JsonResource
             'vehicle_id' => $this->resource->vehicleId,
             'status' => $this->resource->status->value,
             'received_at' => $this->resource->receivedAt->format(DATE_ATOM),
+            'diagnosis_started_at' => $this->resource->diagnosisStartedAt?->format(DATE_ATOM),
+            'awaiting_approval_at' => $this->resource->awaitingApprovalAt?->format(DATE_ATOM),
             'services' => array_map(fn ($service): array => [
                 'service_id' => $service->serviceId,
                 'quantity' => $service->quantity,

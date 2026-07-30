@@ -2,9 +2,11 @@
 
 namespace App\Interfaces\Http\Controllers\ServiceOrder;
 
+use App\Application\ServiceOrder\CompleteServiceOrderDiagnosis;
 use App\Application\ServiceOrder\CreateServiceOrder;
 use App\Application\ServiceOrder\Data\RequestedInventoryItemData;
 use App\Application\ServiceOrder\Data\RequestedServiceData;
+use App\Application\ServiceOrder\StartServiceOrderDiagnosis;
 use App\Interfaces\Http\Requests\ServiceOrder\StoreServiceOrderRequest;
 use App\Interfaces\Http\Resources\ServiceOrderResource;
 use DateTimeImmutable;
@@ -12,7 +14,11 @@ use Illuminate\Http\JsonResponse;
 
 class ServiceOrderController
 {
-    public function __construct(private readonly CreateServiceOrder $createServiceOrder) {}
+    public function __construct(
+        private readonly CompleteServiceOrderDiagnosis $completeServiceOrderDiagnosis,
+        private readonly CreateServiceOrder $createServiceOrder,
+        private readonly StartServiceOrderDiagnosis $startServiceOrderDiagnosis,
+    ) {}
 
     public function store(StoreServiceOrderRequest $request): JsonResponse
     {
@@ -37,5 +43,21 @@ class ServiceOrderController
         );
 
         return (new ServiceOrderResource($order))->response()->setStatusCode(201);
+    }
+
+    public function startDiagnosis(int $serviceOrder): ServiceOrderResource
+    {
+        return new ServiceOrderResource($this->startServiceOrderDiagnosis->execute(
+            $serviceOrder,
+            new DateTimeImmutable,
+        ));
+    }
+
+    public function completeDiagnosis(int $serviceOrder): ServiceOrderResource
+    {
+        return new ServiceOrderResource($this->completeServiceOrderDiagnosis->execute(
+            $serviceOrder,
+            new DateTimeImmutable,
+        ));
     }
 }

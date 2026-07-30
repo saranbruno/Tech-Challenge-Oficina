@@ -38,4 +38,6 @@ Route::middleware('auth:api')->group(function (): void {
     Route::get('inventory-items/{inventoryItem}/movements', [InventoryItemController::class, 'movements'])->name('inventory-items.movements.index');
     Route::delete('inventory-items/{inventoryItem}', [InventoryItemController::class, 'destroy'])->name('inventory-items.destroy');
     Route::post('service-orders', [ServiceOrderController::class, 'store'])->name('service-orders.store');
+    Route::post('service-orders/{serviceOrder}/diagnosis/start', [ServiceOrderController::class, 'startDiagnosis'])->name('service-orders.diagnosis.start');
+    Route::post('service-orders/{serviceOrder}/diagnosis/complete', [ServiceOrderController::class, 'completeDiagnosis'])->name('service-orders.diagnosis.complete');
 });

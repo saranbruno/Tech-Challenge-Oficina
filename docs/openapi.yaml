@@ -619,10 +619,64 @@ paths:
           $ref: '#/components/responses/NotFound'
         '422':
           $ref: '#/components/responses/ValidationError'
+  /admin/service-orders/{serviceOrder}/diagnosis/start:
+    parameters:
+      - $ref: '#/components/parameters/ServiceOrderId'
+    post:
+      operationId: startServiceOrderDiagnosis
+      summary: Inicia o diagnostico da Ordem de Servico
+      description: Altera automaticamente o status de received para in_diagnosis e registra o instante da transicao.
+      tags:
+        - Service Orders
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Diagnostico iniciado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceOrderResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /admin/service-orders/{serviceOrder}/diagnosis/complete:
+    parameters:
+      - $ref: '#/components/parameters/ServiceOrderId'
+    post:
+      operationId: completeServiceOrderDiagnosis
+      summary: Conclui o diagnostico e disponibiliza o orcamento
+      description: Valida a composicao persistida, altera automaticamente de in_diagnosis para awaiting_approval e registra o instante da disponibilizacao pela API.
+      tags:
+        - Service Orders
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Diagnostico concluido e orcamento disponivel
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceOrderResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
 components:
   parameters:
     InventoryItemId:
       name: inventoryItem
+      in: path
+      required: true
+      schema:
+        type: integer
+    ServiceOrderId:
+      name: serviceOrder
       in: path
       required: true
       schema:
@@ -1157,6 +1211,8 @@ components:
         - vehicle_id
         - status
         - received_at
+        - diagnosis_started_at
+        - awaiting_approval_at
         - services
         - inventory_items
         - total_amount
@@ -1169,9 +1225,22 @@ components:
           type: integer
         status:
           type: string
-          const: received
+          enum:
+            - received
+            - in_diagnosis
+            - awaiting_approval
         received_at:
           type: string
+          format: date-time
+        diagnosis_started_at:
+          type:
+            - string
+            - 'null'
+          format: date-time
+        awaiting_approval_at:
+          type:
+            - string
+            - 'null'
           format: date-time
         services:
           type: array

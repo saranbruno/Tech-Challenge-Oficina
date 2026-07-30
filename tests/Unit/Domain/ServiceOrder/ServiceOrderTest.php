@@ -2,9 +2,12 @@
 
 namespace Tests\Unit\Domain\ServiceOrder;
 
+use App\Domain\Service\ValueObjects\UnitPrice;
 use App\Domain\ServiceOrder\Enums\ServiceOrderStatus;
+use App\Domain\ServiceOrder\Exceptions\InvalidServiceOrderBudget;
 use App\Domain\ServiceOrder\Exceptions\InvalidServiceOrderTransition;
 use App\Domain\ServiceOrder\ServiceOrder;
+use App\Domain\ServiceOrder\ServiceOrderService;
 use DateTimeImmutable;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
@@ -15,6 +18,7 @@ class ServiceOrderTest extends TestCase
     {
         $receivedAt = new DateTimeImmutable('2026-07-22 09:00:00');
         $order = ServiceOrder::receive(10, 20, $receivedAt);
+        $order->addService(new ServiceOrderService(1, 1, new UnitPrice(10000)));
 
         self::assertSame(ServiceOrderStatus::Received, $order->status);
         self::assertSame($receivedAt, $order->receivedAt);
@@ -59,6 +63,26 @@ class ServiceOrderTest extends TestCase
             'finalizar sem execucao' => [fn (ServiceOrder $order) => $order->finalize($occurredAt)],
             'entregar sem finalizar' => [fn (ServiceOrder $order) => $order->deliver($occurredAt)],
         ];
+    }
+
+    public function test_diagnosis_cannot_be_started_twice(): void
+    {
+        $order = ServiceOrder::receive(1, 2, new DateTimeImmutable('2026-07-22 09:00:00'));
+        $order->startDiagnosis(new DateTimeImmutable('2026-07-22 09:30:00'));
+
+        $this->expectException(InvalidServiceOrderTransition::class);
+
+        $order->startDiagnosis(new DateTimeImmutable('2026-07-22 10:00:00'));
+    }
+
+    public function test_budget_cannot_be_made_available_without_a_service(): void
+    {
+        $order = ServiceOrder::receive(1, 2, new DateTimeImmutable('2026-07-22 09:00:00'));
+        $order->startDiagnosis(new DateTimeImmutable('2026-07-22 09:30:00'));
+
+        $this->expectException(InvalidServiceOrderBudget::class);
+
+        $order->makeBudgetAvailable(new DateTimeImmutable('2026-07-22 10:00:00'));
     }
 
     #[DataProvider('cancellableStatusProvider')]
@@ -123,6 +147,7 @@ class ServiceOrderTest extends TestCase
             return $order;
         }
 
+        $order->addService(new ServiceOrderService(1, 1, new UnitPrice(10000)));
         $order->makeBudgetAvailable($occurredAt);
 
         if ($status === ServiceOrderStatus::AwaitingApproval) {

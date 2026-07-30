@@ -3,6 +3,7 @@
 namespace App\Domain\ServiceOrder;
 
 use App\Domain\ServiceOrder\Enums\ServiceOrderStatus;
+use App\Domain\ServiceOrder\Exceptions\InvalidServiceOrderBudget;
 use App\Domain\ServiceOrder\Exceptions\InvalidServiceOrderTransition;
 use DateTimeImmutable;
 
@@ -115,6 +116,14 @@ final class ServiceOrder
 
     public function makeBudgetAvailable(DateTimeImmutable $occurredAt): void
     {
+        if ($this->status !== ServiceOrderStatus::InDiagnosis) {
+            throw new InvalidServiceOrderTransition("Transicao invalida de {$this->status->value} para ".ServiceOrderStatus::AwaitingApproval->value.'.');
+        }
+
+        if ($this->services === []) {
+            throw new InvalidServiceOrderBudget('A ordem de servico precisa possuir ao menos um servico para disponibilizar o orcamento.');
+        }
+
         $this->transition(ServiceOrderStatus::InDiagnosis, ServiceOrderStatus::AwaitingApproval);
         $this->awaitingApprovalAt = $occurredAt;
     }
