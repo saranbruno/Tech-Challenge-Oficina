@@ -16,12 +16,10 @@ final readonly class ApproveClientServiceOrderBudget
         string $trackingToken,
         DateTimeImmutable $occurredAt,
     ): ServiceOrder {
-        $serviceOrder = $this->serviceOrders->findForClientOrFail(
+        return $this->serviceOrders->approveForClient(
             (new Document($customerDocument))->value,
             hash('sha256', $trackingToken),
+            $occurredAt,
         );
-        $serviceOrder->approveBudget($occurredAt);
-
-        return $this->serviceOrders->update($serviceOrder);
     }
 }

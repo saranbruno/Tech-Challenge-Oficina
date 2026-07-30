@@ -595,7 +595,7 @@ paths:
     post:
       operationId: createServiceOrder
       summary: Cria uma Ordem de Servico completa com orcamento calculado
-      description: Captura os valores atuais como snapshots e nao altera o estoque nesta etapa.
+      description: Captura os valores atuais como snapshots. O estoque permanece inalterado ate a aprovacao do orcamento.
       tags:
         - Service Orders
       security:
@@ -749,6 +749,7 @@ paths:
     post:
       operationId: approveClientServiceOrderBudget
       summary: Aprova o orcamento com documento e token da OS
+      description: Bloqueia a OS e os itens de estoque, valida todos os saldos e realiza a baixa com historico na mesma transacao que inicia a execucao. Estoque insuficiente ou aprovacao repetida retorna conflito sem alteracao parcial.
       tags:
         - Client Service Orders
       security: []
@@ -1169,6 +1170,7 @@ components:
         - id
         - inventory_item_id
         - admin_user_id
+        - service_order_id
         - type
         - quantity_change
         - quantity_before
@@ -1180,12 +1182,19 @@ components:
         inventory_item_id:
           type: integer
         admin_user_id:
-          type: integer
+          type:
+            - integer
+            - 'null'
+        service_order_id:
+          type:
+            - integer
+            - 'null'
         type:
           type: string
           enum:
             - initial_stock
             - manual_adjustment
+            - service_order_consumption
         quantity_change:
           type: integer
         quantity_before:

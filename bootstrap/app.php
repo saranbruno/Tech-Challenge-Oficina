@@ -4,6 +4,7 @@ use App\Application\Auth\Exceptions\InvalidCredentials;
 use App\Application\Auth\Exceptions\InvalidRefreshToken;
 use App\Application\Customer\Exceptions\DuplicateCustomerDocument;
 use App\Application\Inventory\Exceptions\InventoryItemHasMovements;
+use App\Application\ServiceOrder\Exceptions\InsufficientInventoryStock;
 use App\Application\ServiceOrder\Exceptions\VehicleDoesNotBelongToCustomer;
 use App\Application\Vehicle\Exceptions\DuplicateLicensePlate;
 use App\Domain\Customer\Exceptions\InvalidDocument;
@@ -101,6 +102,10 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $exceptions->render(function (InvalidServiceOrderTransition $exception, Request $request) {
             return ApiErrorResponse::make('invalid_service_order_transition', $exception->getMessage(), 409);
+        });
+
+        $exceptions->render(function (InsufficientInventoryStock $exception, Request $request) {
+            return ApiErrorResponse::make('insufficient_inventory_stock', $exception->getMessage(), 409);
         });
 
         $exceptions->render(function (InvalidServiceOrderBudget $exception, Request $request) {

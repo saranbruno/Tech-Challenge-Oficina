@@ -13,6 +13,7 @@ class StockMovementResource extends JsonResource
             'id' => $this->resource->getKey(),
             'inventory_item_id' => $this->resource->inventory_item_id,
             'admin_user_id' => $this->resource->admin_user_id,
+            'service_order_id' => $this->resource->service_order_id,
             'type' => $this->resource->type,
             'quantity_change' => $this->resource->quantity_change,
             'quantity_before' => $this->resource->quantity_before,

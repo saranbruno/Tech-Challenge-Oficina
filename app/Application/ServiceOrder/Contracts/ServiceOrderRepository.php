@@ -3,6 +3,7 @@
 namespace App\Application\ServiceOrder\Contracts;
 
 use App\Domain\ServiceOrder\ServiceOrder;
+use DateTimeImmutable;
 
 interface ServiceOrderRepository
 {
@@ -13,4 +14,10 @@ interface ServiceOrderRepository
     public function findForClientOrFail(string $customerDocument, string $trackingTokenHash): ServiceOrder;
 
     public function update(ServiceOrder $serviceOrder): ServiceOrder;
+
+    public function approveForClient(
+        string $customerDocument,
+        string $trackingTokenHash,
+        DateTimeImmutable $occurredAt,
+    ): ServiceOrder;
 }
