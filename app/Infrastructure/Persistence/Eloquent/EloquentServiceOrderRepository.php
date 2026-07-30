@@ -41,7 +41,7 @@ class EloquentServiceOrderRepository implements ServiceOrderRepository
                 ]);
             }
 
-            return $this->toDomain($model);
+            return $this->toDomain($model, $serviceOrder->trackingToken);
         });
     }
 
@@ -50,10 +50,39 @@ class EloquentServiceOrderRepository implements ServiceOrderRepository
         return $this->toDomain(ServiceOrderModel::query()->findOrFail($id));
     }
 
+    public function findForClientOrFail(string $customerDocument, string $trackingTokenHash): ServiceOrder
+    {
+        $model = ServiceOrderModel::query()
+            ->join('customers', 'customers.id', '=', 'service_orders.customer_id')
+            ->where('customers.document', $customerDocument)
+            ->where('service_orders.tracking_token_hash', $trackingTokenHash)
+            ->select('service_orders.*')
+            ->firstOrFail();
+
+        return $this->toDomain($model);
+    }
+
     public function update(ServiceOrder $serviceOrder): ServiceOrder
     {
-        $model = ServiceOrderModel::query()->findOrFail($serviceOrder->id);
-        $this->fill($model, $serviceOrder)->save();
+        $model = DB::transaction(function () use ($serviceOrder): ServiceOrderModel {
+            $model = ServiceOrderModel::query()->findOrFail($serviceOrder->id);
+            $this->fill($model, $serviceOrder)->save();
+
+            foreach ($serviceOrder->services() as $service) {
+                ServiceOrderServiceModel::query()->updateOrCreate(
+                    [
+                        'service_order_id' => $model->getKey(),
+                        'service_id' => $service->serviceId,
+                    ],
+                    [
+                        'quantity' => $service->quantity,
+                        'unit_price_snapshot' => $service->unitPriceSnapshot->cents,
+                    ],
+                );
+            }
+
+            return $model;
+        });
 
         return $this->toDomain($model);
     }
@@ -72,10 +101,11 @@ class EloquentServiceOrderRepository implements ServiceOrderRepository
             'finalized_at' => $serviceOrder->finalizedAt,
             'delivered_at' => $serviceOrder->deliveredAt,
             'cancelled_at' => $serviceOrder->cancelledAt,
+            'tracking_token_hash' => $serviceOrder->trackingTokenHash,
         ]);
     }
 
-    private function toDomain(ServiceOrderModel $model): ServiceOrder
+    private function toDomain(ServiceOrderModel $model, ?string $trackingToken = null): ServiceOrder
     {
         $services = ServiceOrderServiceModel::query()
             ->where('service_order_id', $model->getKey())
@@ -114,6 +144,8 @@ class EloquentServiceOrderRepository implements ServiceOrderRepository
             $model->cancelled_at,
             $services,
             $inventoryItems,
+            $model->tracking_token_hash,
+            $trackingToken,
         );
     }
 }

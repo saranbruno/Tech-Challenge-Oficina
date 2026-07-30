@@ -7,6 +7,7 @@ use App\Application\Inventory\Exceptions\InventoryItemHasMovements;
 use App\Application\ServiceOrder\Exceptions\VehicleDoesNotBelongToCustomer;
 use App\Application\Vehicle\Exceptions\DuplicateLicensePlate;
 use App\Domain\Customer\Exceptions\InvalidDocument;
+use App\Domain\ServiceOrder\Exceptions\InvalidAdditionalRepair;
 use App\Domain\ServiceOrder\Exceptions\InvalidServiceOrderBudget;
 use App\Domain\ServiceOrder\Exceptions\InvalidServiceOrderTransition;
 use App\Domain\Vehicle\Exceptions\InvalidLicensePlate;
@@ -104,6 +105,10 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $exceptions->render(function (InvalidServiceOrderBudget $exception, Request $request) {
             return ApiErrorResponse::make('invalid_service_order_budget', $exception->getMessage(), 409);
+        });
+
+        $exceptions->render(function (InvalidAdditionalRepair $exception, Request $request) {
+            return ApiErrorResponse::make('invalid_additional_repair', $exception->getMessage(), 409);
         });
 
         $exceptions->render(function (InvalidLicensePlate $exception, Request $request) {

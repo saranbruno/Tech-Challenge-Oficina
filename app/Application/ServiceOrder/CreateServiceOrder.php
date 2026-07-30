@@ -45,7 +45,14 @@ final readonly class CreateServiceOrder
             throw new VehicleDoesNotBelongToCustomer('O veiculo informado nao pertence ao cliente identificado.');
         }
 
-        $serviceOrder = ServiceOrder::receive($customer->id, $vehicle->id, $receivedAt);
+        $trackingToken = bin2hex(random_bytes(32));
+        $serviceOrder = ServiceOrder::receive(
+            $customer->id,
+            $vehicle->id,
+            $receivedAt,
+            hash('sha256', $trackingToken),
+            $trackingToken,
+        );
 
         foreach ($requestedServices as $requestedService) {
             if (! $requestedService instanceof RequestedServiceData) {

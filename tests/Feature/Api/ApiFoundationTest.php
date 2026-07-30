@@ -47,6 +47,8 @@ class ApiFoundationTest extends TestCase
             'api/admin/inventory-items/{inventoryItem}/movements',
             'api/admin/inventory-items/{inventoryItem}/stock',
             'api/admin/service-orders',
+            'api/admin/service-orders/{serviceOrder}/additional-repairs',
+            'api/admin/service-orders/{serviceOrder}/cancel',
             'api/admin/service-orders/{serviceOrder}/diagnosis/complete',
             'api/admin/service-orders/{serviceOrder}/diagnosis/start',
             'api/admin/services',
@@ -59,6 +61,8 @@ class ApiFoundationTest extends TestCase
             'api/admin/vehicles/{vehicle}',
             'api/admin/vehicles/{vehicle}',
             'api/admin/vehicles/{vehicle}',
+            'api/client/service-orders/approve',
+            'api/client/service-orders/tracking',
         ], $apiRoutes);
     }
 }

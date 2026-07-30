@@ -40,4 +40,6 @@ Route::middleware('auth:api')->group(function (): void {
     Route::post('service-orders', [ServiceOrderController::class, 'store'])->name('service-orders.store');
     Route::post('service-orders/{serviceOrder}/diagnosis/start', [ServiceOrderController::class, 'startDiagnosis'])->name('service-orders.diagnosis.start');
     Route::post('service-orders/{serviceOrder}/diagnosis/complete', [ServiceOrderController::class, 'completeDiagnosis'])->name('service-orders.diagnosis.complete');
+    Route::post('service-orders/{serviceOrder}/cancel', [ServiceOrderController::class, 'cancel'])->name('service-orders.cancel');
+    Route::post('service-orders/{serviceOrder}/additional-repairs', [ServiceOrderController::class, 'addAdditionalRepairs'])->name('service-orders.additional-repairs.store');
 });

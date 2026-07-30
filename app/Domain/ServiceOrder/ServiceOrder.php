@@ -3,6 +3,7 @@
 namespace App\Domain\ServiceOrder;
 
 use App\Domain\ServiceOrder\Enums\ServiceOrderStatus;
+use App\Domain\ServiceOrder\Exceptions\InvalidAdditionalRepair;
 use App\Domain\ServiceOrder\Exceptions\InvalidServiceOrderBudget;
 use App\Domain\ServiceOrder\Exceptions\InvalidServiceOrderTransition;
 use DateTimeImmutable;
@@ -25,11 +26,26 @@ final class ServiceOrder
         public private(set) ?DateTimeImmutable $finalizedAt = null,
         public private(set) ?DateTimeImmutable $deliveredAt = null,
         public private(set) ?DateTimeImmutable $cancelledAt = null,
+        public readonly ?string $trackingTokenHash = null,
+        public readonly ?string $trackingToken = null,
     ) {}
 
-    public static function receive(int $customerId, int $vehicleId, DateTimeImmutable $receivedAt): self
-    {
-        return new self(null, $customerId, $vehicleId, ServiceOrderStatus::Received, $receivedAt);
+    public static function receive(
+        int $customerId,
+        int $vehicleId,
+        DateTimeImmutable $receivedAt,
+        ?string $trackingTokenHash = null,
+        ?string $trackingToken = null,
+    ): self {
+        return new self(
+            null,
+            $customerId,
+            $vehicleId,
+            ServiceOrderStatus::Received,
+            $receivedAt,
+            trackingTokenHash: $trackingTokenHash,
+            trackingToken: $trackingToken,
+        );
     }
 
     public static function reconstitute(
@@ -46,6 +62,8 @@ final class ServiceOrder
         ?DateTimeImmutable $cancelledAt,
         array $services = [],
         array $inventoryItems = [],
+        ?string $trackingTokenHash = null,
+        ?string $trackingToken = null,
     ): self {
         $serviceOrder = new self(
             $id,
@@ -59,6 +77,8 @@ final class ServiceOrder
             $finalizedAt,
             $deliveredAt,
             $cancelledAt,
+            $trackingTokenHash,
+            $trackingToken,
         );
 
         foreach ($services as $service) {
@@ -84,6 +104,19 @@ final class ServiceOrder
     public function services(): array
     {
         return array_values($this->services);
+    }
+
+    public function addAdditionalService(ServiceOrderService $service): void
+    {
+        if ($this->status !== ServiceOrderStatus::AwaitingApproval) {
+            throw new InvalidServiceOrderTransition('Reparos adicionais somente podem ser incluidos enquanto a ordem aguarda aprovacao.');
+        }
+
+        if (isset($this->services[$service->serviceId])) {
+            throw new InvalidAdditionalRepair('O servico adicional ja pertence a ordem de servico.');
+        }
+
+        $this->services[$service->serviceId] = $service;
     }
 
     public function addInventoryItem(ServiceOrderInventoryItem $inventoryItem): void

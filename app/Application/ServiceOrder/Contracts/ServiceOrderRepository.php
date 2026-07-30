@@ -10,5 +10,7 @@ interface ServiceOrderRepository
 
     public function findOrFail(int $id): ServiceOrder;
 
+    public function findForClientOrFail(string $customerDocument, string $trackingTokenHash): ServiceOrder;
+
     public function update(ServiceOrder $serviceOrder): ServiceOrder;
 }

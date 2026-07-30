@@ -17,6 +17,7 @@ use Illuminate\Database\Eloquent\Model;
     'finalized_at',
     'delivered_at',
     'cancelled_at',
+    'tracking_token_hash',
 ])]
 class ServiceOrderModel extends Model
 {
