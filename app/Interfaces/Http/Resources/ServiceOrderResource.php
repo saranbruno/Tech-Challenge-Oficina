@@ -18,6 +18,8 @@ class ServiceOrderResource extends JsonResource
             'diagnosis_started_at' => $this->resource->diagnosisStartedAt?->format(DATE_ATOM),
             'awaiting_approval_at' => $this->resource->awaitingApprovalAt?->format(DATE_ATOM),
             'execution_started_at' => $this->resource->executionStartedAt?->format(DATE_ATOM),
+            'finalized_at' => $this->resource->finalizedAt?->format(DATE_ATOM),
+            'delivered_at' => $this->resource->deliveredAt?->format(DATE_ATOM),
             'cancelled_at' => $this->resource->cancelledAt?->format(DATE_ATOM),
             'tracking_token' => $this->resource->trackingToken,
             'services' => array_map(fn ($service): array => [

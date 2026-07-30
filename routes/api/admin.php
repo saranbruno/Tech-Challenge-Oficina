@@ -37,9 +37,13 @@ Route::middleware('auth:api')->group(function (): void {
     Route::put('inventory-items/{inventoryItem}/stock', [InventoryItemController::class, 'adjustStock'])->name('inventory-items.stock.update');
     Route::get('inventory-items/{inventoryItem}/movements', [InventoryItemController::class, 'movements'])->name('inventory-items.movements.index');
     Route::delete('inventory-items/{inventoryItem}', [InventoryItemController::class, 'destroy'])->name('inventory-items.destroy');
+    Route::get('service-orders', [ServiceOrderController::class, 'index'])->name('service-orders.index');
     Route::post('service-orders', [ServiceOrderController::class, 'store'])->name('service-orders.store');
+    Route::get('service-orders/{serviceOrder}', [ServiceOrderController::class, 'show'])->name('service-orders.show');
     Route::post('service-orders/{serviceOrder}/diagnosis/start', [ServiceOrderController::class, 'startDiagnosis'])->name('service-orders.diagnosis.start');
     Route::post('service-orders/{serviceOrder}/diagnosis/complete', [ServiceOrderController::class, 'completeDiagnosis'])->name('service-orders.diagnosis.complete');
+    Route::post('service-orders/{serviceOrder}/finalize', [ServiceOrderController::class, 'finalize'])->name('service-orders.finalize');
+    Route::post('service-orders/{serviceOrder}/deliver', [ServiceOrderController::class, 'deliver'])->name('service-orders.deliver');
     Route::post('service-orders/{serviceOrder}/cancel', [ServiceOrderController::class, 'cancel'])->name('service-orders.cancel');
     Route::post('service-orders/{serviceOrder}/additional-repairs', [ServiceOrderController::class, 'addAdditionalRepairs'])->name('service-orders.additional-repairs.store');
 });

@@ -592,6 +592,30 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
   /admin/service-orders:
+    get:
+      operationId: listServiceOrders
+      summary: Lista as Ordens de Servico
+      tags:
+        - Service Orders
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: per_page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 15
+      responses:
+        '200':
+          description: Lista paginada de Ordens de Servico
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceOrderCollection'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
     post:
       operationId: createServiceOrder
       summary: Cria uma Ordem de Servico completa com orcamento calculado
@@ -619,6 +643,27 @@ paths:
           $ref: '#/components/responses/NotFound'
         '422':
           $ref: '#/components/responses/ValidationError'
+  /admin/service-orders/{serviceOrder}:
+    parameters:
+      - $ref: '#/components/parameters/ServiceOrderId'
+    get:
+      operationId: getServiceOrder
+      summary: Detalha uma Ordem de Servico
+      tags:
+        - Service Orders
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Detalhes da Ordem de Servico
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceOrderResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /admin/service-orders/{serviceOrder}/diagnosis/start:
     parameters:
       - $ref: '#/components/parameters/ServiceOrderId'
@@ -680,6 +725,54 @@ paths:
       responses:
         '200':
           description: Ordem cancelada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceOrderResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /admin/service-orders/{serviceOrder}/finalize:
+    parameters:
+      - $ref: '#/components/parameters/ServiceOrderId'
+    post:
+      operationId: finalizeServiceOrder
+      summary: Finaliza a execucao de uma Ordem de Servico
+      description: Altera exclusivamente de in_execution para finalized e registra finalized_at.
+      tags:
+        - Service Orders
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Execucao finalizada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceOrderResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /admin/service-orders/{serviceOrder}/deliver:
+    parameters:
+      - $ref: '#/components/parameters/ServiceOrderId'
+    post:
+      operationId: deliverServiceOrder
+      summary: Registra a entrega de uma Ordem de Servico finalizada
+      description: Altera exclusivamente de finalized para delivered e registra delivered_at.
+      tags:
+        - Service Orders
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Veiculo entregue
           content:
             application/json:
               schema:
@@ -1348,6 +1441,10 @@ components:
         - received_at
         - diagnosis_started_at
         - awaiting_approval_at
+        - execution_started_at
+        - finalized_at
+        - delivered_at
+        - cancelled_at
         - services
         - inventory_items
         - total_amount
@@ -1365,6 +1462,8 @@ components:
             - in_diagnosis
             - awaiting_approval
             - in_execution
+            - finalized
+            - delivered
             - cancelled
         received_at:
           type: string
@@ -1380,6 +1479,16 @@ components:
             - 'null'
           format: date-time
         execution_started_at:
+          type:
+            - string
+            - 'null'
+          format: date-time
+        finalized_at:
+          type:
+            - string
+            - 'null'
+          format: date-time
+        delivered_at:
           type:
             - string
             - 'null'
@@ -1414,6 +1523,23 @@ components:
       properties:
         data:
           $ref: '#/components/schemas/ServiceOrder'
+    ServiceOrderCollection:
+      type: object
+      required:
+        - data
+        - links
+        - meta
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/ServiceOrder'
+        links:
+          type: object
+          additionalProperties: true
+        meta:
+          type: object
+          additionalProperties: true
     ClientServiceOrderResponse:
       type: object
       required:

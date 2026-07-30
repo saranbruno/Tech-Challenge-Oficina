@@ -7,6 +7,8 @@ use DateTimeImmutable;
 
 interface ServiceOrderRepository
 {
+    public function paginate(int $perPage): mixed;
+
     public function create(ServiceOrder $serviceOrder): ServiceOrder;
 
     public function findOrFail(int $id): ServiceOrder;

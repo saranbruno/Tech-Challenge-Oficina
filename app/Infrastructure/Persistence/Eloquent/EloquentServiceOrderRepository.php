@@ -20,6 +20,16 @@ use Illuminate\Support\Facades\DB;
 
 class EloquentServiceOrderRepository implements ServiceOrderRepository
 {
+    public function paginate(int $perPage): mixed
+    {
+        $paginator = ServiceOrderModel::query()->orderByDesc('id')->paginate($perPage);
+        $paginator->setCollection($paginator->getCollection()->map(
+            fn (ServiceOrderModel $model): ServiceOrder => $this->toDomain($model),
+        ));
+
+        return $paginator;
+    }
+
     public function create(ServiceOrder $serviceOrder): ServiceOrder
     {
         return DB::transaction(function () use ($serviceOrder): ServiceOrder {

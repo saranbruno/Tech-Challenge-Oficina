@@ -8,12 +8,18 @@ use App\Application\ServiceOrder\CompleteServiceOrderDiagnosis;
 use App\Application\ServiceOrder\CreateServiceOrder;
 use App\Application\ServiceOrder\Data\RequestedInventoryItemData;
 use App\Application\ServiceOrder\Data\RequestedServiceData;
+use App\Application\ServiceOrder\DeliverServiceOrder;
+use App\Application\ServiceOrder\FinalizeServiceOrder;
+use App\Application\ServiceOrder\GetServiceOrder;
+use App\Application\ServiceOrder\ListServiceOrders;
 use App\Application\ServiceOrder\StartServiceOrderDiagnosis;
 use App\Interfaces\Http\Requests\ServiceOrder\AddAdditionalRepairsRequest;
 use App\Interfaces\Http\Requests\ServiceOrder\StoreServiceOrderRequest;
 use App\Interfaces\Http\Resources\ServiceOrderResource;
 use DateTimeImmutable;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 class ServiceOrderController
 {
@@ -22,8 +28,19 @@ class ServiceOrderController
         private readonly CancelServiceOrder $cancelServiceOrder,
         private readonly CompleteServiceOrderDiagnosis $completeServiceOrderDiagnosis,
         private readonly CreateServiceOrder $createServiceOrder,
+        private readonly DeliverServiceOrder $deliverServiceOrder,
+        private readonly FinalizeServiceOrder $finalizeServiceOrder,
+        private readonly GetServiceOrder $getServiceOrder,
+        private readonly ListServiceOrders $listServiceOrders,
         private readonly StartServiceOrderDiagnosis $startServiceOrderDiagnosis,
     ) {}
+
+    public function index(Request $request): AnonymousResourceCollection
+    {
+        $perPage = min(max($request->integer('per_page', 15), 1), 100);
+
+        return ServiceOrderResource::collection($this->listServiceOrders->execute($perPage));
+    }
 
     public function store(StoreServiceOrderRequest $request): JsonResponse
     {
@@ -58,6 +75,11 @@ class ServiceOrderController
         ));
     }
 
+    public function show(int $serviceOrder): ServiceOrderResource
+    {
+        return new ServiceOrderResource($this->getServiceOrder->execute($serviceOrder));
+    }
+
     public function completeDiagnosis(int $serviceOrder): ServiceOrderResource
     {
         return new ServiceOrderResource($this->completeServiceOrderDiagnosis->execute(
@@ -69,6 +91,22 @@ class ServiceOrderController
     public function cancel(int $serviceOrder): ServiceOrderResource
     {
         return new ServiceOrderResource($this->cancelServiceOrder->execute($serviceOrder, new DateTimeImmutable));
+    }
+
+    public function finalize(int $serviceOrder): ServiceOrderResource
+    {
+        return new ServiceOrderResource($this->finalizeServiceOrder->execute(
+            $serviceOrder,
+            new DateTimeImmutable,
+        ));
+    }
+
+    public function deliver(int $serviceOrder): ServiceOrderResource
+    {
+        return new ServiceOrderResource($this->deliverServiceOrder->execute(
+            $serviceOrder,
+            new DateTimeImmutable,
+        ));
     }
 
     public function addAdditionalRepairs(
