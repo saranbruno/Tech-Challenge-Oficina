@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="vendor/phpunit/phpunit/phpunit.xsd"
+         bootstrap="vendor/autoload.php"
+         colors="true"
+>
+    <testsuites>
+        <testsuite name="Critical Domain">
+            <directory>tests/Unit/Domain</directory>
+        </testsuite>
+    </testsuites>
+    <source>
+        <include>
+            <file>app/Domain/Customer/ValueObjects/Document.php</file>
+            <file>app/Domain/Inventory/ValueObjects/StockQuantity.php</file>
+            <file>app/Domain/Service/ValueObjects/UnitPrice.php</file>
+            <file>app/Domain/ServiceOrder/ServiceOrder.php</file>
+            <file>app/Domain/ServiceOrder/ServiceOrderExecutionTimeCalculator.php</file>
+            <file>app/Domain/ServiceOrder/ServiceOrderInventoryItem.php</file>
+            <file>app/Domain/ServiceOrder/ServiceOrderService.php</file>
+            <file>app/Domain/Vehicle/ValueObjects/LicensePlate.php</file>
+        </include>
+    </source>
+</phpunit>

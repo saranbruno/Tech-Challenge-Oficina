@@ -4,6 +4,7 @@ namespace Tests\Unit\Domain\ServiceOrder;
 
 use App\Domain\Service\ValueObjects\UnitPrice;
 use App\Domain\ServiceOrder\Enums\ServiceOrderStatus;
+use App\Domain\ServiceOrder\Exceptions\InvalidAdditionalRepair;
 use App\Domain\ServiceOrder\Exceptions\InvalidServiceOrderBudget;
 use App\Domain\ServiceOrder\Exceptions\InvalidServiceOrderTransition;
 use App\Domain\ServiceOrder\ServiceOrder;
@@ -83,6 +84,34 @@ class ServiceOrderTest extends TestCase
         $this->expectException(InvalidServiceOrderBudget::class);
 
         $order->makeBudgetAvailable(new DateTimeImmutable('2026-07-22 10:00:00'));
+    }
+
+    public function test_additional_service_is_added_only_while_awaiting_approval(): void
+    {
+        $order = $this->orderAt(ServiceOrderStatus::AwaitingApproval);
+        $additionalService = new ServiceOrderService(2, 1, new UnitPrice(5000));
+
+        $order->addAdditionalService($additionalService);
+
+        self::assertSame([1, 2], array_column($order->services(), 'serviceId'));
+    }
+
+    public function test_duplicate_additional_service_is_rejected(): void
+    {
+        $order = $this->orderAt(ServiceOrderStatus::AwaitingApproval);
+
+        $this->expectException(InvalidAdditionalRepair::class);
+
+        $order->addAdditionalService(new ServiceOrderService(1, 1, new UnitPrice(5000)));
+    }
+
+    public function test_additional_service_is_rejected_outside_awaiting_approval(): void
+    {
+        $order = ServiceOrder::receive(1, 2, new DateTimeImmutable('2026-07-22 09:00:00'));
+
+        $this->expectException(InvalidServiceOrderTransition::class);
+
+        $order->addAdditionalService(new ServiceOrderService(2, 1, new UnitPrice(5000)));
     }
 
     #[DataProvider('cancellableStatusProvider')]

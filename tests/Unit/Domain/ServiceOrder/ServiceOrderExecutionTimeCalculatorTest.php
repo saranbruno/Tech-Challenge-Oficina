@@ -48,6 +48,29 @@ class ServiceOrderExecutionTimeCalculatorTest extends TestCase
         ], $result['average_seconds_by_status']);
     }
 
+    #[Test]
+    public function it_ignores_orders_without_every_required_instant(): void
+    {
+        $incomplete = ServiceOrder::reconstitute(
+            1,
+            1,
+            1,
+            ServiceOrderStatus::Delivered,
+            new DateTimeImmutable('@0'),
+            new DateTimeImmutable('@10'),
+            null,
+            new DateTimeImmutable('@30'),
+            new DateTimeImmutable('@40'),
+            new DateTimeImmutable('@50'),
+            null,
+        );
+
+        $result = (new ServiceOrderExecutionTimeCalculator)->calculate([$incomplete]);
+
+        self::assertSame(0, $result['eligible_orders']);
+        self::assertNull($result['average_total_seconds']);
+    }
+
     private function deliveredOrder(array $offsets, int $id = 1): ServiceOrder
     {
         $instant = fn (int $offset): DateTimeImmutable => (new DateTimeImmutable('@0'))->modify("+{$offset} seconds");

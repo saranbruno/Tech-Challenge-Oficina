@@ -3,8 +3,10 @@ FROM composer:2.10.2 AS composer
 FROM php:8.5.8-cli
 
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends libpq-dev unzip \
+    && apt-get install -y --no-install-recommends libpq-dev unzip $PHPIZE_DEPS \
     && docker-php-ext-install pdo_pgsql \
+    && pecl install pcov-1.0.12 \
+    && docker-php-ext-enable pcov \
     && rm -rf /var/lib/apt/lists/*
 
 COPY --from=composer /usr/bin/composer /usr/bin/composer

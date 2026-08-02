@@ -49,10 +49,27 @@ class ServiceOrderBudgetTest extends TestCase
         ));
     }
 
+    public function test_duplicate_service_is_rejected(): void
+    {
+        $order = ServiceOrder::receive(1, 1, new DateTimeImmutable);
+        $order->addService(new ServiceOrderService(1, 1, new UnitPrice(1000)));
+
+        $this->expectException(DomainException::class);
+
+        $order->addService(new ServiceOrderService(1, 2, new UnitPrice(1000)));
+    }
+
     public function test_non_positive_inventory_quantity_is_rejected(): void
     {
         $this->expectException(DomainException::class);
 
         new ServiceOrderInventoryItem(1, InventoryItemType::Supply, 0, new UnitPrice(1000));
+    }
+
+    public function test_invalid_inventory_item_is_rejected(): void
+    {
+        $this->expectException(DomainException::class);
+
+        new ServiceOrderInventoryItem(0, InventoryItemType::Part, 1, new UnitPrice(1000));
     }
 }
