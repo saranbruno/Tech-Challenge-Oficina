@@ -7,6 +7,12 @@ use DateTimeImmutable;
 
 interface ServiceOrderRepository
 {
+    public function completedForMetrics(
+        ?DateTimeImmutable $deliveredFrom,
+        ?DateTimeImmutable $deliveredTo,
+        ?int $serviceId,
+    ): array;
+
     public function paginate(int $perPage): mixed;
 
     public function create(ServiceOrder $serviceOrder): ServiceOrder;

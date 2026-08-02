@@ -48,6 +48,7 @@ class ApiFoundationTest extends TestCase
             'api/admin/inventory-items/{inventoryItem}/stock',
             'api/admin/service-orders',
             'api/admin/service-orders',
+            'api/admin/service-orders-metrics/execution-time',
             'api/admin/service-orders/{serviceOrder}',
             'api/admin/service-orders/{serviceOrder}/additional-repairs',
             'api/admin/service-orders/{serviceOrder}/cancel',

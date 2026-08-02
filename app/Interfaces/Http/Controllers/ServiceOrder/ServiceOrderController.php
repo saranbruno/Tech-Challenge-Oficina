@@ -11,9 +11,11 @@ use App\Application\ServiceOrder\Data\RequestedServiceData;
 use App\Application\ServiceOrder\DeliverServiceOrder;
 use App\Application\ServiceOrder\FinalizeServiceOrder;
 use App\Application\ServiceOrder\GetServiceOrder;
+use App\Application\ServiceOrder\GetServiceOrderExecutionTimeMetrics;
 use App\Application\ServiceOrder\ListServiceOrders;
 use App\Application\ServiceOrder\StartServiceOrderDiagnosis;
 use App\Interfaces\Http\Requests\ServiceOrder\AddAdditionalRepairsRequest;
+use App\Interfaces\Http\Requests\ServiceOrder\ServiceOrderExecutionTimeRequest;
 use App\Interfaces\Http\Requests\ServiceOrder\StoreServiceOrderRequest;
 use App\Interfaces\Http\Resources\ServiceOrderResource;
 use DateTimeImmutable;
@@ -31,6 +33,7 @@ class ServiceOrderController
         private readonly DeliverServiceOrder $deliverServiceOrder,
         private readonly FinalizeServiceOrder $finalizeServiceOrder,
         private readonly GetServiceOrder $getServiceOrder,
+        private readonly GetServiceOrderExecutionTimeMetrics $getServiceOrderExecutionTimeMetrics,
         private readonly ListServiceOrders $listServiceOrders,
         private readonly StartServiceOrderDiagnosis $startServiceOrderDiagnosis,
     ) {}
@@ -40,6 +43,18 @@ class ServiceOrderController
         $perPage = min(max($request->integer('per_page', 15), 1), 100);
 
         return ServiceOrderResource::collection($this->listServiceOrders->execute($perPage));
+    }
+
+    public function executionTime(ServiceOrderExecutionTimeRequest $request): JsonResponse
+    {
+        $deliveredFrom = $request->validated('delivered_from');
+        $deliveredTo = $request->validated('delivered_to');
+
+        return response()->json(['data' => $this->getServiceOrderExecutionTimeMetrics->execute(
+            $deliveredFrom === null ? null : new DateTimeImmutable($deliveredFrom),
+            $deliveredTo === null ? null : new DateTimeImmutable($deliveredTo),
+            $request->validated('service_id'),
+        )]);
     }
 
     public function store(StoreServiceOrderRequest $request): JsonResponse

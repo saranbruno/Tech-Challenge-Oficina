@@ -643,6 +643,42 @@ paths:
           $ref: '#/components/responses/NotFound'
         '422':
           $ref: '#/components/responses/ValidationError'
+  /admin/service-orders-metrics/execution-time:
+    get:
+      operationId: getServiceOrderExecutionTimeMetrics
+      summary: Consulta o tempo medio do ciclo e de cada status
+      description: Considera somente Ordens de Servico entregues com todos os instantes do ciclo. Sem filtros, retorna o resultado geral. O periodo se aplica ao instante de entrega.
+      tags:
+        - Service Orders
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: delivered_from
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: delivered_to
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: service_id
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+      responses:
+        '200':
+          description: Medias em segundos e quantidade de ordens elegiveis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceOrderExecutionTimeResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '422':
+          $ref: '#/components/responses/ValidationError'
   /admin/service-orders/{serviceOrder}:
     parameters:
       - $ref: '#/components/parameters/ServiceOrderId'
@@ -1523,6 +1559,55 @@ components:
       properties:
         data:
           $ref: '#/components/schemas/ServiceOrder'
+    ServiceOrderExecutionTimeResponse:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          type: object
+          required:
+            - eligible_orders
+            - average_total_seconds
+            - average_seconds_by_status
+          properties:
+            eligible_orders:
+              type: integer
+              minimum: 0
+            average_total_seconds:
+              type:
+                - integer
+                - 'null'
+              minimum: 0
+            average_seconds_by_status:
+              type: object
+              required:
+                - received
+                - in_diagnosis
+                - awaiting_approval
+                - in_execution
+                - finalized
+              properties:
+                received:
+                  type:
+                    - integer
+                    - 'null'
+                in_diagnosis:
+                  type:
+                    - integer
+                    - 'null'
+                awaiting_approval:
+                  type:
+                    - integer
+                    - 'null'
+                in_execution:
+                  type:
+                    - integer
+                    - 'null'
+                finalized:
+                  type:
+                    - integer
+                    - 'null'
     ServiceOrderCollection:
       type: object
       required:

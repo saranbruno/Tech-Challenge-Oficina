@@ -38,6 +38,7 @@ Route::middleware('auth:api')->group(function (): void {
     Route::get('inventory-items/{inventoryItem}/movements', [InventoryItemController::class, 'movements'])->name('inventory-items.movements.index');
     Route::delete('inventory-items/{inventoryItem}', [InventoryItemController::class, 'destroy'])->name('inventory-items.destroy');
     Route::get('service-orders', [ServiceOrderController::class, 'index'])->name('service-orders.index');
+    Route::get('service-orders-metrics/execution-time', [ServiceOrderController::class, 'executionTime'])->name('service-orders.metrics.execution-time');
     Route::post('service-orders', [ServiceOrderController::class, 'store'])->name('service-orders.store');
     Route::get('service-orders/{serviceOrder}', [ServiceOrderController::class, 'show'])->name('service-orders.show');
     Route::post('service-orders/{serviceOrder}/diagnosis/start', [ServiceOrderController::class, 'startDiagnosis'])->name('service-orders.diagnosis.start');
