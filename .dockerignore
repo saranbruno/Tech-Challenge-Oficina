@@ -6,5 +6,6 @@ storage/logs
 storage/framework/cache
 storage/framework/sessions
 storage/framework/views
-docs
+docs/*
+!docs/openapi.yaml
 README.md

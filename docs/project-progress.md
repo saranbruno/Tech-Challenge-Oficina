@@ -4,7 +4,7 @@
 
 - Projeto: Tech-Challenge-Oficina
 - Autor: Bruno da Silva Saran
-- Dia atual: 19
+- Dia atual: 20
 - Estado atual: Concluído
 
 ## Roadmap
@@ -30,7 +30,7 @@
 | 17 | Tempo medio e tempo por status | Concluído | 2026-08-02 | 2026-08-02 |
 | 18 | Auditoria dos testes de dominio | Concluído | 2026-08-02 | 2026-08-02 |
 | 19 | Testes de integracao e fluxo completo | Concluído | 2026-08-02 | 2026-08-02 |
-| 20 | OpenAPI e Swagger | Pendente |  |  |
+| 20 | OpenAPI e Swagger | Concluído | 2026-08-02 | 2026-08-02 |
 | 21 | Linguagem Ubiqua e diagramas DDD | Pendente |  |  |
 | 22 | Event Storming | Pendente |  |  |
 | 23 | Scan e analise de vulnerabilidades | Pendente |  |  |
@@ -1178,6 +1178,73 @@ Nenhum endpoint criado ou modificado.
 
 Cobertura integrada medida com PCOV 1.0.12 e PHPUnit 12.5.31 contra PostgreSQL: 100% das oito classes criticas, dos 30 metodos e das 165 linhas. O relatorio reproduzivel e gerado em `build/coverage-integration.xml` e permanece fora do versionamento.
 
+## Dia 20
+
+### Resumo
+
+A especificacao OpenAPI 3.1 foi revisada integralmente contra as rotas implementadas. As 37 operacoes da API possuem correspondencia exata de metodo e caminho, com JWT administrativo, requests, responses, erros, schemas, exemplos e estados da OS documentados. O schema publico da OS foi corrigido para refletir `received_at`, servicos e itens de estoque realmente retornados sem expor IDs administrativos. O Swagger UI 5.32.1 foi disponibilizado em `/docs`, consumindo o contrato servido em `/docs/openapi.yaml`.
+
+### Arquivos principais alterados
+
+- `docs/openapi.yaml`
+- `.dockerignore`
+- `routes/web.php`
+- `resources/views/swagger.blade.php`
+- `tests/Feature/SwaggerDocumentationTest.php`
+- `README.md`
+- `docs/architecture.md`
+- `docs/project-progress.md`
+
+### Migrations criadas
+
+Nenhuma migration criada.
+
+### Endpoints adicionados
+
+- `GET /docs`
+- `GET /docs/openapi.yaml`
+
+Nenhuma operacao da API de dominio foi criada ou modificada.
+
+### Testes executados
+
+- Comparacao automatica entre `php artisan route:list --path=api --json` e o bundle JSON do OpenAPI
+- `npx --yes @redocly/cli lint docs/openapi.yaml`
+- `npx --yes @redocly/cli bundle docs/openapi.yaml --output=/tmp/oficina-openapi.json --ext=json`
+- `docker compose up -d --build --force-recreate app`
+- `docker compose exec -T app ./vendor/bin/phpunit tests/Feature/SwaggerDocumentationTest.php --display-warnings`
+- `docker compose exec -T app ./vendor/bin/phpunit --display-warnings`
+- `docker compose exec -T app ./vendor/bin/pint --test`
+- `docker compose config --quiet`
+- `docker compose exec -T app composer audit`
+- Requisicoes HTTP para `/docs`, `/docs/openapi.yaml`, assets do Swagger UI e `/up`
+- Comparacao byte a byte entre o OpenAPI versionado e o documento servido
+- Busca por comentarios nos arquivos de codigo e configuracao criados ou alterados
+- `git diff --check`
+
+### Resultado real dos testes
+
+- A auditoria confirmou 37 rotas de API implementadas e 37 operacoes documentadas, sem ausencias ou operacoes ficticias.
+- A primeira validacao OpenAPI encontrou uma chave `example` duplicada; a duplicata foi removida e o lint final passou sem erros ou avisos.
+- O primeiro teste do documento servido retornou 500 porque `docs` estava excluido da imagem; o `.dockerignore` foi ajustado para incluir somente `docs/openapi.yaml`.
+- O teste seguinte revelou que `BinaryFileResponse` nao expoe o arquivo como corpo textual no ambiente de teste; a verificacao foi corrigida para inspecionar o arquivo associado a resposta.
+- Testes documentais finais: 2 testes e 9 assercoes aprovados.
+- PHPUnit completo final: 131 testes e 466 assercoes aprovados, sem falhas, usando PostgreSQL.
+- Pint: 164 arquivos aprovados, sem problemas de estilo.
+- Build Docker concluido com sucesso e aplicacao recriada.
+- Swagger UI respondeu HTTP 200 em `/docs`.
+- O contrato respondeu HTTP 200 e `application/yaml` em `/docs/openapi.yaml`, identico ao arquivo versionado.
+- Os assets JavaScript e CSS fixados do Swagger UI 5.32.1 responderam HTTP 200.
+- OpenAPI validado e empacotado sem erros ou avisos.
+- Composer audit: nenhum advisory de seguranca encontrado.
+- Aplicacao respondeu HTTP 200 em `/up`.
+- Nenhum comentario foi adicionado aos arquivos de codigo ou configuracao criados ou alterados.
+- `git diff --check` nao encontrou erros.
+
+### Cobertura
+
+Nao medida novamente no Dia 20. A medicao integrada do Dia 19 permanece em 100% das oito classes criticas, dos 30 metodos e das 165 linhas.
+
 ## Decisoes confirmadas
 
 - Usar as versoes estaveis mais atuais possiveis.
@@ -1214,4 +1281,4 @@ Nenhum bloqueio atual.
 
 ## Escopo previsto para o proximo dia
 
-Dia 20: revisar todos os endpoints implementados, completar e validar a especificacao OpenAPI, documentar autenticacao, requests, responses, erros e schemas, remover divergencias e disponibilizar Swagger UI ou equivalente sem comentarios PHP.
+Dia 21: criar a Linguagem Ubiqua e os diagramas DDD confirmados de Contexto Estrategico, Agregados, Classes de Dominio e Sequencia dos fluxos principais, refletindo somente componentes realmente implementados.

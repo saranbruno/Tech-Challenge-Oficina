@@ -85,6 +85,10 @@ Erros da API utilizam um envelope consistente:
 
 `details` e omitido quando nao ha informacoes adicionais. Erros de validacao usam `validation_error`, falhas de autenticacao usam `unauthenticated` e respostas HTTP conhecidas possuem codigos estaveis.
 
+## Documentacao executavel da API
+
+O contrato OpenAPI 3.1 permanece desacoplado do codigo PHP em `docs/openapi.yaml`, sem DocBlocks ou anotacoes. A rota `/docs/openapi.yaml` serve esse arquivo e `/docs` renderiza o Swagger UI 5.32.1. O visualizador e exclusivamente documental e usa `/api` como base para executar as operacoes descritas.
+
 ## Convencoes
 
 - Identificadores do codigo e contratos da API sao escritos em ingles.

@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Tech-Challenge-Oficina API
-  version: 0.1.0
+  version: 1.0.0
   description: API do Sistema Integrado de Atendimento e Execucao de Servicos da oficina.
   license:
     name: MIT
@@ -9,6 +9,21 @@ info:
 servers:
   - url: /api
     description: Servidor da aplicacao
+tags:
+  - name: Authentication
+    description: Autenticacao administrativa JWT.
+  - name: Customers
+    description: Cadastro administrativo de clientes com CPF ou CNPJ.
+  - name: Vehicles
+    description: Cadastro administrativo de veiculos vinculados a clientes.
+  - name: Services
+    description: Catalogo administrativo de servicos.
+  - name: Inventory
+    description: Catalogo, estoque e movimentacoes de pecas e insumos.
+  - name: Service Orders
+    description: Criacao, ciclo de vida e monitoramento administrativo das Ordens de Servico.
+  - name: Client Service Orders
+    description: Acompanhamento e aprovacao seguros pelo cliente.
 paths:
   /admin/auth/login:
     post:
@@ -909,12 +924,14 @@ components:
       required: true
       schema:
         type: integer
+        minimum: 1
     ServiceOrderId:
       name: serviceOrder
       in: path
       required: true
       schema:
         type: integer
+        minimum: 1
   securitySchemes:
     bearerAuth:
       type: http
@@ -927,24 +944,43 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/ApiError'
+          example:
+            error:
+              code: unauthenticated
+              message: Autenticacao necessaria.
     ValidationError:
       description: Dados de entrada invalidos
       content:
         application/json:
           schema:
             $ref: '#/components/schemas/ApiError'
+          example:
+            error:
+              code: validation_error
+              message: Os dados informados sao invalidos.
+              details:
+                field:
+                  - O campo field e obrigatorio.
     Conflict:
       description: Conflito com o estado persistido
       content:
         application/json:
           schema:
             $ref: '#/components/schemas/ApiError'
+          example:
+            error:
+              code: invalid_service_order_transition
+              message: Transicao invalida para o estado atual da Ordem de Servico.
     NotFound:
       description: Recurso nao encontrado
       content:
         application/json:
           schema:
             $ref: '#/components/schemas/ApiError'
+          example:
+            error:
+              code: not_found
+              message: Recurso nao encontrado.
   schemas:
     LoginRequest:
       type: object
@@ -959,6 +995,7 @@ components:
         password:
           type: string
           format: password
+          example: senha-configurada-no-ambiente
     TokenResponse:
       type: object
       required:
@@ -969,15 +1006,18 @@ components:
       properties:
         access_token:
           type: string
+          example: eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...
         token_type:
           type: string
           const: bearer
         expires_in:
           type: integer
           description: Validade do acesso em segundos.
+          example: 3600
         refresh_expires_in:
           type: integer
           description: Janela total de renovacao em segundos.
+          example: 1209600
     AdminResponse:
       type: object
       required:
@@ -992,11 +1032,14 @@ components:
           properties:
             id:
               type: integer
+              example: 1
             name:
               type: string
+              example: Administrador
             email:
               type: string
               format: email
+              example: admin@example.com
     CustomerRequest:
       type: object
       required:
@@ -1022,11 +1065,13 @@ components:
       properties:
         id:
           type: integer
+          example: 1
         name:
           type: string
         document:
           type: string
           description: CPF ou CNPJ normalizado, somente com digitos.
+          example: '52998224725'
         document_type:
           type: string
           enum:
@@ -1067,6 +1112,7 @@ components:
       properties:
         customer_id:
           type: integer
+          example: 1
         license_plate:
           type: string
           maxLength: 10
@@ -1096,11 +1142,13 @@ components:
       properties:
         id:
           type: integer
+          example: 1
         customer_id:
           type: integer
         license_plate:
           type: string
           pattern: '^[A-Z]{3}([0-9]{4}|[0-9][A-Z][0-9]{2})$'
+          example: BRA1E23
         brand:
           type: string
         model:
@@ -1156,6 +1204,7 @@ components:
       properties:
         id:
           type: integer
+          example: 1
         name:
           type: string
         unit_price:
@@ -1163,6 +1212,7 @@ components:
           format: int64
           minimum: 0
           description: Valor unitario exato em centavos.
+          example: 15990
     ServiceResponse:
       type: object
       required:
@@ -1204,6 +1254,7 @@ components:
           enum:
             - part
             - supply
+          example: part
         unit_price:
           type: integer
           format: int64
@@ -1243,6 +1294,7 @@ components:
         quantity_available:
           type: integer
           minimum: 0
+          example: 8
           maximum: 2147483647
     InventoryItem:
       type: object
@@ -1360,6 +1412,7 @@ components:
       properties:
         service_id:
           type: integer
+          example: 1
         quantity:
           type: integer
           minimum: 1
@@ -1371,6 +1424,7 @@ components:
       properties:
         inventory_item_id:
           type: integer
+          example: 1
         quantity:
           type: integer
           minimum: 1
@@ -1388,6 +1442,7 @@ components:
           example: 529.982.247-25
         vehicle_id:
           type: integer
+          example: 1
         services:
           type: array
           minItems: 1
@@ -1415,10 +1470,12 @@ components:
       properties:
         customer_document:
           type: string
+          example: 529.982.247-25
         tracking_token:
           type: string
           minLength: 64
           maxLength: 64
+          example: 8f394ce8b625d4ed85ad7b3f3e70de5b22d48c3c7e607641e716b9e24a9f912d
     ServiceOrderServiceItem:
       type: object
       required:
@@ -1481,6 +1538,7 @@ components:
         - finalized_at
         - delivered_at
         - cancelled_at
+        - tracking_token
         - services
         - inventory_items
         - total_amount
@@ -1501,6 +1559,7 @@ components:
             - finalized
             - delivered
             - cancelled
+          example: awaiting_approval
         received_at:
           type: string
           format: date-time
@@ -1574,11 +1633,13 @@ components:
             eligible_orders:
               type: integer
               minimum: 0
+              example: 3
             average_total_seconds:
               type:
                 - integer
                 - 'null'
               minimum: 0
+              example: 86400
             average_seconds_by_status:
               type: object
               required:
@@ -1635,22 +1696,87 @@ components:
           required:
             - service_order_id
             - status
+            - received_at
             - approval_status
+            - services
+            - inventory_items
             - total_amount
           properties:
             service_order_id:
               type: integer
             status:
               type: string
+              enum:
+                - received
+                - in_diagnosis
+                - awaiting_approval
+                - in_execution
+                - finalized
+                - delivered
+                - cancelled
+            received_at:
+              type: string
+              format: date-time
             approval_status:
               type: string
               enum:
                 - not_available
                 - pending
                 - approved
+            services:
+              type: array
+              items:
+                $ref: '#/components/schemas/ClientServiceOrderServiceItem'
+            inventory_items:
+              type: array
+              items:
+                $ref: '#/components/schemas/ClientServiceOrderInventoryItem'
             total_amount:
               type: integer
               format: int64
+              minimum: 0
+    ClientServiceOrderServiceItem:
+      type: object
+      required:
+        - quantity
+        - unit_price
+        - subtotal
+      properties:
+        quantity:
+          type: integer
+          minimum: 1
+        unit_price:
+          type: integer
+          format: int64
+          minimum: 0
+        subtotal:
+          type: integer
+          format: int64
+          minimum: 0
+    ClientServiceOrderInventoryItem:
+      type: object
+      required:
+        - type
+        - quantity
+        - unit_price
+        - subtotal
+      properties:
+        type:
+          type: string
+          enum:
+            - part
+            - supply
+        quantity:
+          type: integer
+          minimum: 1
+        unit_price:
+          type: integer
+          format: int64
+          minimum: 0
+        subtotal:
+          type: integer
+          format: int64
+          minimum: 0
     ApiError:
       type: object
       required:
@@ -1664,8 +1790,10 @@ components:
           properties:
             code:
               type: string
+              example: validation_error
             message:
               type: string
+              example: Os dados informados sao invalidos.
             details:
               type: object
               additionalProperties: true

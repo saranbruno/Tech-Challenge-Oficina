@@ -111,9 +111,15 @@ O monolito utiliza DDD pragmatico com as camadas de Dominio, Aplicacao, Infraest
 
 As rotas administrativas e do cliente estao separadas sob `/api/admin` e `/api/client`. Os CRUDs implementados usam casos de uso independentes do transporte HTTP e persistencia Eloquent implementada na camada de Infraestrutura.
 
-## OpenAPI
+## OpenAPI e Swagger UI
 
-A especificacao incremental esta em `docs/openapi.yaml`. Ela documenta somente os endpoints implementados.
+A especificacao OpenAPI 3.1 esta em `docs/openapi.yaml` e documenta as 37 operacoes realmente implementadas, incluindo autenticacao, parametros, requests, responses, erros, exemplos e os sete estados atuais da OS. O Swagger UI 5.32.1 fica disponivel em `http://localhost:8081/docs` depois que o ambiente Docker inicia. O documento bruto servido para o visualizador pode ser consultado em `http://localhost:8081/docs/openapi.yaml`.
+
+Valide o contrato localmente com:
+
+```bash
+npx --yes @redocly/cli lint docs/openapi.yaml
+```
 
 ## Autenticacao JWT
 
