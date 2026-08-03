@@ -109,6 +109,8 @@ PostgreSQL foi escolhido como banco unico da aplicacao e dos testes de integraca
 
 O monolito utiliza DDD pragmatico com as camadas de Dominio, Aplicacao, Infraestrutura e Interface HTTP. As regras de dependencia e as convencoes estao descritas em `docs/architecture.md`.
 
+A documentacao do dominio inclui a [Linguagem Ubiqua](docs/ddd/ubiquitous-language.md) e os [diagramas DDD](docs/ddd/diagrams.md) de Contexto Estrategico, Agregados, Classes de Dominio e Sequencia dos fluxos principais.
+
 As rotas administrativas e do cliente estao separadas sob `/api/admin` e `/api/client`. Os CRUDs implementados usam casos de uso independentes do transporte HTTP e persistencia Eloquent implementada na camada de Infraestrutura.
 
 ## OpenAPI e Swagger UI

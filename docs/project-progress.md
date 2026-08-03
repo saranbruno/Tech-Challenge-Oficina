@@ -4,7 +4,7 @@
 
 - Projeto: Tech-Challenge-Oficina
 - Autor: Bruno da Silva Saran
-- Dia atual: 20
+- Dia atual: 21
 - Estado atual: Concluído
 
 ## Roadmap
@@ -31,7 +31,7 @@
 | 18 | Auditoria dos testes de dominio | Concluído | 2026-08-02 | 2026-08-02 |
 | 19 | Testes de integracao e fluxo completo | Concluído | 2026-08-02 | 2026-08-02 |
 | 20 | OpenAPI e Swagger | Concluído | 2026-08-02 | 2026-08-02 |
-| 21 | Linguagem Ubiqua e diagramas DDD | Pendente |  |  |
+| 21 | Linguagem Ubiqua e diagramas DDD | Concluído | 2026-08-02 | 2026-08-02 |
 | 22 | Event Storming | Pendente |  |  |
 | 23 | Scan e analise de vulnerabilidades | Pendente |  |  |
 | 24 | Validacao e entrega final | Pendente |  |  |
@@ -1245,6 +1245,64 @@ Nenhuma operacao da API de dominio foi criada ou modificada.
 
 Nao medida novamente no Dia 20. A medicao integrada do Dia 19 permanece em 100% das oito classes criticas, dos 30 metodos e das 165 linhas.
 
+## Dia 21
+
+### Resumo
+
+A Linguagem Ubiqua foi documentada com o mapeamento entre os termos do dominio em portugues e os identificadores em ingles realmente utilizados no codigo e na API. O glossario registra definicoes, regras, limites e sinonimos que devem ser evitados para Clientes, Veiculos, Servicos, Estoque, Ordem de Servico, Orçamento, Aprovação, ciclo operacional e metricas.
+
+Os diagramas DDD confirmados foram produzidos em Mermaid. O Contexto Estrategico delimita cinco contextos conceituais dentro do monolito; os diagramas de Agregados e Classes de Dominio representam entidades, objetos de valor, enums e limites de consistencia; e os diagramas de Sequencia cobrem criacao e disponibilizacao do orçamento, acompanhamento e aprovacao com consumo transacional do estoque, conclusao do ciclo e monitoramento. Um diagrama de estados consolida as transicoes implementadas da OS.
+
+### Arquivos principais alterados
+
+- `docs/ddd/ubiquitous-language.md`
+- `docs/ddd/diagrams.md`
+- `docs/architecture.md`
+- `README.md`
+- `docs/project-progress.md`
+
+### Migrations criadas
+
+Nenhuma migration criada.
+
+### Endpoints adicionados ou modificados
+
+Nenhum endpoint adicionado ou modificado.
+
+### Testes executados
+
+- Renderizacao de todos os blocos Mermaid com `@mermaid-js/mermaid-cli` 11.12.0
+- Conferencia dos identificadores documentados contra as interfaces, casos de uso e classes de dominio
+- `docker compose up -d --build --force-recreate app`
+- `docker compose exec -T app php artisan migrate --force`
+- `docker compose exec -T app ./vendor/bin/phpunit --display-warnings`
+- `docker compose exec -T app ./vendor/bin/pint --test`
+- `docker compose config --quiet`
+- `docker compose exec -T app php artisan route:list --path=api`
+- `npx --yes @redocly/cli lint docs/openapi.yaml`
+- `docker compose exec -T app composer audit`
+- Requisicoes HTTP para `/up` e `/docs`
+- `git diff --check`
+
+### Resultado real dos testes
+
+- Os seis blocos Mermaid foram processados sem erro de sintaxe.
+- A primeira conferencia encontrou quatro nomes descritivos que nao correspondiam aos metodos concretos do repositorio; os diagramas foram alinhados a `create`, `findForClientOrFail`, `approveForClient` e `completedForMetrics` antes da validacao final.
+- Build Docker concluido com sucesso e aplicacao recriada sobre PostgreSQL saudavel.
+- Migrations estavam atualizadas, sem novas migrations para aplicar.
+- PHPUnit: 131 testes e 466 assercoes aprovados, sem falhas, usando PostgreSQL.
+- Pint: 164 arquivos aprovados, sem problemas de estilo.
+- Configuracao do Docker Compose valida.
+- As 37 rotas da API permaneceram inalteradas; a listagem por `--path=api` tambem inclui a rota documental `/docs/openapi.yaml` por conter o texto `api`.
+- OpenAPI validado sem erros ou avisos.
+- Composer audit: nenhum advisory de seguranca encontrado.
+- Aplicacao e Swagger UI responderam HTTP 200 em `/up` e `/docs`.
+- `git diff --check` nao encontrou erros.
+
+### Cobertura
+
+Nao medida novamente no Dia 21, pois a etapa alterou somente documentacao. A medicao integrada do Dia 19 permanece em 100% das oito classes criticas, dos 30 metodos e das 165 linhas.
+
 ## Decisoes confirmadas
 
 - Usar as versoes estaveis mais atuais possiveis.
@@ -1281,4 +1339,4 @@ Nenhum bloqueio atual.
 
 ## Escopo previsto para o proximo dia
 
-Dia 21: criar a Linguagem Ubiqua e os diagramas DDD confirmados de Contexto Estrategico, Agregados, Classes de Dominio e Sequencia dos fluxos principais, refletindo somente componentes realmente implementados.
+Dia 22: produzir o Event Storming completo da criacao e acompanhamento da OS e da gestao de pecas e insumos, incluindo atores, comandos, eventos, politicas, agregados, read models, hotspots e fluxos de erro coerentes com a implementacao.

@@ -89,6 +89,10 @@ Erros da API utilizam um envelope consistente:
 
 O contrato OpenAPI 3.1 permanece desacoplado do codigo PHP em `docs/openapi.yaml`, sem DocBlocks ou anotacoes. A rota `/docs/openapi.yaml` serve esse arquivo e `/docs` renderiza o Swagger UI 5.32.1. O visualizador e exclusivamente documental e usa `/api` como base para executar as operacoes descritas.
 
+## Documentacao DDD
+
+A Linguagem Ubiqua esta versionada em `docs/ddd/ubiquitous-language.md`. Os diagramas de Contexto Estrategico, Agregados, Classes de Dominio, Sequencia dos fluxos principais e transicoes da OS estao em `docs/ddd/diagrams.md`, escritos em Mermaid e limitados aos componentes implementados.
+
 ## Convencoes
 
 - Identificadores do codigo e contratos da API sao escritos em ingles.
