@@ -2,7 +2,7 @@
 
 ## Escopo
 
-Os diagramas representam o monólito implementado e usam os identificadores reais do código. As divisões abaixo são limites conceituais internos, não microserviços. Event Storming, eventos e políticas detalhadas pertencem ao Dia 22.
+Os diagramas representam o monólito implementado e usam os identificadores reais do código. As divisões abaixo são limites conceituais internos, não microserviços. Os eventos, políticas, atores, read models, hotspots e fluxos de erro estão detalhados no [Event Storming](event-storming.md).
 
 ## Contexto Estratégico
 

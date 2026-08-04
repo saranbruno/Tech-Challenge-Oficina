@@ -4,7 +4,7 @@
 
 - Projeto: Tech-Challenge-Oficina
 - Autor: Bruno da Silva Saran
-- Dia atual: 21
+- Dia atual: 22
 - Estado atual: Concluído
 
 ## Roadmap
@@ -32,7 +32,7 @@
 | 19 | Testes de integracao e fluxo completo | Concluído | 2026-08-02 | 2026-08-02 |
 | 20 | OpenAPI e Swagger | Concluído | 2026-08-02 | 2026-08-02 |
 | 21 | Linguagem Ubiqua e diagramas DDD | Concluído | 2026-08-02 | 2026-08-02 |
-| 22 | Event Storming | Pendente |  |  |
+| 22 | Event Storming | Concluído | 2026-08-03 | 2026-08-03 |
 | 23 | Scan e analise de vulnerabilidades | Pendente |  |  |
 | 24 | Validacao e entrega final | Pendente |  |  |
 
@@ -1302,6 +1302,67 @@ Nenhum endpoint adicionado ou modificado.
 ### Cobertura
 
 Nao medida novamente no Dia 21, pois a etapa alterou somente documentacao. A medicao integrada do Dia 19 permanece em 100% das oito classes criticas, dos 30 metodos e das 165 linhas.
+
+## Dia 22
+
+### Resumo
+
+O Event Storming foi documentado para os fluxos completos de criacao, acompanhamento e ciclo de vida da Ordem de Servico e para a gestao de Pecas, Insumos e Estoque. A modelagem identifica atores, comandos, eventos de negocio, politicas, agregados, read models, sistemas externos inexistentes, hotspots e caminhos de erro, sempre de acordo com o comportamento implementado.
+
+Os eventos foram registrados como fatos de modelagem, sem sugerir uma infraestrutura inexistente de event bus ou processamento assincrono. Os fluxos detalham a criacao transacional com snapshots e total calculado pelo servidor, diagnostico, disponibilizacao do orçamento pela API, acompanhamento protegido, aprovacao com consumo atomico do estoque, finalizacao, entrega, cancelamento, ajustes administrativos e historico imutavel de movimentacoes.
+
+Durante a validacao, o `composer audit` identificou duas vulnerabilidades publicadas no mesmo dia para o Guzzle 7.15.1, uma alta e uma media. O lock foi atualizado para Guzzle 7.15.2, versao corrigida e compativel, e a imagem, os testes e a auditoria foram executados novamente com sucesso.
+
+### Arquivos principais alterados
+
+- `docs/ddd/event-storming.md`
+- `docs/ddd/diagrams.md`
+- `README.md`
+- `composer.lock`
+- `docs/project-progress.md`
+
+### Migrations criadas
+
+Nenhuma migration criada.
+
+### Endpoints adicionados ou modificados
+
+Nenhum endpoint adicionado ou modificado.
+
+### Testes executados
+
+- Renderizacao dos quatro blocos Mermaid do Event Storming com `@mermaid-js/mermaid-cli` 11.12.0
+- Validacao de `docs/ddd/event-storming.md` com `markdownlint-cli` 0.47.0 e `MD013` desabilitada
+- Conferencia dos eventos, politicas, estados, movimentacoes e operacoes de repositorio contra codigo e migrations
+- `docker compose up -d --build --force-recreate app`
+- `docker compose exec -T app php artisan migrate --force`
+- `docker compose exec -T app ./vendor/bin/phpunit --display-warnings`
+- `docker compose exec -T app ./vendor/bin/pint --test`
+- `docker compose config --quiet`
+- `docker compose exec -T app php artisan route:list --path=api`
+- `npx --yes @redocly/cli lint docs/openapi.yaml`
+- `docker compose exec -T app composer audit`
+- Requisicoes HTTP para `/up` e `/docs`
+- `git diff --check`
+
+### Resultado real dos testes
+
+- Os quatro blocos Mermaid foram processados sem erro de sintaxe no container oficial do Mermaid CLI.
+- O novo documento passou no markdownlint sem erros; somente a regra de comprimento de linha foi desabilitada para preservar a legibilidade dos diagramas.
+- Build Docker concluido e aplicacao recriada com Guzzle 7.15.2 sobre PostgreSQL saudavel.
+- Migrations estavam atualizadas, sem novas migrations para aplicar.
+- PHPUnit: 131 testes e 466 assercoes aprovados, sem falhas, usando PostgreSQL.
+- Pint: 164 arquivos aprovados, sem problemas de estilo.
+- Configuracao do Docker Compose valida.
+- As 37 operacoes da API permaneceram inalteradas; a listagem apresentou 38 rotas ao incluir tambem `/docs/openapi.yaml`.
+- OpenAPI validado sem erros ou avisos.
+- Composer audit final: nenhum advisory de seguranca encontrado depois da atualizacao do Guzzle de 7.15.1 para 7.15.2.
+- Aplicacao e Swagger UI responderam HTTP 200 em `/up` e `/docs`.
+- `git diff --check` nao encontrou erros.
+
+### Cobertura
+
+Nao medida novamente no Dia 22, pois a entrega funcional foi documental e a unica alteracao executavel foi a correcao compativel da dependencia. A medicao integrada do Dia 19 permanece em 100% das oito classes criticas, dos 30 metodos e das 165 linhas.
 
 ## Decisoes confirmadas
 

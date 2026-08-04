@@ -6,7 +6,7 @@ Autor: Bruno da Silva Saran.
 
 ## Estado atual
 
-O Dia 17 fornece a base executavel, os catalogos, a criacao da Ordem de Servico, o acompanhamento seguro pelo cliente, o ciclo administrativo completo ate a entrega e o monitoramento de duracao.
+O Dia 22 fornece a base executavel, os catalogos, o fluxo completo da Ordem de Servico, o monitoramento de duracao e a documentacao DDD com Linguagem Ubiqua, diagramas e Event Storming.
 
 ## Tecnologias
 
@@ -109,7 +109,7 @@ PostgreSQL foi escolhido como banco unico da aplicacao e dos testes de integraca
 
 O monolito utiliza DDD pragmatico com as camadas de Dominio, Aplicacao, Infraestrutura e Interface HTTP. As regras de dependencia e as convencoes estao descritas em `docs/architecture.md`.
 
-A documentacao do dominio inclui a [Linguagem Ubiqua](docs/ddd/ubiquitous-language.md) e os [diagramas DDD](docs/ddd/diagrams.md) de Contexto Estrategico, Agregados, Classes de Dominio e Sequencia dos fluxos principais.
+A documentacao do dominio inclui a [Linguagem Ubiqua](docs/ddd/ubiquitous-language.md), os [diagramas DDD](docs/ddd/diagrams.md) de Contexto Estrategico, Agregados, Classes de Dominio e Sequencia dos fluxos principais e o [Event Storming](docs/ddd/event-storming.md) da Ordem de Servico e da gestao de estoque.
 
 As rotas administrativas e do cliente estao separadas sob `/api/admin` e `/api/client`. Os CRUDs implementados usam casos de uso independentes do transporte HTTP e persistencia Eloquent implementada na camada de Infraestrutura.
 
