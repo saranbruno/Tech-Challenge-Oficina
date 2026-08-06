@@ -1,0 +1,531 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Entrega Final - Tech-Challenge-Oficina</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 0;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        :root {
+            --ink: #13231f;
+            --muted: #53645f;
+            --paper: #f5f1e8;
+            --cream: #fffdf7;
+            --green: #0b5b48;
+            --green-dark: #073c32;
+            --lime: #b7d63d;
+            --orange: #e46f3f;
+            --line: #ced5c9;
+        }
+
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+            color: var(--ink);
+            background: #d8ddd7;
+            font-family: "DejaVu Sans", "Liberation Sans", sans-serif;
+            font-size: 10.5pt;
+            line-height: 1.5;
+        }
+
+        .page {
+            position: relative;
+            width: 210mm;
+            height: 297mm;
+            padding: 18mm 18mm 16mm;
+            overflow: hidden;
+            background:
+                radial-gradient(circle at 92% 8%, rgba(183, 214, 61, 0.18) 0 24mm, transparent 24.5mm),
+                linear-gradient(135deg, rgba(11, 91, 72, 0.05), transparent 42%),
+                var(--paper);
+            page-break-after: always;
+        }
+
+        .page:last-child {
+            page-break-after: auto;
+        }
+
+        .cover {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            color: #fff;
+            background:
+                linear-gradient(120deg, transparent 58%, rgba(183, 214, 61, 0.92) 58% 60%, transparent 60%),
+                radial-gradient(circle at 82% 18%, rgba(228, 111, 63, 0.92) 0 21mm, transparent 21.5mm),
+                linear-gradient(148deg, #073c32 0%, #0b5b48 58%, #12372f 100%);
+        }
+
+        .cover::after {
+            content: "";
+            position: absolute;
+            right: -21mm;
+            bottom: -28mm;
+            width: 100mm;
+            height: 100mm;
+            border: 1.8mm solid rgba(255, 255, 255, 0.12);
+            border-radius: 50%;
+        }
+
+        .eyebrow {
+            margin: 0 0 6mm;
+            color: var(--orange);
+            font-size: 9pt;
+            font-weight: 700;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+        }
+
+        .cover .eyebrow {
+            color: var(--lime);
+        }
+
+        h1,
+        h2,
+        h3,
+        p {
+            margin-top: 0;
+        }
+
+        h1,
+        h2 {
+            font-family: "DejaVu Serif", "Liberation Serif", serif;
+            line-height: 1.08;
+        }
+
+        h1 {
+            max-width: 155mm;
+            margin-bottom: 7mm;
+            font-size: 34pt;
+            font-weight: 700;
+            letter-spacing: -0.025em;
+        }
+
+        h2 {
+            margin-bottom: 7mm;
+            color: var(--green-dark);
+            font-size: 24pt;
+            letter-spacing: -0.02em;
+        }
+
+        h3 {
+            margin-bottom: 2.5mm;
+            color: var(--green);
+            font-size: 11.5pt;
+            letter-spacing: 0.02em;
+        }
+
+        .subtitle {
+            max-width: 135mm;
+            color: rgba(255, 255, 255, 0.82);
+            font-size: 14pt;
+        }
+
+        .cover-card {
+            position: relative;
+            z-index: 1;
+            width: 148mm;
+            padding: 8mm 9mm;
+            border: 0.4mm solid rgba(255, 255, 255, 0.22);
+            border-radius: 4mm;
+            background: rgba(5, 42, 34, 0.58);
+        }
+
+        .identity-grid {
+            display: grid;
+            grid-template-columns: 37mm 1fr;
+            gap: 2.5mm 5mm;
+            margin: 0;
+        }
+
+        .identity-grid dt {
+            color: var(--lime);
+            font-size: 8.5pt;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        .identity-grid dd {
+            margin: 0;
+            color: #fff;
+            font-weight: 600;
+        }
+
+        .section-number {
+            position: absolute;
+            top: 15mm;
+            right: 18mm;
+            color: rgba(11, 91, 72, 0.16);
+            font-family: "DejaVu Serif", serif;
+            font-size: 41pt;
+            font-weight: 700;
+        }
+
+        .lead {
+            max-width: 158mm;
+            margin-bottom: 8mm;
+            color: var(--muted);
+            font-size: 12pt;
+        }
+
+        .link-stack {
+            display: grid;
+            gap: 4mm;
+            margin: 8mm 0;
+        }
+
+        .link-card {
+            padding: 5mm 6mm;
+            border-left: 1.5mm solid var(--lime);
+            border-radius: 0 3mm 3mm 0;
+            background: rgba(255, 253, 247, 0.78);
+            box-shadow: 0 1mm 4mm rgba(19, 35, 31, 0.06);
+        }
+
+        .link-card span {
+            display: block;
+            margin-bottom: 1mm;
+            color: var(--muted);
+            font-size: 8.5pt;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        a {
+            color: var(--green);
+            text-decoration: none;
+            overflow-wrap: anywhere;
+        }
+
+        .cover a {
+            color: #fff;
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 5mm;
+        }
+
+        .feature-card {
+            min-height: 34mm;
+            padding: 5mm;
+            border: 0.3mm solid var(--line);
+            border-radius: 3mm;
+            background: rgba(255, 253, 247, 0.72);
+        }
+
+        .feature-card p {
+            margin: 0;
+            color: var(--muted);
+            font-size: 9.4pt;
+        }
+
+        .flow {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 2mm;
+            margin-top: 8mm;
+        }
+
+        .flow div {
+            display: flex;
+            min-height: 22mm;
+            align-items: center;
+            justify-content: center;
+            padding: 2.5mm 1.5mm;
+            border-radius: 2mm;
+            color: #fff;
+            background: var(--green);
+            font-size: 8pt;
+            font-weight: 700;
+            line-height: 1.2;
+            text-align: center;
+        }
+
+        .flow div:nth-child(even) {
+            background: var(--green-dark);
+        }
+
+        .metric-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 4mm;
+            margin: 7mm 0;
+        }
+
+        .metric {
+            padding: 6mm 4mm;
+            border-radius: 3mm;
+            color: #fff;
+            background: var(--green-dark);
+            text-align: center;
+        }
+
+        .metric strong {
+            display: block;
+            margin-bottom: 1.5mm;
+            color: var(--lime);
+            font-family: "DejaVu Serif", serif;
+            font-size: 22pt;
+            line-height: 1;
+        }
+
+        .metric span {
+            font-size: 8.5pt;
+        }
+
+        .check-list {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 3mm 6mm;
+            padding: 0;
+            list-style: none;
+        }
+
+        .check-list li {
+            position: relative;
+            padding: 3.5mm 3.5mm 3.5mm 10mm;
+            border-bottom: 0.3mm solid var(--line);
+            color: var(--muted);
+        }
+
+        .check-list li::before {
+            content: "✓";
+            position: absolute;
+            left: 2mm;
+            color: var(--green);
+            font-weight: 700;
+        }
+
+        .security-result {
+            margin: 8mm 0;
+            padding: 8mm;
+            border-radius: 4mm;
+            color: #fff;
+            background: linear-gradient(135deg, var(--green-dark), var(--green));
+        }
+
+        .security-result strong {
+            display: block;
+            margin-bottom: 2mm;
+            color: var(--lime);
+            font-family: "DejaVu Serif", serif;
+            font-size: 24pt;
+        }
+
+        .security-result p {
+            margin: 0;
+            color: rgba(255, 255, 255, 0.86);
+        }
+
+        .note {
+            padding: 5mm 6mm;
+            border: 0.3mm solid rgba(228, 111, 63, 0.45);
+            border-radius: 3mm;
+            background: rgba(228, 111, 63, 0.08);
+            color: var(--muted);
+        }
+
+        .references {
+            display: grid;
+            gap: 2.5mm;
+            margin-top: 7mm;
+        }
+
+        .references a {
+            display: block;
+            padding-bottom: 2mm;
+            border-bottom: 0.3mm solid var(--line);
+            font-size: 9pt;
+        }
+
+        .footer {
+            position: absolute;
+            right: 18mm;
+            bottom: 8mm;
+            left: 18mm;
+            display: flex;
+            justify-content: space-between;
+            color: rgba(83, 100, 95, 0.72);
+            font-size: 8pt;
+        }
+
+        .cover .footer {
+            color: rgba(255, 255, 255, 0.58);
+        }
+    </style>
+</head>
+<body>
+    <section class="page cover">
+        <div>
+            <p class="eyebrow">FIAP · 15SOAT · Fase 1</p>
+            <h1>Tech-Challenge-Oficina</h1>
+            <p class="subtitle">Sistema Integrado de Atendimento e Execução de Serviços para oficina mecânica</p>
+        </div>
+
+        <div class="cover-card">
+            <dl class="identity-grid">
+                <dt>Grupo</dt>
+                <dd>Bruno da Silva Saran</dd>
+                <dt>Participante</dt>
+                <dd>Bruno da Silva Saran</dd>
+                <dt>Discord</dt>
+                <dd>saranbruno</dd>
+                <dt>Repositório</dt>
+                <dd><a href="https://github.com/saranbruno/Tech-Challenge-Oficina">github.com/saranbruno/Tech-Challenge-Oficina</a></dd>
+            </dl>
+        </div>
+
+        <div class="footer">
+            <span>Documento final de entrega</span>
+            <span>05 de agosto de 2026</span>
+        </div>
+    </section>
+
+    <section class="page">
+        <span class="section-number">01</span>
+        <p class="eyebrow">Entrega e documentação</p>
+        <h2>Um back-end completo, reproduzível e documentado</h2>
+        <p class="lead">O projeto entrega o MVP de uma oficina mecânica como monólito Laravel, organizado com DDD pragmático, API REST, PostgreSQL e execução integral por Docker.</p>
+
+        <div class="link-stack">
+            <div class="link-card">
+                <span>Documentação DDD</span>
+                <a href="https://github.com/saranbruno/Tech-Challenge-Oficina/tree/main/docs/ddd">https://github.com/saranbruno/Tech-Challenge-Oficina/tree/main/docs/ddd</a>
+            </div>
+            <div class="link-card">
+                <span>Repositório do projeto</span>
+                <a href="https://github.com/saranbruno/Tech-Challenge-Oficina">https://github.com/saranbruno/Tech-Challenge-Oficina</a>
+            </div>
+        </div>
+
+        <div class="grid-2">
+            <article class="feature-card">
+                <h3>Cadastros administrativos</h3>
+                <p>Clientes com CPF/CNPJ válido, veículos com placa brasileira, catálogo de serviços e catálogo unificado de peças e insumos.</p>
+            </article>
+            <article class="feature-card">
+                <h3>Ordem de Serviço</h3>
+                <p>Criação transacional, composição de serviços e itens, preços históricos, orçamento automático e ações explícitas de ciclo de vida.</p>
+            </article>
+            <article class="feature-card">
+                <h3>Segurança e acompanhamento</h3>
+                <p>API administrativa protegida por JWT e consulta do cliente por documento normalizado e token específico armazenado apenas como hash.</p>
+            </article>
+            <article class="feature-card">
+                <h3>Estoque e monitoramento</h3>
+                <p>Baixa transacional com controle de concorrência, histórico de movimentações e métricas de duração do ciclo completo e por estado.</p>
+            </article>
+        </div>
+
+        <div class="flow">
+            <div>Recebida</div>
+            <div>Em diagnóstico</div>
+            <div>Aguardando aprovação</div>
+            <div>Em execução</div>
+            <div>Finalizada</div>
+            <div>Entregue</div>
+        </div>
+
+        <div class="footer">
+            <span>Tech-Challenge-Oficina</span>
+            <span>2 / 4</span>
+        </div>
+    </section>
+
+    <section class="page">
+        <span class="section-number">02</span>
+        <p class="eyebrow">Qualidade comprovada</p>
+        <h2>Validação final executada em ambiente real</h2>
+        <p class="lead">As verificações abaixo foram executadas no ambiente Docker do projeto com PostgreSQL, sem substituir o banco de integração por SQLite.</p>
+
+        <div class="metric-grid">
+            <div class="metric">
+                <strong>50</strong>
+                <span>testes de domínio<br>73 asserções</span>
+            </div>
+            <div class="metric">
+                <strong>131</strong>
+                <span>testes de integração<br>466 asserções</span>
+            </div>
+            <div class="metric">
+                <strong>98,79%</strong>
+                <span>cobertura de linhas<br>no domínio crítico</span>
+            </div>
+        </div>
+
+        <ul class="check-list">
+            <li>Build do Docker concluído</li>
+            <li>Docker Compose validado</li>
+            <li>PostgreSQL saudável</li>
+            <li>12 migrations aplicadas</li>
+            <li>Rollback das 12 migrations</li>
+            <li>OpenAPI 3.1 validada</li>
+            <li>37 operações documentadas</li>
+            <li>Swagger UI disponibilizado</li>
+            <li>Pint aprovou 164 arquivos</li>
+            <li>Composer sem advisories</li>
+        </ul>
+
+        <div class="note">
+            <h3>Cobertura integrada</h3>
+            <p>A suíte integrada atingiu 100% de classes, métodos e linhas nas oito classes críticas delimitadas. A suíte exclusiva de domínio atingiu 87,50% de classes, 96,67% de métodos e 98,79% de linhas.</p>
+        </div>
+
+        <div class="footer">
+            <span>Tech-Challenge-Oficina</span>
+            <span>3 / 4</span>
+        </div>
+    </section>
+
+    <section class="page">
+        <span class="section-number">03</span>
+        <p class="eyebrow">Análise de vulnerabilidades</p>
+        <h2>Scan real do código e auditoria das dependências</h2>
+        <p class="lead">A análise foi realizada em 05 de agosto de 2026 com Semgrep 1.89.0 para o código-fonte e Composer Audit para as dependências PHP.</p>
+
+        <div class="security-result">
+            <strong>0 findings</strong>
+            <p>O Semgrep executou 27 regras sobre 172 arquivos entre 201 arquivos rastreados pelo Git. O Composer Audit não encontrou avisos de vulnerabilidade nas dependências.</p>
+        </div>
+
+        <div class="grid-2">
+            <article class="feature-card">
+                <h3>Vulnerabilidades encontradas</h3>
+                <p>Nenhuma vulnerabilidade foi reportada pelas ferramentas executadas. Por isso, não houve arquivos alterados por correções de segurança.</p>
+            </article>
+            <article class="feature-card">
+                <h3>Riscos residuais</h3>
+                <p>O resultado não garante ausência absoluta de falhas. Três arquivos tiveram análise parcial pelo parser e o scan não substitui revisão manual ou testes de comportamento.</p>
+            </article>
+        </div>
+
+        <div class="references">
+            <h3>Referências técnicas</h3>
+            <a href="https://github.com/saranbruno/Tech-Challenge-Oficina/blob/main/docs/vulnerability-report.md">Relatório técnico completo de vulnerabilidades</a>
+            <a href="https://github.com/saranbruno/Tech-Challenge-Oficina/blob/main/docs/openapi.yaml">Especificação OpenAPI 3.1</a>
+            <a href="https://github.com/saranbruno/Tech-Challenge-Oficina/blob/main/README.md">README com instalação, uso, testes e arquitetura</a>
+            <a href="https://github.com/saranbruno/Tech-Challenge-Oficina/blob/main/docs/ddd/event-storming.md">Event Storming da Ordem de Serviço e da gestão de estoque</a>
+            <a href="https://github.com/saranbruno/Tech-Challenge-Oficina/blob/main/docs/ddd/diagrams.md">Diagramas DDD</a>
+            <a href="https://github.com/saranbruno/Tech-Challenge-Oficina/blob/main/docs/ddd/ubiquitous-language.md">Linguagem Ubíqua</a>
+        </div>
+
+        <div class="footer">
+            <span>Bruno da Silva Saran · saranbruno</span>
+            <span>4 / 4</span>
+        </div>
+    </section>
+</body>
+</html>

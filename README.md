@@ -6,7 +6,7 @@ Autor: Bruno da Silva Saran.
 
 ## Estado atual
 
-O Dia 22 fornece a base executavel, os catalogos, o fluxo completo da Ordem de Servico, o monitoramento de duracao e a documentacao DDD com Linguagem Ubiqua, diagramas e Event Storming.
+Os 24 dias logicos foram executados. O projeto inclui a base executavel, os catalogos, o fluxo completo da Ordem de Servico, o monitoramento de duracao, a documentacao DDD, a analise de vulnerabilidades e o documento final de entrega.
 
 ## Tecnologias
 
@@ -87,7 +87,7 @@ A validacao integrada usa PostgreSQL e executa testes unitarios e todos os Featu
 docker compose exec app ./vendor/bin/phpunit -c phpunit.integration.xml --coverage-text --coverage-clover build/coverage-integration.xml
 ```
 
-Na medicao do Dia 19, os 129 testes executaram 457 assercoes. As oito classes criticas atingiram 100% de classes, metodos e linhas durante a suíte integrada. O relatorio Clover e gerado localmente em `build/coverage-integration.xml` e nao e versionado.
+Na medicao final do Dia 24, os 131 testes executaram 466 assercoes. As oito classes criticas atingiram 100% de classes, metodos e linhas durante a suite integrada. O relatorio Clover e gerado localmente em `build/coverage-integration.xml` e nao e versionado.
 
 ## Encerramento
 
@@ -244,3 +244,9 @@ O monitoramento administrativo considera somente OS em `delivered` com todos os 
 ## Progresso
 
 O acompanhamento detalhado das etapas esta em `docs/project-progress.md`.
+
+## Entrega final
+
+O documento final esta em [docs/final-delivery.pdf](docs/final-delivery.pdf). Sua fonte renderizavel esta em `docs/final-delivery.html`.
+
+A documentacao DDD indicada na entrega esta reunida em [docs/ddd](docs/ddd), com Linguagem Ubiqua, diagramas e Event Storming alinhados ao codigo implementado.
