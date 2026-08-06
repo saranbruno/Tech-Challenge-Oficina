@@ -4,7 +4,7 @@
 
 - Projeto: Tech-Challenge-Oficina
 - Autor: Bruno da Silva Saran
-- Dia atual: 22
+- Dia atual: 23
 - Estado atual: Concluído
 
 ## Roadmap
@@ -33,7 +33,7 @@
 | 20 | OpenAPI e Swagger | Concluído | 2026-08-02 | 2026-08-02 |
 | 21 | Linguagem Ubiqua e diagramas DDD | Concluído | 2026-08-02 | 2026-08-02 |
 | 22 | Event Storming | Concluído | 2026-08-03 | 2026-08-03 |
-| 23 | Scan e analise de vulnerabilidades | Pendente |  |  |
+| 23 | Scan e analise de vulnerabilidades | Concluído | 2026-08-05 | 2026-08-05 |
 | 24 | Validacao e entrega final | Pendente |  |  |
 
 ## Dia 1
@@ -1364,6 +1364,61 @@ Nenhum endpoint adicionado ou modificado.
 
 Nao medida novamente no Dia 22, pois a entrega funcional foi documental e a unica alteracao executavel foi a correcao compativel da dependencia. A medicao integrada do Dia 19 permanece em 100% das oito classes criticas, dos 30 metodos e das 165 linhas.
 
+## Dia 23
+
+### Resumo
+
+Foi executado um scan real do codigo-fonte com Semgrep 1.89.0 e um audit de dependencias com Composer. Nao houve vulnerabilidades reportadas pelos dois metodos.
+
+### Arquivos principais alterados
+
+- `docs/vulnerability-report.md`
+- `README.md`
+- `docs/project-progress.md`
+
+### Migrations criadas
+
+Nenhuma migration criada.
+
+### Endpoints adicionados ou modificados
+
+Nenhum endpoint alterado.
+
+### Testes executados
+
+- `docker compose up -d`
+- `docker run --rm semgrep/semgrep:1.89.0 semgrep --version`
+- `docker run --rm -v /usr/src/Tech-Challenge-Oficina:/src -w /src semgrep/semgrep:1.89.0 semgrep scan --config p/php --config p/security-audit --metrics=off`
+- `docker compose exec -T app composer audit`
+
+### Resultado real dos testes
+
+- PostgreSQL e o container da aplicacao subiram com sucesso.
+- Semgrep analisou 201 arquivos rastreados pelo Git com 27 regras e registrou 0 findings.
+- O scan informou que 3 arquivos tiveram analise parcial e 29 arquivos foram ignorados por padrao do `.semgrepignore`.
+- `composer audit` retornou `No security vulnerability advisories found.`
+
+### Cobertura
+
+Nao medida no Dia 23.
+
+### Decisoes confirmadas
+
+- O scan do codigo foi realizado com Semgrep 1.89.0.
+- A analise de dependencias foi complementada com `composer audit`.
+
+### Duvidas e bloqueios
+
+Nenhum bloqueio atual.
+
+### Pendencias tecnicas
+
+- Dia 24 ainda pendente.
+
+### Escopo previsto para o proximo dia
+
+Validacao e entrega final, incluindo revisao completa do projeto, testes, cobertura, Docker, documentacao e pendencias externas.
+
 ## Decisoes confirmadas
 
 - Usar as versoes estaveis mais atuais possiveis.
@@ -1400,4 +1455,4 @@ Nenhum bloqueio atual.
 
 ## Escopo previsto para o proximo dia
 
-Dia 22: produzir o Event Storming completo da criacao e acompanhamento da OS e da gestao de pecas e insumos, incluindo atores, comandos, eventos, politicas, agregados, read models, hotspots e fluxos de erro coerentes com a implementacao.
+Dia 23: executar o scan real do codigo-fonte e das dependencias, registrar o resultado, atualizar o README e preparar o projeto para a validacao final do Dia 24.

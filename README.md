@@ -101,6 +101,16 @@ Para remover tambem o volume local do banco:
 docker compose down -v
 ```
 
+## Analise de vulnerabilidades
+
+O Dia 23 executou um scan real do codigo-fonte com Semgrep 1.89.0 e um audit de dependencias com Composer.
+
+- Relatorio tecnico: `docs/vulnerability-report.md`
+- Semgrep: 201 arquivos rastreados, 27 regras executadas, 0 findings
+- Composer audit: nenhuma advisory encontrada
+
+Os resultados nao substituem revisao manual e testes de comportamento.
+
 ## PostgreSQL
 
 PostgreSQL foi escolhido como banco unico da aplicacao e dos testes de integracao por oferecer integridade relacional, transacoes ACID, constraints, controle de concorrencia, representacao monetaria exata e suporte consistente a consultas agregadas.
