@@ -4,10 +4,6 @@ Back-end do Sistema Integrado de Atendimento e Execucao de Servicos para uma ofi
 
 Autor: Bruno da Silva Saran.
 
-## Estado atual
-
-Os 24 dias logicos foram executados. O projeto inclui a base executavel, os catalogos, o fluxo completo da Ordem de Servico, o monitoramento de duracao, a documentacao DDD, a analise de vulnerabilidades e o documento final de entrega.
-
 ## Tecnologias
 
 - PHP 8.5.8
