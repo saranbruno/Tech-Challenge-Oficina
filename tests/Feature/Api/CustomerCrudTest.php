@@ -3,7 +3,7 @@
 namespace Tests\Feature\Api;
 
 use App\Infrastructure\Persistence\Eloquent\Models\CustomerModel;
-use App\Models\User;
+use App\Infrastructure\Persistence\Eloquent\Models\User;
 use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;

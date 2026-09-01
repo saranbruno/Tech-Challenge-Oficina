@@ -4,9 +4,9 @@
 
 Os diagramas representam o monólito implementado e usam os identificadores reais do código. As divisões abaixo são limites conceituais internos, não microserviços. Os eventos, políticas, atores, read models, hotspots e fluxos de erro estão detalhados no [Event Storming](event-storming.md).
 
-## Componentes e dependencias apos o Dia 3
+## Componentes e dependencias apos o Dia 4
 
-As setas continuas representam dependencias conformes encontradas no codigo. A refatoracao do Dia 3 removeu a configuracao Laravel dos casos de uso e o modelo Eloquent do contrato de autenticacao. A unica seta tracejada restante representa os modelos Eloquent que ainda atravessam retornos `mixed` de listagem e pertence ao backlog do Dia 4.
+As setas representam as dependencias conformes encontradas no codigo. Os Dias 3 e 4 removeram configuracao Laravel, modelos Eloquent e paginadores das fronteiras internas. A Interface HTTP recebe somente entidades, DTOs e resultados da Aplicacao; a Infraestrutura concentra os modelos Eloquent, inclusive o usuario administrativo.
 
 ```mermaid
 flowchart LR
@@ -27,10 +27,9 @@ flowchart LR
     Composition --> Application
     Composition --> Infrastructure
     HTTP --> Laravel
-    Eloquent -. paginadores e models via mixed .-> HTTP
 ```
 
-O Dominio nao possui dependencia proibida. A composicao do Laravel e o ponto autorizado a conhecer ports e adapters concretos. A ultima passagem tracejada sera eliminada pela tipagem e pelo mapeamento interno programados para o Dia 4, conforme `docs/architecture.md`.
+O Dominio nao possui dependencia proibida. A composicao do Laravel e o ponto autorizado a conhecer ports e adapters concretos. Testes em `tests/Architecture` protegem automaticamente a direcao das dependencias, a ausencia de helpers Laravel nas camadas internas, a localizacao do Eloquent e a proibicao de `mixed` em Dominio e Aplicacao.
 
 ## Contexto Estratégico
 
@@ -69,7 +68,7 @@ flowchart LR
 | --- | --- | --- |
 | Identidade Administrativa | Autenticar o Administrador e emitir ou renovar JWT. | `LoginAdmin`, `RefreshAdminToken`, `AdminTokenProvider` |
 | Cadastro de Atendimento | Manter Clientes e Veículos e proteger sua relação de propriedade. | `Customer`, `Document`, `Vehicle`, `LicensePlate` |
-| Catálogo e Estoque | Manter Serviços, Peças, Insumos, saldos e movimentações. | `Service`, `InventoryItem`, `StockQuantity`, `StockMovementModel` |
+| Catálogo e Estoque | Manter Serviços, Peças, Insumos, saldos e movimentações. | `Service`, `InventoryItem`, `StockQuantity`, `StockMovementData` |
 | Atendimento da Oficina | Coordenar a OS, orçamento, acompanhamento, aprovação e ciclo operacional. | `ServiceOrder`, casos de uso em `Application/ServiceOrder` |
 | Monitoramento | Calcular duração total e por estado das OS elegíveis. | `GetServiceOrderExecutionTimeMetrics`, `ServiceOrderExecutionTimeCalculator` |
 
@@ -86,7 +85,7 @@ flowchart TB
     ServiceRoot["Service<br/>raiz de agregado"]
     InventoryRoot["InventoryItem<br/>raiz de agregado"]
     Stock["StockQuantity<br/>objeto de valor"]
-    Movement["StockMovementModel<br/>registro imutável"]
+    Movement["StockMovementData<br/>resultado interno de leitura"]
     OrderRoot["ServiceOrder<br/>raiz de agregado"]
     OrderService["ServiceOrderService<br/>entidade interna"]
     OrderInventory["ServiceOrderInventoryItem<br/>entidade interna"]

@@ -10,13 +10,18 @@ class CustomerResource extends JsonResource
 {
     public function toArray(Request $request): array
     {
-        $customer = $this->resource;
+        $customer = $this->customer();
 
         return [
-            'id' => $customer instanceof Customer ? $customer->id : $customer->getKey(),
+            'id' => $customer->id,
             'name' => $customer->name,
-            'document' => $customer instanceof Customer ? $customer->document->value : $customer->document,
-            'document_type' => $customer instanceof Customer ? $customer->document->type->value : $customer->document_type,
+            'document' => $customer->document->value,
+            'document_type' => $customer->document->type->value,
         ];
+    }
+
+    private function customer(): Customer
+    {
+        return $this->resource;
     }
 }

@@ -16,6 +16,7 @@ use App\Application\ServiceOrder\GetServiceOrder;
 use App\Application\ServiceOrder\GetServiceOrderExecutionTimeMetrics;
 use App\Application\ServiceOrder\ListServiceOrders;
 use App\Application\ServiceOrder\StartServiceOrderDiagnosis;
+use App\Interfaces\Http\Pagination\LengthAwarePaginatorFactory;
 use App\Interfaces\Http\Requests\ServiceOrder\AddAdditionalRepairsRequest;
 use App\Interfaces\Http\Requests\ServiceOrder\ServiceOrderExecutionTimeRequest;
 use App\Interfaces\Http\Requests\ServiceOrder\StoreServiceOrderRequest;
@@ -44,7 +45,10 @@ class ServiceOrderController
     {
         $perPage = min(max($request->integer('per_page', 15), 1), 100);
 
-        return ServiceOrderResource::collection($this->listServiceOrders->execute($perPage));
+        return ServiceOrderResource::collection(LengthAwarePaginatorFactory::make(
+            $this->listServiceOrders->execute($perPage),
+            $request,
+        ));
     }
 
     public function executionTime(ServiceOrderExecutionTimeRequest $request): JsonResponse

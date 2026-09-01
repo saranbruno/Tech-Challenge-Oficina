@@ -2,7 +2,7 @@
 
 namespace App\Application\ServiceOrder;
 
-use App\Application\ServiceOrder\Contracts\ServiceOrderRepository;
+use App\Application\ServiceOrder\Contracts\ServiceOrderMetricsQuery;
 use App\Domain\ServiceOrder\ServiceOrderExecutionTimeCalculator;
 use App\Domain\ServiceOrder\ServiceOrderExecutionTimeMetrics;
 use DateTimeImmutable;
@@ -10,7 +10,7 @@ use DateTimeImmutable;
 final readonly class GetServiceOrderExecutionTimeMetrics
 {
     public function __construct(
-        private ServiceOrderRepository $serviceOrders,
+        private ServiceOrderMetricsQuery $serviceOrders,
         private ServiceOrderExecutionTimeCalculator $calculator,
     ) {}
 

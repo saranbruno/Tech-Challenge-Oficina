@@ -9,6 +9,7 @@ use App\Application\Inventory\GetInventoryItem;
 use App\Application\Inventory\ListInventoryItems;
 use App\Application\Inventory\ListInventoryMovements;
 use App\Application\Inventory\UpdateInventoryItem;
+use App\Interfaces\Http\Pagination\LengthAwarePaginatorFactory;
 use App\Interfaces\Http\Requests\Inventory\AdjustStockRequest;
 use App\Interfaces\Http\Requests\Inventory\StoreInventoryItemRequest;
 use App\Interfaces\Http\Requests\Inventory\UpdateInventoryItemRequest;
@@ -23,7 +24,10 @@ class InventoryItemController
 {
     public function index(Request $request, ListInventoryItems $listInventoryItems): AnonymousResourceCollection
     {
-        return InventoryItemResource::collection($listInventoryItems->execute($this->perPage($request)));
+        return InventoryItemResource::collection(LengthAwarePaginatorFactory::make(
+            $listInventoryItems->execute($this->perPage($request)),
+            $request,
+        ));
     }
 
     public function store(StoreInventoryItemRequest $request, CreateInventoryItem $createInventoryItem): JsonResponse
@@ -65,7 +69,10 @@ class InventoryItemController
 
     public function movements(Request $request, int $inventoryItem, ListInventoryMovements $listInventoryMovements): AnonymousResourceCollection
     {
-        return StockMovementResource::collection($listInventoryMovements->execute($inventoryItem, $this->perPage($request)));
+        return StockMovementResource::collection(LengthAwarePaginatorFactory::make(
+            $listInventoryMovements->execute($inventoryItem, $this->perPage($request)),
+            $request,
+        ));
     }
 
     public function destroy(int $inventoryItem, DeleteInventoryItem $deleteInventoryItem): Response

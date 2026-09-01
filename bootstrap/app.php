@@ -6,6 +6,7 @@ use App\Application\Customer\Exceptions\DuplicateCustomerDocument;
 use App\Application\Inventory\Exceptions\InventoryItemHasMovements;
 use App\Application\ServiceOrder\Exceptions\InsufficientInventoryStock;
 use App\Application\ServiceOrder\Exceptions\VehicleDoesNotBelongToCustomer;
+use App\Application\Shared\Exceptions\ResourceNotFound;
 use App\Application\Vehicle\Exceptions\DuplicateLicensePlate;
 use App\Domain\Customer\Exceptions\InvalidDocument;
 use App\Domain\ServiceOrder\Exceptions\InvalidAdditionalRepair;
@@ -122,6 +123,14 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $exceptions->render(function (DuplicateLicensePlate $exception, Request $request) {
             return ApiErrorResponse::make('duplicate_license_plate', $exception->getMessage(), 409);
+        });
+
+        $exceptions->render(function (ResourceNotFound $exception, Request $request) {
+            if (! $request->is('api/*')) {
+                return null;
+            }
+
+            return ApiErrorResponse::make('not_found', 'Recurso nao encontrado.', 404);
         });
 
         $exceptions->render(function (HttpExceptionInterface $exception, Request $request) {

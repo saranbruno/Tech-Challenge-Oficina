@@ -2,11 +2,12 @@
 
 namespace App\Application\Inventory\Contracts;
 
+use App\Application\Shared\Data\PaginatedResult;
 use App\Domain\Inventory\InventoryItem;
 
 interface InventoryItemRepository
 {
-    public function paginate(int $perPage): mixed;
+    public function paginate(int $perPage): PaginatedResult;
 
     public function findOrFail(int $id): InventoryItem;
 
@@ -16,7 +17,7 @@ interface InventoryItemRepository
 
     public function adjustStock(int $id, int $quantity, int $adminId): InventoryItem;
 
-    public function movements(int $id, int $perPage): mixed;
+    public function movements(int $id, int $perPage): PaginatedResult;
 
     public function delete(int $id): void;
 }

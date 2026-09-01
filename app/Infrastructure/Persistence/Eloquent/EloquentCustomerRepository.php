@@ -3,25 +3,36 @@
 namespace App\Infrastructure\Persistence\Eloquent;
 
 use App\Application\Customer\Contracts\CustomerRepository;
+use App\Application\Shared\Data\PaginatedResult;
+use App\Application\Shared\Exceptions\ResourceNotFound;
 use App\Domain\Customer\Customer;
 use App\Domain\Customer\ValueObjects\Document;
 use App\Infrastructure\Persistence\Eloquent\Models\CustomerModel;
 
 class EloquentCustomerRepository implements CustomerRepository
 {
-    public function paginate(int $perPage): mixed
+    public function paginate(int $perPage): PaginatedResult
     {
-        return CustomerModel::query()->orderBy('id')->paginate($perPage);
+        return PaginatedResultFactory::make(
+            CustomerModel::query()->orderBy('id')->paginate($perPage),
+            fn (CustomerModel $model): Customer => $this->toDomain($model),
+        );
     }
 
     public function findOrFail(int $id): Customer
     {
-        return $this->toDomain(CustomerModel::query()->findOrFail($id));
+        return $this->toDomain($this->findModel($id));
     }
 
     public function findByDocumentOrFail(string $document): Customer
     {
-        return $this->toDomain(CustomerModel::query()->where('document', $document)->firstOrFail());
+        $model = CustomerModel::query()->where('document', $document)->first();
+
+        if ($model === null) {
+            throw new ResourceNotFound;
+        }
+
+        return $this->toDomain($model);
     }
 
     public function documentExists(string $document, ?int $exceptId = null): bool
@@ -36,7 +47,7 @@ class EloquentCustomerRepository implements CustomerRepository
     {
         $model = $customer->id === null
             ? new CustomerModel
-            : CustomerModel::query()->findOrFail($customer->id);
+            : $this->findModel($customer->id);
 
         $model->fill([
             'name' => $customer->name,
@@ -49,7 +60,18 @@ class EloquentCustomerRepository implements CustomerRepository
 
     public function delete(int $id): void
     {
-        CustomerModel::query()->findOrFail($id)->delete();
+        $this->findModel($id)->delete();
+    }
+
+    private function findModel(int $id): CustomerModel
+    {
+        $model = CustomerModel::query()->find($id);
+
+        if ($model === null) {
+            throw new ResourceNotFound;
+        }
+
+        return $model;
     }
 
     private function toDomain(CustomerModel $model): Customer

@@ -7,6 +7,7 @@ use App\Application\Vehicle\DeleteVehicle;
 use App\Application\Vehicle\GetVehicle;
 use App\Application\Vehicle\ListVehicles;
 use App\Application\Vehicle\UpdateVehicle;
+use App\Interfaces\Http\Pagination\LengthAwarePaginatorFactory;
 use App\Interfaces\Http\Requests\Vehicle\StoreVehicleRequest;
 use App\Interfaces\Http\Requests\Vehicle\UpdateVehicleRequest;
 use App\Interfaces\Http\Resources\VehicleResource;
@@ -21,7 +22,10 @@ class VehicleController
     {
         $perPage = min(max($request->integer('per_page', 15), 1), 100);
 
-        return VehicleResource::collection($listVehicles->execute($perPage));
+        return VehicleResource::collection(LengthAwarePaginatorFactory::make(
+            $listVehicles->execute($perPage),
+            $request,
+        ));
     }
 
     public function store(StoreVehicleRequest $request, CreateVehicle $createVehicle): JsonResponse

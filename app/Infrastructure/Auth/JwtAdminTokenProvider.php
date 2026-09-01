@@ -6,7 +6,7 @@ use App\Application\Auth\Contracts\AdminTokenProvider;
 use App\Application\Auth\Data\AuthenticatedAdminData;
 use App\Application\Auth\Data\TokenData;
 use App\Application\Auth\Exceptions\InvalidRefreshToken;
-use App\Models\User;
+use App\Infrastructure\Persistence\Eloquent\Models\User;
 use Illuminate\Contracts\Auth\Factory;
 use PHPOpenSourceSaver\JWTAuth\Exceptions\JWTException;
 

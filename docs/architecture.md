@@ -122,6 +122,14 @@ As buscas apos a refatoracao encontraram zero uso de `config()` e zero import de
 | `D4-ERRORS` | Traduzir ausencias da persistencia para excecao interna estavel e manter o mapeamento HTTP 404 na Interface. | Nenhum contrato interno depende implicitamente de `ModelNotFoundException`; todos os testes de not found continuam aprovados. |
 | `D4-ARCH-TESTS` | Criar testes em `tests/Architecture` para imports entre camadas, helpers Laravel nas camadas internas, Eloquent fora da Infraestrutura e `mixed` nos contratos. Usar fixture controlada para provar que a regra detecta violacao. | A fixture proibida falha na verificacao, o codigo real passa e a suite funcional permanece verde sem nova biblioteca. |
 
+### Resultado da refatoracao do Dia 4
+
+Os cinco itens do backlog foram concluidos sem alterar rotas, status HTTP ou formatos de resposta. `PaginatedResult` substitui os retornos `mixed`; a Interface reconstrói o paginador Laravel apenas na borda HTTP. Repositories Eloquent convertem listagens em entidades ou em `StockMovementData`, e cada Resource recebe um unico tipo interno.
+
+A persistencia de OS foi dividida entre `ServiceOrderRepository`, `ServiceOrderQuery`, `ServiceOrderMetricsQuery` e `ServiceOrderApproval`. `ServiceOrderMapper` concentra a traducao entre o agregado e os modelos, enquanto a aprovacao continua transacional, com bloqueio da OS e do estoque. Ausencias agora geram `ResourceNotFound`, traduzida pela Interface para o contrato HTTP 404 existente.
+
+O modelo `User` foi movido para a Infraestrutura. Cinco testes em `tests/Architecture` verificam as dependencias de Dominio e Aplicacao, Eloquent fora da Infraestrutura, persistencia na Interface e tipos `mixed`; a fixture controlada confirma que dependência de Infraestrutura, helper Laravel e `mixed` sao detectados. As buscas no codigo real retornam zero violacao e a suite integrada permanece aprovada.
+
 ## Rotas
 
 As rotas da API possuem o prefixo global `/api`.

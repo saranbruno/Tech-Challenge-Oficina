@@ -10,15 +10,20 @@ class VehicleResource extends JsonResource
 {
     public function toArray(Request $request): array
     {
-        $vehicle = $this->resource;
+        $vehicle = $this->vehicle();
 
         return [
-            'id' => $vehicle instanceof Vehicle ? $vehicle->id : $vehicle->getKey(),
-            'customer_id' => $vehicle instanceof Vehicle ? $vehicle->customerId : $vehicle->customer_id,
-            'license_plate' => $vehicle instanceof Vehicle ? $vehicle->licensePlate->value : $vehicle->license_plate,
+            'id' => $vehicle->id,
+            'customer_id' => $vehicle->customerId,
+            'license_plate' => $vehicle->licensePlate->value,
             'brand' => $vehicle->brand,
             'model' => $vehicle->model,
             'year' => $vehicle->year,
         ];
+    }
+
+    private function vehicle(): Vehicle
+    {
+        return $this->resource;
     }
 }

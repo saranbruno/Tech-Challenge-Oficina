@@ -10,14 +10,19 @@ class InventoryItemResource extends JsonResource
 {
     public function toArray(Request $request): array
     {
-        $item = $this->resource;
+        $item = $this->item();
 
         return [
-            'id' => $item instanceof InventoryItem ? $item->id : $item->getKey(),
+            'id' => $item->id,
             'name' => $item->name,
-            'type' => $item instanceof InventoryItem ? $item->type->value : $item->type,
-            'unit_price' => $item instanceof InventoryItem ? $item->unitPrice->cents : $item->unit_price,
-            'quantity_available' => $item instanceof InventoryItem ? $item->quantityAvailable->value : $item->quantity_available,
+            'type' => $item->type->value,
+            'unit_price' => $item->unitPrice->cents,
+            'quantity_available' => $item->quantityAvailable->value,
         ];
+    }
+
+    private function item(): InventoryItem
+    {
+        return $this->resource;
     }
 }

@@ -7,6 +7,7 @@ use App\Application\Customer\DeleteCustomer;
 use App\Application\Customer\GetCustomer;
 use App\Application\Customer\ListCustomers;
 use App\Application\Customer\UpdateCustomer;
+use App\Interfaces\Http\Pagination\LengthAwarePaginatorFactory;
 use App\Interfaces\Http\Requests\Customer\StoreCustomerRequest;
 use App\Interfaces\Http\Requests\Customer\UpdateCustomerRequest;
 use App\Interfaces\Http\Resources\CustomerResource;
@@ -21,7 +22,10 @@ class CustomerController
     {
         $perPage = min(max($request->integer('per_page', 15), 1), 100);
 
-        return CustomerResource::collection($listCustomers->execute($perPage));
+        return CustomerResource::collection(LengthAwarePaginatorFactory::make(
+            $listCustomers->execute($perPage),
+            $request,
+        ));
     }
 
     public function store(StoreCustomerRequest $request, CreateCustomer $createCustomer): JsonResponse
