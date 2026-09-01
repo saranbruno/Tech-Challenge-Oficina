@@ -2,7 +2,7 @@
 
 ## Abordagem
 
-O Tech-Challenge-Oficina utiliza um monolito Laravel organizado por DDD pragmatico e arquitetura em camadas. A separacao existe para manter as regras de negocio independentes do transporte HTTP e permitir que futuros controllers, inclusive controllers Inertia, reutilizem os mesmos casos de uso.
+O Tech-Challenge-Oficina utiliza um monolito Laravel organizado por DDD pragmatico e arquitetura em camadas. A separacao existe para manter as regras de negocio independentes do transporte HTTP e permitir que qualquer adaptador de entrada reutilize os mesmos casos de uso. A Fase 2 adota Clean Architecture como regra explicita, sem criar frontend, microservicos ou novos processos de execucao.
 
 ## Camadas
 
@@ -36,12 +36,90 @@ As dependencias seguem o sentido `Interface HTTP -> Aplicacao -> Dominio`. A Inf
 
 Eloquent permanece na Infraestrutura. Form Requests e API Resources permanecem na Interface HTTP. Casos de uso nao retornam respostas JSON e podem ser chamados por qualquer adaptador de interface.
 
+### Regras objetivas
+
+| Origem | Pode depender de | Nao pode depender de |
+| --- | --- | --- |
+| `Domain` | PHP e outros tipos de `Domain` | Laravel, Eloquent, HTTP, `Application`, `Infrastructure`, `Interfaces` e modelos de persistencia |
+| `Application` | `Domain`, DTOs e contratos definidos em `Application`, PHP | helpers ou tipos do Laravel, Eloquent, HTTP, `Infrastructure`, `Interfaces` e `App\Models` |
+| `Infrastructure` | contratos de `Application`, `Domain`, Laravel, Eloquent e fornecedores tecnicos | `Interfaces` e regras de apresentacao |
+| `Interfaces/Http` | casos de uso, DTOs e resultados de `Application`, tipos de `Domain` quando necessarios para apresentacao e Laravel HTTP | adapters concretos de `Infrastructure` e modelos Eloquent como contrato de entrada |
+| composicao do Laravel | todas as camadas necessarias para realizar bindings | regras de negocio |
+
+As dependencias sao avaliadas tanto por imports estaticos quanto pelo tipo concreto que cruza uma fronteira em tempo de execucao. Declarar `mixed` nao torna aceitavel devolver um modelo Eloquent atraves de um contrato interno.
+
+## Auditoria de Clean Architecture do Dia 2
+
+### Escopo e metodo
+
+A auditoria cobriu os 100 arquivos PHP de `app`: 20 de Dominio, 35 de Aplicacao, 14 de Infraestrutura, 29 da Interface HTTP e os dois arquivos de composicao/modelo administrativo. Foram revisados namespaces e imports, helpers de framework, contratos, tipos de retorno, DTOs, excecoes, referencias reais nos testes, tamanho das classes e fluxo concreto entre repositories, casos de uso, controllers e Resources.
+
+### Mapa observado
+
+| Origem | Dependencias observadas | Resultado |
+| --- | --- | --- |
+| `Domain` | somente tipos do proprio Dominio e PHP, incluindo `DateTimeImmutable` e `DomainException` | Conforme; nenhuma dependencia proibida encontrada |
+| `Application` | contratos e DTOs proprios, `Domain`, quatro chamadas a `config()` e uma referencia a `App\Models\User` | Duas violacoes de direcao na autenticacao |
+| `Infrastructure` | contratos de `Application`, tipos de `Domain`, Eloquent, PostgreSQL e JWT | Direcao estatica conforme |
+| `Interfaces/Http` | casos de uso, DTOs, tipos de `Domain`, Requests, Resources e respostas Laravel | Sem import direto de `Infrastructure`, mas com modelos Eloquent recebidos por contratos `mixed` |
+| `AppServiceProvider` | contratos internos e adapters concretos | Conforme como composition root |
+
+### Achados e destino obrigatorio
+
+| ID | Evidencia | Impacto | Destino |
+| --- | --- | --- | --- |
+| `ARQ-01` | `AdminTokenProvider::user()` retorna `App\Models\User`; `AdminAuthController::me()` chama metodos e propriedades desse modelo. | A Aplicacao conhece um modelo Eloquent e a Interface depende do formato concreto da persistencia. | Dia 3, item `D3-AUTH` |
+| `ARQ-02` | `LoginAdmin` e `RefreshAdminToken` chamam `config()` quatro vezes. | Casos de uso dependem do container/configuracao global do Laravel. | Dia 3, item `D3-AUTH` |
+| `ARQ-03` | `CustomerService`, `VehicleService`, `ServiceService` e `InventoryService` concentram 22 operacoes publicas independentes de listar, consultar, criar, atualizar, ajustar e excluir. | Casos de uso possuem responsabilidade e dependencias agrupadas por recurso, dificultando evolucao e testes isolados. | Dia 3, item `D3-USE-CASES` |
+| `ARQ-04` | `CreateInitialServiceOrder` duplica parte de `CreateServiceOrder` e so e referenciado por seu teste legado. | Existem dois caminhos de criacao com validacoes e capacidades divergentes. | Dia 3, item `D3-SERVICE-ORDER` |
+| `ARQ-05` | Entradas de composicao e o resultado de metricas usam arrays genericos; tres casos de uso validam tipos por `instanceof` durante a execucao e lancam `DomainException` generica. | A assinatura nao expressa integralmente o contrato e permite erro de programacao chegar como erro de dominio. | Dia 3, item `D3-CONTRACTS` |
+| `ARQ-06` | Seis metodos de repository, seis metodos de Aplicacao e seis implementacoes Eloquent declaram retorno `mixed`. | Ha 18 assinaturas sem tipo concreto nas fronteiras internas. | Dia 4, item `D4-PAGINATION` |
+| `ARQ-07` | As listagens de cliente, veiculo, servico e estoque devolvem paginadores com modelos Eloquent; quatro Resources aceitam alternativamente entidade ou modelo, e `StockMovementResource` recebe somente `StockMovementModel`. | Eloquent atravessa Aplicacao e chega a Interface em tempo de execucao apesar de nao existir import estatico. | Dia 4, item `D4-MAPPING` |
+| `ARQ-08` | `EloquentServiceOrderRepository` possui 242 linhas e sete operacoes publicas, reunindo listagem, metricas, tracking, criacao, atualizacao, aprovacao com estoque e reconstituicao. | Consultas, comandos transacionais e mapeamento mudam pela mesma classe e pelo mesmo contrato. | Dia 4, item `D4-SERVICE-ORDER-PERSISTENCE` |
+| `ARQ-09` | Os contratos `findOrFail` nao declaram excecao interna e as implementacoes deixam `ModelNotFoundException` atravessar a Aplicacao. | O comportamento de falha dos ports depende implicitamente do Eloquent e do handler HTTP do Laravel. | Dia 4, item `D4-ERRORS` |
+| `ARQ-10` | Nao existe `tests/Architecture`; as regras atuais dependem apenas de revisao humana. | Uma dependencia proibida pode ser adicionada sem falha automatica. | Dia 4, item `D4-ARCH-TESTS` |
+
+### Classes grandes mantidas
+
+`ServiceOrder` possui 204 linhas, mas permanece coeso como raiz do agregado que protege composicao, total, status e instantes. Dividi-lo agora separaria invariantes que mudam juntas. `ServiceOrderController` possui 142 linhas e dez dependencias, mas seus metodos apenas convertem HTTP, acionam um caso de uso e apresentam a resposta; nao foi encontrada regra de negocio no controller. Esses dois tamanhos foram revisados e nao geram refatoracao cosmetica nos Dias 3 ou 4.
+
+## Arquitetura-alvo apos os Dias 3 e 4
+
+A arquitetura-alvo preserva os mesmos quatro limites e remove todas as excecoes observadas:
+
+1. HTTP converte Request em DTO de Aplicacao e converte resultado interno em Resource ou `JsonResponse`.
+2. Cada caso de uso independente possui uma classe coesa e depende somente de ports internos e do Dominio.
+3. Resultados de autenticacao, paginacao, metricas e movimentacao pertencem a Aplicacao ou Dominio e possuem tipos concretos.
+4. Repositories e queries nunca devolvem Eloquent para dentro; adapters convertem modelos em entidades ou DTOs antes do retorno.
+5. Consultas operacionais e de metricas da OS ficam separadas dos comandos transacionais e do mapeamento de persistencia.
+6. O composition root do Laravel liga ports a adapters; nenhuma camada interna consulta configuracao global.
+7. Testes arquiteturais impedem imports e helpers proibidos e recusam `mixed` nos contratos internos.
+
+### Backlog fechado do Dia 3
+
+| Item | Alteracao exata | Criterio de aceite |
+| --- | --- | --- |
+| `D3-AUTH` | Fazer o provider devolver dados internos concretos de token e identidade administrativa; criar caso de uso para o administrador autenticado; retirar `App\Models\User` do contrato e `config()` dos casos de uso. | Nenhum arquivo de `Application` importa `App\Models` ou chama helper Laravel; login, refresh e `me` preservam o contrato HTTP. |
+| `D3-USE-CASES` | Substituir os quatro servicos CRUD por casos de uso separados: listar, consultar, criar, atualizar e excluir para clientes, veiculos e servicos; listar, consultar, criar, atualizar, ajustar estoque, listar movimentos e excluir para estoque. | As 22 operacoes independentes possuem classes coesas; validacao comum nao e duplicada; controllers continuam finos. |
+| `D3-SERVICE-ORDER` | Remover o caminho legado `CreateInitialServiceOrder` e portar sua cobertura valida para `CreateServiceOrder` com lista vazia de itens de estoque. | Existe um unico caso de uso de abertura e nenhum comportamento publico da Fase 1 e perdido. |
+| `D3-CONTRACTS` | Introduzir entradas tipadas para composicoes e um resultado concreto para metricas; substituir erros genericos de composicao por excecoes de negocio nomeadas quando fizerem parte do contrato. | Casos de uso nao recebem colecoes sem contrato nem retornam array de formato implicito; responses HTTP permanecem identicas. |
+
+### Backlog fechado do Dia 4
+
+| Item | Alteracao exata | Criterio de aceite |
+| --- | --- | --- |
+| `D4-PAGINATION` | Criar resultado paginado interno com itens e metadados; tipar os seis ports e seus consumidores hoje declarados como `mixed`. | Zero retorno `mixed` em `Domain` e `Application`; formato e paginacao HTTP preservados. |
+| `D4-MAPPING` | Converter toda listagem Eloquent em entidades ou DTOs antes de sair da Infraestrutura; criar DTO de movimentacao de estoque; tornar cada Resource dependente de um unico tipo interno. | Nenhum modelo Eloquent cruza um contrato de Aplicacao nem e recebido por Resource. |
+| `D4-SERVICE-ORDER-PERSISTENCE` | Separar repository do agregado, query de listagem/tracking, query de metricas e comando atomico de aprovacao; extrair o mapeamento da OS para uma responsabilidade propria da Infraestrutura. | Cada port possui um motivo coeso para mudar; criacao, tracking, metricas, paginacao, aprovacao e estoque preservam os resultados atuais. |
+| `D4-ERRORS` | Traduzir ausencias da persistencia para excecao interna estavel e manter o mapeamento HTTP 404 na Interface. | Nenhum contrato interno depende implicitamente de `ModelNotFoundException`; todos os testes de not found continuam aprovados. |
+| `D4-ARCH-TESTS` | Criar testes em `tests/Architecture` para imports entre camadas, helpers Laravel nas camadas internas, Eloquent fora da Infraestrutura e `mixed` nos contratos. Usar fixture controlada para provar que a regra detecta violacao. | A fixture proibida falha na verificacao, o codigo real passa e a suite funcional permanece verde sem nova biblioteca. |
+
 ## Rotas
 
 As rotas da API possuem o prefixo global `/api`.
 
 - `routes/api/admin.php`: rotas administrativas protegidas por JWT.
-- `routes/api/client.php`: futuras rotas de acompanhamento protegidas pelo mecanismo do cliente.
+- `routes/api/client.php`: rotas de acompanhamento e aprovacao protegidas por documento e token da OS.
 
 Os arquivos estao carregados e agrupados sob `/api/admin` e `/api/client`. Somente funcionalidades concluidas publicam endpoints.
 
@@ -98,6 +176,9 @@ A Linguagem Ubiqua esta versionada em `docs/ddd/ubiquitous-language.md`. Os diag
 - Identificadores do codigo e contratos da API sao escritos em ingles.
 - Documentacao de entrega e mensagens destinadas ao usuario sao escritas em portugues do Brasil.
 - Valores monetarios usam representacao exata e nunca `float`.
+- Helpers e configuracoes globais do Laravel nao sao usados em Dominio ou Aplicacao.
+- Ports internos possuem retornos concretos; `mixed` nao e usado para ocultar tipos de framework.
+- Modelos Eloquent sao convertidos dentro da Infraestrutura antes de cruzar uma fronteira interna.
 
 ## Cobertura dos dominios criticos
 

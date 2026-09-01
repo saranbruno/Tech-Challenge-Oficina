@@ -4,6 +4,36 @@
 
 Os diagramas representam o monólito implementado e usam os identificadores reais do código. As divisões abaixo são limites conceituais internos, não microserviços. Os eventos, políticas, atores, read models, hotspots e fluxos de erro estão detalhados no [Event Storming](event-storming.md).
 
+## Componentes e dependencias observadas no Dia 2
+
+As setas continuas representam dependencias conformes encontradas no codigo. As setas tracejadas representam as tres passagens que o backlog dos Dias 3 e 4 deve remover: configuracao Laravel dentro de casos de uso, modelo Eloquent no contrato de autenticacao e modelos Eloquent atravessando retornos `mixed` de listagem.
+
+```mermaid
+flowchart LR
+    HTTP[Interface HTTP]
+    Application[Aplicacao]
+    Domain[Dominio]
+    Infrastructure[Infraestrutura]
+    Composition[Composition root Laravel]
+    Laravel[Laravel e configuracao]
+    Eloquent[Eloquent e PostgreSQL]
+
+    HTTP --> Application
+    HTTP --> Domain
+    Application --> Domain
+    Infrastructure --> Application
+    Infrastructure --> Domain
+    Infrastructure --> Eloquent
+    Composition --> Application
+    Composition --> Infrastructure
+    HTTP --> Laravel
+    Application -. quatro chamadas config .-> Laravel
+    Application -. AdminTokenProvider retorna User .-> Eloquent
+    Eloquent -. paginadores e models via mixed .-> HTTP
+```
+
+O Dominio nao possui dependencia proibida. A composicao do Laravel e o ponto autorizado a conhecer ports e adapters concretos. A arquitetura-alvo preserva os quatro componentes e elimina somente as setas tracejadas, conforme o backlog fechado em `docs/architecture.md`.
+
 ## Contexto Estratégico
 
 ```mermaid
