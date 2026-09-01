@@ -4,6 +4,12 @@ Back-end do Sistema Integrado de Atendimento e Execucao de Servicos para uma ofi
 
 Autor: Bruno da Silva Saran.
 
+## Fase 2
+
+A evolucao da Fase 2 ocorre na branch `fase-2` em um roadmap de 30 dias, preservando os comportamentos validos da Fase 1. A [matriz de requisitos](docs/requirements-phase-2.md) relaciona cada requisito consolidado com criterio verificavel, implementacao, teste, evidencia e dias responsaveis. O acompanhamento operacional permanece em `docs/project-progress.md`.
+
+O Dia 1 registrou a baseline reproduzivel, sem adicionar funcionalidade: Compose e PostgreSQL saudaveis, 131 testes integrados aprovados com 466 assercoes, 100% das 165 linhas criticas cobertas e OpenAPI valido. A auditoria inicial encontrou advisories no pacote transitivo `league/commonmark`; o lockfile foi atualizado da versao 2.8.3 para 2.10.0 e a auditoria final nao encontrou advisories.
+
 ## Tecnologias
 
 - PHP 8.5.8
