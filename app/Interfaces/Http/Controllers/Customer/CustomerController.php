@@ -2,7 +2,11 @@
 
 namespace App\Interfaces\Http\Controllers\Customer;
 
-use App\Application\Customer\CustomerService;
+use App\Application\Customer\CreateCustomer;
+use App\Application\Customer\DeleteCustomer;
+use App\Application\Customer\GetCustomer;
+use App\Application\Customer\ListCustomers;
+use App\Application\Customer\UpdateCustomer;
 use App\Interfaces\Http\Requests\Customer\StoreCustomerRequest;
 use App\Interfaces\Http\Requests\Customer\UpdateCustomerRequest;
 use App\Interfaces\Http\Resources\CustomerResource;
@@ -13,37 +17,35 @@ use Illuminate\Http\Response;
 
 class CustomerController
 {
-    public function __construct(private readonly CustomerService $customers) {}
-
-    public function index(Request $request): AnonymousResourceCollection
+    public function index(Request $request, ListCustomers $listCustomers): AnonymousResourceCollection
     {
         $perPage = min(max($request->integer('per_page', 15), 1), 100);
 
-        return CustomerResource::collection($this->customers->list($perPage));
+        return CustomerResource::collection($listCustomers->execute($perPage));
     }
 
-    public function store(StoreCustomerRequest $request): JsonResponse
+    public function store(StoreCustomerRequest $request, CreateCustomer $createCustomer): JsonResponse
     {
-        $customer = $this->customers->create($request->string('name')->toString(), $request->string('document')->toString());
+        $customer = $createCustomer->execute($request->string('name')->toString(), $request->string('document')->toString());
 
         return (new CustomerResource($customer))->response()->setStatusCode(201);
     }
 
-    public function show(int $customer): CustomerResource
+    public function show(int $customer, GetCustomer $getCustomer): CustomerResource
     {
-        return new CustomerResource($this->customers->find($customer));
+        return new CustomerResource($getCustomer->execute($customer));
     }
 
-    public function update(UpdateCustomerRequest $request, int $customer): CustomerResource
+    public function update(UpdateCustomerRequest $request, int $customer, UpdateCustomer $updateCustomer): CustomerResource
     {
-        $updated = $this->customers->update($customer, $request->string('name')->toString(), $request->string('document')->toString());
+        $updated = $updateCustomer->execute($customer, $request->string('name')->toString(), $request->string('document')->toString());
 
         return new CustomerResource($updated);
     }
 
-    public function destroy(int $customer): Response
+    public function destroy(int $customer, DeleteCustomer $deleteCustomer): Response
     {
-        $this->customers->delete($customer);
+        $deleteCustomer->execute($customer);
 
         return response()->noContent();
     }

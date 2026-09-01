@@ -6,7 +6,9 @@ use App\Application\ServiceOrder\AddAdditionalRepairs;
 use App\Application\ServiceOrder\CancelServiceOrder;
 use App\Application\ServiceOrder\CompleteServiceOrderDiagnosis;
 use App\Application\ServiceOrder\CreateServiceOrder;
+use App\Application\ServiceOrder\Data\RequestedInventoryItemCollection;
 use App\Application\ServiceOrder\Data\RequestedInventoryItemData;
+use App\Application\ServiceOrder\Data\RequestedServiceCollection;
 use App\Application\ServiceOrder\Data\RequestedServiceData;
 use App\Application\ServiceOrder\DeliverServiceOrder;
 use App\Application\ServiceOrder\FinalizeServiceOrder;
@@ -50,11 +52,17 @@ class ServiceOrderController
         $deliveredFrom = $request->validated('delivered_from');
         $deliveredTo = $request->validated('delivered_to');
 
-        return response()->json(['data' => $this->getServiceOrderExecutionTimeMetrics->execute(
+        $metrics = $this->getServiceOrderExecutionTimeMetrics->execute(
             $deliveredFrom === null ? null : new DateTimeImmutable($deliveredFrom),
             $deliveredTo === null ? null : new DateTimeImmutable($deliveredTo),
             $request->validated('service_id'),
-        )]);
+        );
+
+        return response()->json(['data' => [
+            'eligible_orders' => $metrics->eligibleOrders,
+            'average_total_seconds' => $metrics->averageTotalSeconds,
+            'average_seconds_by_status' => $metrics->averageSecondsByStatus,
+        ]]);
     }
 
     public function store(StoreServiceOrderRequest $request): JsonResponse
@@ -62,20 +70,20 @@ class ServiceOrderController
         $order = $this->createServiceOrder->execute(
             $request->string('customer_document')->toString(),
             $request->integer('vehicle_id'),
-            array_map(
+            new RequestedServiceCollection(...array_map(
                 fn (array $service): RequestedServiceData => new RequestedServiceData(
                     $service['service_id'],
                     $service['quantity'],
                 ),
                 $request->validated('services'),
-            ),
-            array_map(
+            )),
+            new RequestedInventoryItemCollection(...array_map(
                 fn (array $inventoryItem): RequestedInventoryItemData => new RequestedInventoryItemData(
                     $inventoryItem['inventory_item_id'],
                     $inventoryItem['quantity'],
                 ),
                 $request->validated('inventory_items'),
-            ),
+            )),
             new DateTimeImmutable,
         );
 
@@ -130,13 +138,13 @@ class ServiceOrderController
     ): ServiceOrderResource {
         return new ServiceOrderResource($this->addAdditionalRepairs->execute(
             $serviceOrder,
-            array_map(
+            new RequestedServiceCollection(...array_map(
                 fn (array $service): RequestedServiceData => new RequestedServiceData(
                     $service['service_id'],
                     $service['quantity'],
                 ),
                 $request->validated('services'),
-            ),
+            )),
         ));
     }
 }

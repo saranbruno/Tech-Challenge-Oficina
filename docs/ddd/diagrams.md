@@ -4,9 +4,9 @@
 
 Os diagramas representam o monólito implementado e usam os identificadores reais do código. As divisões abaixo são limites conceituais internos, não microserviços. Os eventos, políticas, atores, read models, hotspots e fluxos de erro estão detalhados no [Event Storming](event-storming.md).
 
-## Componentes e dependencias observadas no Dia 2
+## Componentes e dependencias apos o Dia 3
 
-As setas continuas representam dependencias conformes encontradas no codigo. As setas tracejadas representam as tres passagens que o backlog dos Dias 3 e 4 deve remover: configuracao Laravel dentro de casos de uso, modelo Eloquent no contrato de autenticacao e modelos Eloquent atravessando retornos `mixed` de listagem.
+As setas continuas representam dependencias conformes encontradas no codigo. A refatoracao do Dia 3 removeu a configuracao Laravel dos casos de uso e o modelo Eloquent do contrato de autenticacao. A unica seta tracejada restante representa os modelos Eloquent que ainda atravessam retornos `mixed` de listagem e pertence ao backlog do Dia 4.
 
 ```mermaid
 flowchart LR
@@ -27,12 +27,10 @@ flowchart LR
     Composition --> Application
     Composition --> Infrastructure
     HTTP --> Laravel
-    Application -. quatro chamadas config .-> Laravel
-    Application -. AdminTokenProvider retorna User .-> Eloquent
     Eloquent -. paginadores e models via mixed .-> HTTP
 ```
 
-O Dominio nao possui dependencia proibida. A composicao do Laravel e o ponto autorizado a conhecer ports e adapters concretos. A arquitetura-alvo preserva os quatro componentes e elimina somente as setas tracejadas, conforme o backlog fechado em `docs/architecture.md`.
+O Dominio nao possui dependencia proibida. A composicao do Laravel e o ponto autorizado a conhecer ports e adapters concretos. A ultima passagem tracejada sera eliminada pela tipagem e pelo mapeamento interno programados para o Dia 4, conforme `docs/architecture.md`.
 
 ## Contexto Estratégico
 
@@ -215,8 +213,9 @@ classDiagram
         Cancelled
     }
     class ServiceOrderExecutionTimeCalculator {
-        +calculate(ServiceOrder[]) array
+        +calculate(ServiceOrder[]) ServiceOrderExecutionTimeMetrics
     }
+    class ServiceOrderExecutionTimeMetrics
 
     Customer *-- Document
     Document --> DocumentType
@@ -237,6 +236,7 @@ classDiagram
     ServiceOrderInventoryItem --> InventoryItemType
     ServiceOrderInventoryItem *-- UnitPrice
     ServiceOrderExecutionTimeCalculator ..> ServiceOrder
+    ServiceOrderExecutionTimeCalculator --> ServiceOrderExecutionTimeMetrics
 ```
 
 ## Sequência: criação e disponibilização do orçamento

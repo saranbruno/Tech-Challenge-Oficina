@@ -3,18 +3,20 @@
 namespace Tests\Feature\Application;
 
 use App\Application\ServiceOrder\Contracts\ServiceOrderRepository;
-use App\Application\ServiceOrder\CreateInitialServiceOrder;
+use App\Application\ServiceOrder\CreateServiceOrder;
+use App\Application\ServiceOrder\Data\RequestedInventoryItemCollection;
+use App\Application\ServiceOrder\Data\RequestedServiceCollection;
 use App\Application\ServiceOrder\Data\RequestedServiceData;
 use App\Application\ServiceOrder\Exceptions\VehicleDoesNotBelongToCustomer;
 use App\Domain\ServiceOrder\Enums\ServiceOrderStatus;
+use App\Domain\ServiceOrder\Exceptions\InvalidServiceOrderBudget;
 use DateTimeImmutable;
-use DomainException;
 use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
-class CreateInitialServiceOrderTest extends TestCase
+class CreateServiceOrderApplicationTest extends TestCase
 {
     use RefreshDatabase;
 
@@ -24,13 +26,14 @@ class CreateInitialServiceOrderTest extends TestCase
         $firstServiceId = $this->createService('Troca de oleo', 15000);
         $secondServiceId = $this->createService('Alinhamento', 9000);
 
-        $order = app(CreateInitialServiceOrder::class)->execute(
+        $order = app(CreateServiceOrder::class)->execute(
             '529.982.247-25',
             $vehicleId,
-            [
+            new RequestedServiceCollection(
                 new RequestedServiceData($firstServiceId, 1),
                 new RequestedServiceData($secondServiceId, 2),
-            ],
+            ),
+            new RequestedInventoryItemCollection,
             new DateTimeImmutable('2026-07-22 10:00:00'),
         );
 
@@ -52,11 +55,12 @@ class CreateInitialServiceOrderTest extends TestCase
     {
         [, $vehicleId] = $this->createCustomerAndVehicle('52998224725', 'ABC1D23');
         $serviceId = $this->createService('Troca de oleo', 15000);
-        $useCase = app(CreateInitialServiceOrder::class);
+        $useCase = app(CreateServiceOrder::class);
         $order = $useCase->execute(
             '52998224725',
             $vehicleId,
-            [new RequestedServiceData($serviceId, 1)],
+            new RequestedServiceCollection(new RequestedServiceData($serviceId, 1)),
+            new RequestedInventoryItemCollection,
             new DateTimeImmutable('2026-07-22 10:00:00'),
         );
 
@@ -71,10 +75,11 @@ class CreateInitialServiceOrderTest extends TestCase
         [$customerId, $vehicleId] = $this->createCustomerAndVehicle('04252011000110', 'BRA2E19');
         $serviceId = $this->createService('Alinhamento', 9000);
 
-        $order = app(CreateInitialServiceOrder::class)->execute(
+        $order = app(CreateServiceOrder::class)->execute(
             '04.252.011/0001-10',
             $vehicleId,
-            [new RequestedServiceData($serviceId, 1)],
+            new RequestedServiceCollection(new RequestedServiceData($serviceId, 1)),
+            new RequestedInventoryItemCollection,
             new DateTimeImmutable('2026-07-22 10:00:00'),
         );
 
@@ -90,10 +95,11 @@ class CreateInitialServiceOrderTest extends TestCase
         $this->expectException(VehicleDoesNotBelongToCustomer::class);
 
         try {
-            app(CreateInitialServiceOrder::class)->execute(
+            app(CreateServiceOrder::class)->execute(
                 '52998224725',
                 $otherVehicleId,
-                [new RequestedServiceData($serviceId, 1)],
+                new RequestedServiceCollection(new RequestedServiceData($serviceId, 1)),
+                new RequestedInventoryItemCollection,
                 new DateTimeImmutable('2026-07-22 10:00:00'),
             );
         } finally {
@@ -105,12 +111,13 @@ class CreateInitialServiceOrderTest extends TestCase
     {
         [, $vehicleId] = $this->createCustomerAndVehicle('52998224725', 'ABC1D23');
 
-        $this->expectException(DomainException::class);
+        $this->expectException(InvalidServiceOrderBudget::class);
 
-        app(CreateInitialServiceOrder::class)->execute(
+        app(CreateServiceOrder::class)->execute(
             '52998224725',
             $vehicleId,
-            [],
+            new RequestedServiceCollection,
+            new RequestedInventoryItemCollection,
             new DateTimeImmutable('2026-07-22 10:00:00'),
         );
     }
@@ -119,10 +126,11 @@ class CreateInitialServiceOrderTest extends TestCase
     {
         [, $vehicleId] = $this->createCustomerAndVehicle('52998224725', 'ABC1D23');
         $serviceId = $this->createService('Alinhamento', 9000);
-        $order = app(CreateInitialServiceOrder::class)->execute(
+        $order = app(CreateServiceOrder::class)->execute(
             '52998224725',
             $vehicleId,
-            [new RequestedServiceData($serviceId, 1)],
+            new RequestedServiceCollection(new RequestedServiceData($serviceId, 1)),
+            new RequestedInventoryItemCollection,
             new DateTimeImmutable('2026-07-22 10:00:00'),
         );
 

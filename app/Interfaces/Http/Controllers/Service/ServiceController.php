@@ -2,7 +2,11 @@
 
 namespace App\Interfaces\Http\Controllers\Service;
 
-use App\Application\Service\ServiceService;
+use App\Application\Service\CreateService;
+use App\Application\Service\DeleteService;
+use App\Application\Service\GetService;
+use App\Application\Service\ListServices;
+use App\Application\Service\UpdateService;
 use App\Interfaces\Http\Requests\Service\StoreServiceRequest;
 use App\Interfaces\Http\Requests\Service\UpdateServiceRequest;
 use App\Interfaces\Http\Resources\ServiceResource;
@@ -13,35 +17,33 @@ use Illuminate\Http\Response;
 
 class ServiceController
 {
-    public function __construct(private readonly ServiceService $services) {}
-
-    public function index(Request $request): AnonymousResourceCollection
+    public function index(Request $request, ListServices $listServices): AnonymousResourceCollection
     {
         $perPage = min(max($request->integer('per_page', 15), 1), 100);
 
-        return ServiceResource::collection($this->services->list($perPage));
+        return ServiceResource::collection($listServices->execute($perPage));
     }
 
-    public function store(StoreServiceRequest $request): JsonResponse
+    public function store(StoreServiceRequest $request, CreateService $createService): JsonResponse
     {
-        $service = $this->services->create(...$this->parameters($request));
+        $service = $createService->execute(...$this->parameters($request));
 
         return (new ServiceResource($service))->response()->setStatusCode(201);
     }
 
-    public function show(int $service): ServiceResource
+    public function show(int $service, GetService $getService): ServiceResource
     {
-        return new ServiceResource($this->services->find($service));
+        return new ServiceResource($getService->execute($service));
     }
 
-    public function update(UpdateServiceRequest $request, int $service): ServiceResource
+    public function update(UpdateServiceRequest $request, int $service, UpdateService $updateService): ServiceResource
     {
-        return new ServiceResource($this->services->update($service, ...$this->parameters($request)));
+        return new ServiceResource($updateService->execute($service, ...$this->parameters($request)));
     }
 
-    public function destroy(int $service): Response
+    public function destroy(int $service, DeleteService $deleteService): Response
     {
-        $this->services->delete($service);
+        $deleteService->execute($service);
 
         return response()->noContent();
     }

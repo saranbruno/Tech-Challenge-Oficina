@@ -2,7 +2,13 @@
 
 namespace App\Interfaces\Http\Controllers\Inventory;
 
-use App\Application\Inventory\InventoryService;
+use App\Application\Inventory\AdjustInventoryStock;
+use App\Application\Inventory\CreateInventoryItem;
+use App\Application\Inventory\DeleteInventoryItem;
+use App\Application\Inventory\GetInventoryItem;
+use App\Application\Inventory\ListInventoryItems;
+use App\Application\Inventory\ListInventoryMovements;
+use App\Application\Inventory\UpdateInventoryItem;
 use App\Interfaces\Http\Requests\Inventory\AdjustStockRequest;
 use App\Interfaces\Http\Requests\Inventory\StoreInventoryItemRequest;
 use App\Interfaces\Http\Requests\Inventory\UpdateInventoryItemRequest;
@@ -15,16 +21,14 @@ use Illuminate\Http\Response;
 
 class InventoryItemController
 {
-    public function __construct(private readonly InventoryService $inventory) {}
-
-    public function index(Request $request): AnonymousResourceCollection
+    public function index(Request $request, ListInventoryItems $listInventoryItems): AnonymousResourceCollection
     {
-        return InventoryItemResource::collection($this->inventory->list($this->perPage($request)));
+        return InventoryItemResource::collection($listInventoryItems->execute($this->perPage($request)));
     }
 
-    public function store(StoreInventoryItemRequest $request): JsonResponse
+    public function store(StoreInventoryItemRequest $request, CreateInventoryItem $createInventoryItem): JsonResponse
     {
-        $item = $this->inventory->create(
+        $item = $createInventoryItem->execute(
             $request->string('name')->toString(),
             $request->string('type')->toString(),
             $request->integer('unit_price'),
@@ -35,14 +39,14 @@ class InventoryItemController
         return (new InventoryItemResource($item))->response()->setStatusCode(201);
     }
 
-    public function show(int $inventoryItem): InventoryItemResource
+    public function show(int $inventoryItem, GetInventoryItem $getInventoryItem): InventoryItemResource
     {
-        return new InventoryItemResource($this->inventory->find($inventoryItem));
+        return new InventoryItemResource($getInventoryItem->execute($inventoryItem));
     }
 
-    public function update(UpdateInventoryItemRequest $request, int $inventoryItem): InventoryItemResource
+    public function update(UpdateInventoryItemRequest $request, int $inventoryItem, UpdateInventoryItem $updateInventoryItem): InventoryItemResource
     {
-        return new InventoryItemResource($this->inventory->update(
+        return new InventoryItemResource($updateInventoryItem->execute(
             $inventoryItem,
             $request->string('name')->toString(),
             $request->string('type')->toString(),
@@ -50,23 +54,23 @@ class InventoryItemController
         ));
     }
 
-    public function adjustStock(AdjustStockRequest $request, int $inventoryItem): InventoryItemResource
+    public function adjustStock(AdjustStockRequest $request, int $inventoryItem, AdjustInventoryStock $adjustInventoryStock): InventoryItemResource
     {
-        return new InventoryItemResource($this->inventory->adjustStock(
+        return new InventoryItemResource($adjustInventoryStock->execute(
             $inventoryItem,
             $request->integer('quantity_available'),
             $request->user()->getAuthIdentifier(),
         ));
     }
 
-    public function movements(Request $request, int $inventoryItem): AnonymousResourceCollection
+    public function movements(Request $request, int $inventoryItem, ListInventoryMovements $listInventoryMovements): AnonymousResourceCollection
     {
-        return StockMovementResource::collection($this->inventory->movements($inventoryItem, $this->perPage($request)));
+        return StockMovementResource::collection($listInventoryMovements->execute($inventoryItem, $this->perPage($request)));
     }
 
-    public function destroy(int $inventoryItem): Response
+    public function destroy(int $inventoryItem, DeleteInventoryItem $deleteInventoryItem): Response
     {
-        $this->inventory->delete($inventoryItem);
+        $deleteInventoryItem->execute($inventoryItem);
 
         return response()->noContent();
     }

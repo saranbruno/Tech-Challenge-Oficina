@@ -4,6 +4,7 @@ namespace App\Application\ServiceOrder;
 
 use App\Application\ServiceOrder\Contracts\ServiceOrderRepository;
 use App\Domain\ServiceOrder\ServiceOrderExecutionTimeCalculator;
+use App\Domain\ServiceOrder\ServiceOrderExecutionTimeMetrics;
 use DateTimeImmutable;
 
 final readonly class GetServiceOrderExecutionTimeMetrics
@@ -17,7 +18,7 @@ final readonly class GetServiceOrderExecutionTimeMetrics
         ?DateTimeImmutable $deliveredFrom,
         ?DateTimeImmutable $deliveredTo,
         ?int $serviceId,
-    ): array {
+    ): ServiceOrderExecutionTimeMetrics {
         return $this->calculator->calculate($this->serviceOrders->completedForMetrics(
             $deliveredFrom,
             $deliveredTo,

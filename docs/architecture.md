@@ -95,7 +95,15 @@ A arquitetura-alvo preserva os mesmos quatro limites e remove todas as excecoes 
 6. O composition root do Laravel liga ports a adapters; nenhuma camada interna consulta configuracao global.
 7. Testes arquiteturais impedem imports e helpers proibidos e recusam `mixed` nos contratos internos.
 
-### Backlog fechado do Dia 3
+### Resultado da refatoracao do Dia 3
+
+Os quatro itens do Dia 3 foram concluidos sem alterar rotas ou payloads HTTP. A autenticacao agora usa `TokenData` e `AuthenticatedAdminData` como contratos internos; somente o adapter JWT consulta configuracao Laravel e converte `User`. As 22 operacoes antes reunidas em quatro servicos CRUD possuem casos de uso independentes, enquanto factories de Aplicacao concentram a construcao e a validacao compartilhada.
+
+`CreateServiceOrder` tornou-se o unico fluxo de abertura. A cobertura valida do caso legado foi portada com uma colecao vazia de itens de estoque, e `CreateInitialServiceOrder` foi removido. `RequestedServiceCollection` e `RequestedInventoryItemCollection` tornam as composicoes explicitas nas assinaturas; entradas vazias usam as excecoes nomeadas `InvalidServiceOrderBudget` e `InvalidAdditionalRepair`. O calculador retorna `ServiceOrderExecutionTimeMetrics`, e a Interface HTTP mantem o formato publico em `snake_case`.
+
+As buscas apos a refatoracao encontraram zero uso de `config()` e zero import de `App\Models` nos 60 arquivos da Aplicacao. Permanecem 12 assinaturas `mixed`, todas pertencentes ao escopo deliberado de paginacao e mapeamento do Dia 4.
+
+### Backlog fechado do Dia 3, concluido
 
 | Item | Alteracao exata | Criterio de aceite |
 | --- | --- | --- |
@@ -188,3 +196,5 @@ A configuracao `phpunit.integration.xml` executa as suites Unit e Feature contra
 - Regras de negocio sao testadas prioritariamente como testes unitarios de Dominio.
 - Fluxos HTTP e persistencia PostgreSQL sao cobertos por testes de integracao.
 - Novas classes e diretorios sao criados somente quando houver comportamento concreto.
+- Operacoes independentes de Aplicacao usam uma classe de caso de uso e o metodo `execute`; factories coesas concentram somente construcao, normalizacao e validacao compartilhadas.
+- Colecoes de entrada e resultados compostos possuem tipos internos explicitos; a Interface HTTP e responsavel por preservar nomes e formatos do contrato publico.

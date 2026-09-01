@@ -2,7 +2,7 @@
 
 namespace App\Interfaces\Http\Controllers\Auth;
 
-use App\Application\Auth\Contracts\AdminTokenProvider;
+use App\Application\Auth\GetAuthenticatedAdmin;
 use App\Application\Auth\LoginAdmin;
 use App\Application\Auth\RefreshAdminToken;
 use App\Interfaces\Http\Requests\Auth\LoginRequest;
@@ -38,13 +38,13 @@ class AdminAuthController
         ]);
     }
 
-    public function me(AdminTokenProvider $tokens): JsonResponse
+    public function me(GetAuthenticatedAdmin $getAuthenticatedAdmin): JsonResponse
     {
-        $admin = $tokens->user();
+        $admin = $getAuthenticatedAdmin->execute();
 
         return response()->json([
             'data' => [
-                'id' => $admin?->getKey(),
+                'id' => $admin?->id,
                 'name' => $admin?->name,
                 'email' => $admin?->email,
             ],

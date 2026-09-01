@@ -2,7 +2,11 @@
 
 namespace App\Interfaces\Http\Controllers\Vehicle;
 
-use App\Application\Vehicle\VehicleService;
+use App\Application\Vehicle\CreateVehicle;
+use App\Application\Vehicle\DeleteVehicle;
+use App\Application\Vehicle\GetVehicle;
+use App\Application\Vehicle\ListVehicles;
+use App\Application\Vehicle\UpdateVehicle;
 use App\Interfaces\Http\Requests\Vehicle\StoreVehicleRequest;
 use App\Interfaces\Http\Requests\Vehicle\UpdateVehicleRequest;
 use App\Interfaces\Http\Resources\VehicleResource;
@@ -13,35 +17,33 @@ use Illuminate\Http\Response;
 
 class VehicleController
 {
-    public function __construct(private readonly VehicleService $vehicles) {}
-
-    public function index(Request $request): AnonymousResourceCollection
+    public function index(Request $request, ListVehicles $listVehicles): AnonymousResourceCollection
     {
         $perPage = min(max($request->integer('per_page', 15), 1), 100);
 
-        return VehicleResource::collection($this->vehicles->list($perPage));
+        return VehicleResource::collection($listVehicles->execute($perPage));
     }
 
-    public function store(StoreVehicleRequest $request): JsonResponse
+    public function store(StoreVehicleRequest $request, CreateVehicle $createVehicle): JsonResponse
     {
-        $vehicle = $this->vehicles->create(...$this->parameters($request));
+        $vehicle = $createVehicle->execute(...$this->parameters($request));
 
         return (new VehicleResource($vehicle))->response()->setStatusCode(201);
     }
 
-    public function show(int $vehicle): VehicleResource
+    public function show(int $vehicle, GetVehicle $getVehicle): VehicleResource
     {
-        return new VehicleResource($this->vehicles->find($vehicle));
+        return new VehicleResource($getVehicle->execute($vehicle));
     }
 
-    public function update(UpdateVehicleRequest $request, int $vehicle): VehicleResource
+    public function update(UpdateVehicleRequest $request, int $vehicle, UpdateVehicle $updateVehicle): VehicleResource
     {
-        return new VehicleResource($this->vehicles->update($vehicle, ...$this->parameters($request)));
+        return new VehicleResource($updateVehicle->execute($vehicle, ...$this->parameters($request)));
     }
 
-    public function destroy(int $vehicle): Response
+    public function destroy(int $vehicle, DeleteVehicle $deleteVehicle): Response
     {
-        $this->vehicles->delete($vehicle);
+        $deleteVehicle->execute($vehicle);
 
         return response()->noContent();
     }

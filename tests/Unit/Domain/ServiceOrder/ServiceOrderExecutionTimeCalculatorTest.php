@@ -21,15 +21,15 @@ class ServiceOrderExecutionTimeCalculatorTest extends TestCase
             $this->deliveredOrder([0, 20, 60, 120, 200, 300], 2),
         ]);
 
-        self::assertSame(2, $result['eligible_orders']);
-        self::assertSame(225, $result['average_total_seconds']);
+        self::assertSame(2, $result->eligibleOrders);
+        self::assertSame(225, $result->averageTotalSeconds);
         self::assertSame([
             'received' => 15,
             'in_diagnosis' => 30,
             'awaiting_approval' => 45,
             'in_execution' => 60,
             'finalized' => 75,
-        ], $result['average_seconds_by_status']);
+        ], $result->averageSecondsByStatus);
     }
 
     #[Test]
@@ -37,15 +37,15 @@ class ServiceOrderExecutionTimeCalculatorTest extends TestCase
     {
         $result = (new ServiceOrderExecutionTimeCalculator)->calculate([]);
 
-        self::assertSame(0, $result['eligible_orders']);
-        self::assertNull($result['average_total_seconds']);
+        self::assertSame(0, $result->eligibleOrders);
+        self::assertNull($result->averageTotalSeconds);
         self::assertSame([
             'received' => null,
             'in_diagnosis' => null,
             'awaiting_approval' => null,
             'in_execution' => null,
             'finalized' => null,
-        ], $result['average_seconds_by_status']);
+        ], $result->averageSecondsByStatus);
     }
 
     #[Test]
@@ -67,8 +67,8 @@ class ServiceOrderExecutionTimeCalculatorTest extends TestCase
 
         $result = (new ServiceOrderExecutionTimeCalculator)->calculate([$incomplete]);
 
-        self::assertSame(0, $result['eligible_orders']);
-        self::assertNull($result['average_total_seconds']);
+        self::assertSame(0, $result->eligibleOrders);
+        self::assertNull($result->averageTotalSeconds);
     }
 
     private function deliveredOrder(array $offsets, int $id = 1): ServiceOrder

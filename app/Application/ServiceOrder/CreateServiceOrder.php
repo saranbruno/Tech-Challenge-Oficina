@@ -6,16 +6,16 @@ use App\Application\Customer\Contracts\CustomerRepository;
 use App\Application\Inventory\Contracts\InventoryItemRepository;
 use App\Application\Service\Contracts\ServiceRepository;
 use App\Application\ServiceOrder\Contracts\ServiceOrderRepository;
-use App\Application\ServiceOrder\Data\RequestedInventoryItemData;
-use App\Application\ServiceOrder\Data\RequestedServiceData;
+use App\Application\ServiceOrder\Data\RequestedInventoryItemCollection;
+use App\Application\ServiceOrder\Data\RequestedServiceCollection;
 use App\Application\ServiceOrder\Exceptions\VehicleDoesNotBelongToCustomer;
 use App\Application\Vehicle\Contracts\VehicleRepository;
 use App\Domain\Customer\ValueObjects\Document;
+use App\Domain\ServiceOrder\Exceptions\InvalidServiceOrderBudget;
 use App\Domain\ServiceOrder\ServiceOrder;
 use App\Domain\ServiceOrder\ServiceOrderInventoryItem;
 use App\Domain\ServiceOrder\ServiceOrderService;
 use DateTimeImmutable;
-use DomainException;
 
 final readonly class CreateServiceOrder
 {
@@ -30,12 +30,12 @@ final readonly class CreateServiceOrder
     public function execute(
         string $customerDocument,
         int $vehicleId,
-        array $requestedServices,
-        array $requestedInventoryItems,
+        RequestedServiceCollection $requestedServices,
+        RequestedInventoryItemCollection $requestedInventoryItems,
         DateTimeImmutable $receivedAt,
     ): ServiceOrder {
-        if ($requestedServices === []) {
-            throw new DomainException('A ordem de servico deve possuir ao menos um servico.');
+        if ($requestedServices->isEmpty()) {
+            throw new InvalidServiceOrderBudget('A ordem de servico deve possuir ao menos um servico.');
         }
 
         $customer = $this->customers->findByDocumentOrFail((new Document($customerDocument))->value);
@@ -54,11 +54,7 @@ final readonly class CreateServiceOrder
             $trackingToken,
         );
 
-        foreach ($requestedServices as $requestedService) {
-            if (! $requestedService instanceof RequestedServiceData) {
-                throw new DomainException('A composicao de servicos informada e invalida.');
-            }
-
+        foreach ($requestedServices->all() as $requestedService) {
             $service = $this->services->findOrFail($requestedService->serviceId);
             $serviceOrder->addService(new ServiceOrderService(
                 $service->id,
@@ -67,11 +63,7 @@ final readonly class CreateServiceOrder
             ));
         }
 
-        foreach ($requestedInventoryItems as $requestedInventoryItem) {
-            if (! $requestedInventoryItem instanceof RequestedInventoryItemData) {
-                throw new DomainException('A composicao de itens de estoque informada e invalida.');
-            }
-
+        foreach ($requestedInventoryItems->all() as $requestedInventoryItem) {
             $inventoryItem = $this->inventoryItems->findOrFail($requestedInventoryItem->inventoryItemId);
             $serviceOrder->addInventoryItem(new ServiceOrderInventoryItem(
                 $inventoryItem->id,
