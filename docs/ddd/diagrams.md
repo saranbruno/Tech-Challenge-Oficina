@@ -73,7 +73,7 @@ flowchart LR
 | Comunicacao de Status | Preparar mensagens minimas e tentar todos os contatos disponiveis sem acoplar o Dominio a fornecedores. | `DispatchServiceOrderStatusNotification`, ports em `Application/Notification` |
 | Monitoramento | Calcular duração total e por estado das OS elegíveis. | `GetServiceOrderExecutionTimeMetrics`, `ServiceOrderExecutionTimeCalculator` |
 
-O núcleo interno de notificações existe sem adapters externos conectados às transições. Ainda não há SMTP, Mailpit, Twilio, filas, pagamentos ou tempo real. A API REST lê o estado persistido e o PostgreSQL é o único banco da aplicação.
+O núcleo interno de notificações e o adapter de e-mail existem sem conexão às transições. O Compose fornece Mailpit local; SMTP de produção e o adapter Twilio permanecem configuráveis por ambiente nos Dias 7 e 8. Ainda não há filas, pagamentos ou tempo real. A API REST lê o estado persistido e o PostgreSQL é o único banco da aplicação.
 
 ## Agregados e relações
 

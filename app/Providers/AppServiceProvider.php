@@ -5,6 +5,7 @@ namespace App\Providers;
 use App\Application\Auth\Contracts\AdminTokenProvider;
 use App\Application\Customer\Contracts\CustomerRepository;
 use App\Application\Inventory\Contracts\InventoryItemRepository;
+use App\Application\Notification\Contracts\EmailNotificationSender;
 use App\Application\Notification\Contracts\NotificationFailureReporter;
 use App\Application\Service\Contracts\ServiceRepository;
 use App\Application\ServiceOrder\Contracts\ServiceOrderApproval;
@@ -13,6 +14,7 @@ use App\Application\ServiceOrder\Contracts\ServiceOrderQuery;
 use App\Application\ServiceOrder\Contracts\ServiceOrderRepository;
 use App\Application\Vehicle\Contracts\VehicleRepository;
 use App\Infrastructure\Auth\JwtAdminTokenProvider;
+use App\Infrastructure\Notification\Email\LaravelEmailNotificationSender;
 use App\Infrastructure\Notification\LoggingNotificationFailureReporter;
 use App\Infrastructure\Persistence\Eloquent\EloquentCustomerRepository;
 use App\Infrastructure\Persistence\Eloquent\EloquentInventoryItemRepository;
@@ -32,6 +34,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(AdminTokenProvider::class, JwtAdminTokenProvider::class);
         $this->app->bind(CustomerRepository::class, EloquentCustomerRepository::class);
         $this->app->bind(InventoryItemRepository::class, EloquentInventoryItemRepository::class);
+        $this->app->bind(EmailNotificationSender::class, LaravelEmailNotificationSender::class);
         $this->app->bind(NotificationFailureReporter::class, function (): NotificationFailureReporter {
             $logger = $this->app->make(LogManager::class)
                 ->channel((string) config('notifications.failure_log_channel'));

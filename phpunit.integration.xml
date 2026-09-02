@@ -31,6 +31,8 @@
             <file>app/Application/Notification/DispatchServiceOrderStatusNotification.php</file>
             <file>app/Application/Notification/ServiceOrderStatusNotificationFactory.php</file>
             <file>app/Infrastructure/Notification/LoggingNotificationFailureReporter.php</file>
+            <file>app/Infrastructure/Notification/Email/LaravelEmailNotificationSender.php</file>
+            <file>app/Infrastructure/Notification/Email/ServiceOrderStatusMail.php</file>
         </include>
     </source>
     <php>
@@ -50,6 +52,8 @@
         <env name="JWT_TTL" value="60"/>
         <env name="JWT_REFRESH_TTL" value="20160"/>
         <env name="MAIL_MAILER" value="array"/>
+        <env name="NOTIFICATION_MAILER" value="array"/>
+        <env name="MAILPIT_INTEGRATION_TEST" value="false"/>
         <env name="QUEUE_CONNECTION" value="sync"/>
         <env name="SESSION_DRIVER" value="array"/>
         <env name="PULSE_ENABLED" value="false"/>

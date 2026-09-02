@@ -81,7 +81,7 @@ A imagem inclui PCOV 1.0.12 para medir a cobertura real das classes criticas do 
 docker compose exec app ./vendor/bin/phpunit -c phpunit.domain.xml --coverage-text --coverage-clover build/coverage-domain.xml
 ```
 
-Na medicao do Dia 5 da Fase 2, os 63 testes de dominio executaram 88 assercoes. As dez classes criticas, incluindo os objetos de valor `Email` e `Phone`, atingiram 100% das classes, metodos e 170 linhas. O relatorio Clover e gerado localmente em `build/coverage-domain.xml` e nao e versionado.
+Na medicao atual da Fase 2, os testes criticos executam 78 testes e 143 assercoes. As 13 classes criticas, incluindo os objetos de valor de Cliente e o nucleo de notificacoes, atingiram 100% das classes, metodos e 211 linhas. O relatorio Clover e gerado localmente em `build/coverage-domain.xml` e nao e versionado.
 
 A validacao integrada usa PostgreSQL e executa testes unitarios e todos os Feature Tests, incluindo um fluxo completo da OS pela API:
 
@@ -89,7 +89,7 @@ A validacao integrada usa PostgreSQL e executa testes unitarios e todos os Featu
 docker compose exec app ./vendor/bin/phpunit -c phpunit.integration.xml --coverage-text --coverage-clover build/coverage-integration.xml
 ```
 
-Na medicao do Dia 5 da Fase 2, os 156 testes executaram 520 assercoes em PostgreSQL. As dez classes criticas atingiram 100% das classes, 33 metodos e 170 linhas durante a suite integrada. O relatorio Clover e gerado localmente em `build/coverage-integration.xml` e nao e versionado.
+Na medicao do Dia 7 da Fase 2, os 175 testes executaram 583 assercoes em PostgreSQL, com um teste opt-in do Mailpit pulado no modo padrao. As 15 classes criticas atingiram 100% das classes, 46 metodos e 221 linhas durante a suite integrada. O relatorio Clover e gerado localmente em `build/coverage-integration.xml` e nao e versionado.
 
 ## Encerramento
 
@@ -112,6 +112,12 @@ O Dia 23 executou um scan real do codigo-fonte com Semgrep 1.89.0 e um audit de 
 - Composer audit: nenhuma advisory encontrada
 
 Os resultados nao substituem revisao manual e testes de comportamento.
+
+## E-mail e Mailpit
+
+O Compose inicia o Mailpit `v1.30.6` para desenvolvimento local, com SMTP em `localhost:1025` e interface web em `http://localhost:8025`. O adapter `LaravelEmailNotificationSender` envia a mensagem de status usando `NOTIFICATION_MAILER` e o template `resources/views/mail/service-order-status.blade.php`.
+
+O `.env.example` usa SMTP apontando para `mailpit`. Em producao, configure `MAIL_MAILER`, `MAIL_HOST`, `MAIL_PORT`, `MAIL_SCHEME`, `MAIL_USERNAME`, `MAIL_PASSWORD`, `MAIL_FROM_ADDRESS` e `MAIL_FROM_NAME` por variaveis de ambiente ou Secrets. Nenhuma credencial real deve ser versionada. O teste Mailpit real e opt-in com `MAILPIT_INTEGRATION_TEST=true`; a suite padrao usa `Mail::fake`.
 
 ## PostgreSQL
 
@@ -157,7 +163,7 @@ O refresh usa o proprio JWT anterior. Depois do prazo de acesso ele nao autentic
 
 O cadastro minimo possui `name` e `document`. Os campos `email` e `phone` sao opcionais e podem estar ambos ausentes; nao existe `notification_channel`. E-mails sao normalizados em letras minusculas, e telefones sao armazenados no formato internacional E.164, com `+55` aplicado a numeros brasileiros informados sem codigo do pais. Contatos nao identificam o cliente e podem se repetir; o documento permanece unico.
 
-O nucleo de notificacoes aplica melhor esforco a todos os contatos disponiveis: tenta e-mail quando existe e-mail, SMS quando existe telefone e ambos quando os dois existem. Falhas sao isoladas e registradas sem destinatario ou conteudo sensivel. Os adapters SMTP/Mailpit e Twilio ainda pertencem aos Dias 7 e 8, e a integracao com transicoes pertence ao Dia 9. A politica detalhada esta em `docs/notifications.md`.
+O nucleo de notificacoes aplica melhor esforco a todos os contatos disponiveis: tenta e-mail quando existe e-mail, SMS quando existe telefone e ambos quando os dois existem. Falhas sao isoladas e registradas sem destinatario ou conteudo sensivel. O e-mail usa Mailpit local ou SMTP por configuracao; SMS/Twilio e a integracao com transicoes permanecem nos Dias 8 e 9. A politica detalhada esta em `docs/notifications.md`.
 
 CPF e CNPJ podem ser enviados com ou sem pontuacao, sao normalizados para somente digitos e validados pelos digitos verificadores antes da persistencia. O PostgreSQL tambem impede documentos duplicados, restringe o tipo e o tamanho estrutural do documento e protege o formato persistido do telefone.
 

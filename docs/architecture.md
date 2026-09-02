@@ -134,7 +134,7 @@ O modelo `User` foi movido para a Infraestrutura. Cinco testes em `tests/Archite
 
 `DispatchServiceOrderStatusNotification` pertence a Aplicacao e depende somente das portas `EmailNotificationSender`, `SmsNotificationSender` e `NotificationFailureReporter`. Ele seleciona todos os contatos disponiveis, cria uma mensagem minima por status e isola a falha de cada tentativa. O Dominio continua sem conhecer mensagens, fornecedores ou mecanismos de entrega.
 
-`LoggingNotificationFailureReporter` implementa na Infraestrutura o registro sanitizado das falhas. SMTP, Mailpit e Twilio ainda nao fazem parte do codigo: seus adapters pertencem aos Dias 7 e 8. O dispatcher tambem nao foi ligado aos casos de uso de transicao, responsabilidade do Dia 9, quando a chamada ocorrera somente depois da persistencia bem-sucedida.
+`LoggingNotificationFailureReporter` implementa na Infraestrutura o registro sanitizado das falhas. `LaravelEmailNotificationSender` e `ServiceOrderStatusMail` usam o mailer Laravel configurado por ambiente; o Compose fornece Mailpit local. O adapter SMS e a ligacao do dispatcher aos casos de uso de transicao permanecem nos Dias 8 e 9.
 
 ## Rotas
 
