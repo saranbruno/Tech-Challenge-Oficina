@@ -70,9 +70,10 @@ flowchart LR
 | Cadastro de Atendimento | Manter Clientes e Veículos e proteger sua relação de propriedade. | `Customer`, `Document`, `Email`, `Phone`, `Vehicle`, `LicensePlate` |
 | Catálogo e Estoque | Manter Serviços, Peças, Insumos, saldos e movimentações. | `Service`, `InventoryItem`, `StockQuantity`, `StockMovementData` |
 | Atendimento da Oficina | Coordenar a OS, orçamento, acompanhamento, aprovação e ciclo operacional. | `ServiceOrder`, casos de uso em `Application/ServiceOrder` |
+| Comunicacao de Status | Preparar mensagens minimas e tentar todos os contatos disponiveis sem acoplar o Dominio a fornecedores. | `DispatchServiceOrderStatusNotification`, ports em `Application/Notification` |
 | Monitoramento | Calcular duração total e por estado das OS elegíveis. | `GetServiceOrderExecutionTimeMetrics`, `ServiceOrderExecutionTimeCalculator` |
 
-Não há sistema externo de notificações, pagamentos, filas ou tempo real. A API REST lê o estado persistido e o PostgreSQL é o único banco da aplicação.
+O núcleo interno de notificações existe sem adapters externos conectados às transições. Ainda não há SMTP, Mailpit, Twilio, filas, pagamentos ou tempo real. A API REST lê o estado persistido e o PostgreSQL é o único banco da aplicação.
 
 ## Agregados e relações
 

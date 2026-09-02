@@ -130,6 +130,12 @@ A persistencia de OS foi dividida entre `ServiceOrderRepository`, `ServiceOrderQ
 
 O modelo `User` foi movido para a Infraestrutura. Cinco testes em `tests/Architecture` verificam as dependencias de Dominio e Aplicacao, Eloquent fora da Infraestrutura, persistencia na Interface e tipos `mixed`; a fixture controlada confirma que dependência de Infraestrutura, helper Laravel e `mixed` sao detectados. As buscas no codigo real retornam zero violacao e a suite integrada permanece aprovada.
 
+### Nucleo de notificacoes do Dia 6
+
+`DispatchServiceOrderStatusNotification` pertence a Aplicacao e depende somente das portas `EmailNotificationSender`, `SmsNotificationSender` e `NotificationFailureReporter`. Ele seleciona todos os contatos disponiveis, cria uma mensagem minima por status e isola a falha de cada tentativa. O Dominio continua sem conhecer mensagens, fornecedores ou mecanismos de entrega.
+
+`LoggingNotificationFailureReporter` implementa na Infraestrutura o registro sanitizado das falhas. SMTP, Mailpit e Twilio ainda nao fazem parte do codigo: seus adapters pertencem aos Dias 7 e 8. O dispatcher tambem nao foi ligado aos casos de uso de transicao, responsabilidade do Dia 9, quando a chamada ocorrera somente depois da persistencia bem-sucedida.
+
 ## Rotas
 
 As rotas da API possuem o prefixo global `/api`.

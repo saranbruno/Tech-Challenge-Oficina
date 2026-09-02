@@ -157,6 +157,8 @@ O refresh usa o proprio JWT anterior. Depois do prazo de acesso ele nao autentic
 
 O cadastro minimo possui `name` e `document`. Os campos `email` e `phone` sao opcionais e podem estar ambos ausentes; nao existe `notification_channel`. E-mails sao normalizados em letras minusculas, e telefones sao armazenados no formato internacional E.164, com `+55` aplicado a numeros brasileiros informados sem codigo do pais. Contatos nao identificam o cliente e podem se repetir; o documento permanece unico.
 
+O nucleo de notificacoes aplica melhor esforco a todos os contatos disponiveis: tenta e-mail quando existe e-mail, SMS quando existe telefone e ambos quando os dois existem. Falhas sao isoladas e registradas sem destinatario ou conteudo sensivel. Os adapters SMTP/Mailpit e Twilio ainda pertencem aos Dias 7 e 8, e a integracao com transicoes pertence ao Dia 9. A politica detalhada esta em `docs/notifications.md`.
+
 CPF e CNPJ podem ser enviados com ou sem pontuacao, sao normalizados para somente digitos e validados pelos digitos verificadores antes da persistencia. O PostgreSQL tambem impede documentos duplicados, restringe o tipo e o tamanho estrutural do documento e protege o formato persistido do telefone.
 
 Todos os endpoints exigem JWT administrativo:

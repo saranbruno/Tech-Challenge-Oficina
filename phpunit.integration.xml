@@ -28,6 +28,9 @@
             <file>app/Domain/ServiceOrder/ServiceOrderInventoryItem.php</file>
             <file>app/Domain/ServiceOrder/ServiceOrderService.php</file>
             <file>app/Domain/Vehicle/ValueObjects/LicensePlate.php</file>
+            <file>app/Application/Notification/DispatchServiceOrderStatusNotification.php</file>
+            <file>app/Application/Notification/ServiceOrderStatusNotificationFactory.php</file>
+            <file>app/Infrastructure/Notification/LoggingNotificationFailureReporter.php</file>
         </include>
     </source>
     <php>
