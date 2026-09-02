@@ -1055,6 +1055,22 @@ components:
           maxLength: 18
           description: CPF ou CNPJ, com ou sem pontuacao.
           example: 529.982.247-25
+        email:
+          type:
+            - string
+            - 'null'
+          format: email
+          maxLength: 254
+          description: E-mail opcional, normalizado para letras minusculas.
+          example: cliente@example.com
+        phone:
+          type:
+            - string
+            - 'null'
+          maxLength: 30
+          pattern: '^\+?[0-9\s().-]+$'
+          description: Telefone opcional; numeros brasileiros podem ser enviados com formatacao e sao armazenados em E.164.
+          example: (11) 99876-5432
     Customer:
       type: object
       required:
@@ -1062,6 +1078,8 @@ components:
         - name
         - document
         - document_type
+        - email
+        - phone
       properties:
         id:
           type: integer
@@ -1077,6 +1095,19 @@ components:
           enum:
             - cpf
             - cnpj
+        email:
+          type:
+            - string
+            - 'null'
+          format: email
+          example: cliente@example.com
+        phone:
+          type:
+            - string
+            - 'null'
+          pattern: '^\+[1-9][0-9]{7,14}$'
+          description: Telefone normalizado no formato E.164.
+          example: '+5511998765432'
     CustomerResponse:
       type: object
       required:

@@ -67,7 +67,7 @@ flowchart LR
 | Contexto conceitual | Responsabilidade | Principais identificadores |
 | --- | --- | --- |
 | Identidade Administrativa | Autenticar o Administrador e emitir ou renovar JWT. | `LoginAdmin`, `RefreshAdminToken`, `AdminTokenProvider` |
-| Cadastro de Atendimento | Manter Clientes e Veículos e proteger sua relação de propriedade. | `Customer`, `Document`, `Vehicle`, `LicensePlate` |
+| Cadastro de Atendimento | Manter Clientes e Veículos e proteger sua relação de propriedade. | `Customer`, `Document`, `Email`, `Phone`, `Vehicle`, `LicensePlate` |
 | Catálogo e Estoque | Manter Serviços, Peças, Insumos, saldos e movimentações. | `Service`, `InventoryItem`, `StockQuantity`, `StockMovementData` |
 | Atendimento da Oficina | Coordenar a OS, orçamento, acompanhamento, aprovação e ciclo operacional. | `ServiceOrder`, casos de uso em `Application/ServiceOrder` |
 | Monitoramento | Calcular duração total e por estado das OS elegíveis. | `GetServiceOrderExecutionTimeMetrics`, `ServiceOrderExecutionTimeCalculator` |
@@ -80,6 +80,8 @@ Não há sistema externo de notificações, pagamentos, filas ou tempo real. A A
 flowchart TB
     CustomerRoot["Customer<br/>raiz de agregado"]
     Document["Document<br/>objeto de valor"]
+    Email["Email<br/>objeto de valor opcional"]
+    Phone["Phone<br/>objeto de valor opcional"]
     VehicleRoot["Vehicle<br/>raiz de agregado"]
     Plate["LicensePlate<br/>objeto de valor"]
     ServiceRoot["Service<br/>raiz de agregado"]
@@ -92,6 +94,8 @@ flowchart TB
     UnitPrice["UnitPrice<br/>objeto de valor"]
 
     CustomerRoot -->|possui| Document
+    CustomerRoot -. pode possuir .-> Email
+    CustomerRoot -. pode possuir .-> Phone
     VehicleRoot -->|referencia customerId| CustomerRoot
     VehicleRoot -->|possui| Plate
     ServiceRoot -->|possui| UnitPrice
@@ -125,6 +129,8 @@ classDiagram
         +int id
         +string name
         +Document document
+        +Email email
+        +Phone phone
     }
     class Document {
         +string value
@@ -134,6 +140,12 @@ classDiagram
         <<enumeration>>
         Cpf
         Cnpj
+    }
+    class Email {
+        +string value
+    }
+    class Phone {
+        +string value
     }
     class Vehicle {
         +int id
@@ -217,6 +229,8 @@ classDiagram
     class ServiceOrderExecutionTimeMetrics
 
     Customer *-- Document
+    Customer o-- Email
+    Customer o-- Phone
     Document --> DocumentType
     Vehicle *-- LicensePlate
     Vehicle --> Customer : customerId

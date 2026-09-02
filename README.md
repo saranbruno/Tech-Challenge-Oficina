@@ -81,7 +81,7 @@ A imagem inclui PCOV 1.0.12 para medir a cobertura real das classes criticas do 
 docker compose exec app ./vendor/bin/phpunit -c phpunit.domain.xml --coverage-text --coverage-clover build/coverage-domain.xml
 ```
 
-Na medicao do Dia 18, os 50 testes de dominio executaram 73 assercoes. A cobertura obtida nas oito classes criticas foi de 87,50% das classes, 96,67% dos metodos e 98,79% das linhas. O relatorio Clover e gerado localmente em `build/coverage-domain.xml` e nao e versionado.
+Na medicao do Dia 5 da Fase 2, os 63 testes de dominio executaram 88 assercoes. As dez classes criticas, incluindo os objetos de valor `Email` e `Phone`, atingiram 100% das classes, metodos e 170 linhas. O relatorio Clover e gerado localmente em `build/coverage-domain.xml` e nao e versionado.
 
 A validacao integrada usa PostgreSQL e executa testes unitarios e todos os Feature Tests, incluindo um fluxo completo da OS pela API:
 
@@ -89,7 +89,7 @@ A validacao integrada usa PostgreSQL e executa testes unitarios e todos os Featu
 docker compose exec app ./vendor/bin/phpunit -c phpunit.integration.xml --coverage-text --coverage-clover build/coverage-integration.xml
 ```
 
-Na medicao final do Dia 24, os 131 testes executaram 466 assercoes. As oito classes criticas atingiram 100% de classes, metodos e linhas durante a suite integrada. O relatorio Clover e gerado localmente em `build/coverage-integration.xml` e nao e versionado.
+Na medicao do Dia 5 da Fase 2, os 156 testes executaram 520 assercoes em PostgreSQL. As dez classes criticas atingiram 100% das classes, 33 metodos e 170 linhas durante a suite integrada. O relatorio Clover e gerado localmente em `build/coverage-integration.xml` e nao e versionado.
 
 ## Encerramento
 
@@ -155,7 +155,9 @@ O refresh usa o proprio JWT anterior. Depois do prazo de acesso ele nao autentic
 
 ## Clientes
 
-O cadastro minimo possui `name` e `document`. CPF e CNPJ podem ser enviados com ou sem pontuacao, sao normalizados para somente digitos e validados pelos digitos verificadores antes da persistencia. O PostgreSQL tambem impede documentos duplicados e restringe o tipo e o tamanho estrutural do documento.
+O cadastro minimo possui `name` e `document`. Os campos `email` e `phone` sao opcionais e podem estar ambos ausentes; nao existe `notification_channel`. E-mails sao normalizados em letras minusculas, e telefones sao armazenados no formato internacional E.164, com `+55` aplicado a numeros brasileiros informados sem codigo do pais. Contatos nao identificam o cliente e podem se repetir; o documento permanece unico.
+
+CPF e CNPJ podem ser enviados com ou sem pontuacao, sao normalizados para somente digitos e validados pelos digitos verificadores antes da persistencia. O PostgreSQL tambem impede documentos duplicados, restringe o tipo e o tamanho estrutural do documento e protege o formato persistido do telefone.
 
 Todos os endpoints exigem JWT administrativo:
 

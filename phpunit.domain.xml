@@ -12,6 +12,8 @@
     <source>
         <include>
             <file>app/Domain/Customer/ValueObjects/Document.php</file>
+            <file>app/Domain/Customer/ValueObjects/Email.php</file>
+            <file>app/Domain/Customer/ValueObjects/Phone.php</file>
             <file>app/Domain/Inventory/ValueObjects/StockQuantity.php</file>
             <file>app/Domain/Service/ValueObjects/UnitPrice.php</file>
             <file>app/Domain/ServiceOrder/ServiceOrder.php</file>

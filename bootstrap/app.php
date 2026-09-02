@@ -9,6 +9,8 @@ use App\Application\ServiceOrder\Exceptions\VehicleDoesNotBelongToCustomer;
 use App\Application\Shared\Exceptions\ResourceNotFound;
 use App\Application\Vehicle\Exceptions\DuplicateLicensePlate;
 use App\Domain\Customer\Exceptions\InvalidDocument;
+use App\Domain\Customer\Exceptions\InvalidEmail;
+use App\Domain\Customer\Exceptions\InvalidPhone;
 use App\Domain\ServiceOrder\Exceptions\InvalidAdditionalRepair;
 use App\Domain\ServiceOrder\Exceptions\InvalidServiceOrderBudget;
 use App\Domain\ServiceOrder\Exceptions\InvalidServiceOrderTransition;
@@ -83,6 +85,14 @@ return Application::configure(basePath: dirname(__DIR__))
                 $exception->getMessage(),
                 422,
             );
+        });
+
+        $exceptions->render(function (InvalidEmail $exception, Request $request) {
+            return ApiErrorResponse::make('invalid_email', $exception->getMessage(), 422);
+        });
+
+        $exceptions->render(function (InvalidPhone $exception, Request $request) {
+            return ApiErrorResponse::make('invalid_phone', $exception->getMessage(), 422);
         });
 
         $exceptions->render(function (DuplicateCustomerDocument $exception, Request $request) {

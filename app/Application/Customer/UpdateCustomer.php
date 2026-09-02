@@ -12,10 +12,15 @@ final readonly class UpdateCustomer
         private CustomerDataFactory $factory,
     ) {}
 
-    public function execute(int $id, string $name, string $document): Customer
-    {
+    public function execute(
+        int $id,
+        string $name,
+        string $document,
+        ?string $email = null,
+        ?string $phone = null,
+    ): Customer {
         $this->customers->findOrFail($id);
 
-        return $this->customers->save($this->factory->make($id, $name, $document));
+        return $this->customers->save($this->factory->make($id, $name, $document, $email, $phone));
     }
 }

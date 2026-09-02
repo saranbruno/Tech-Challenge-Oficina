@@ -8,8 +8,11 @@ Este glossário estabelece o vocabulário do domínio da oficina e seu mapeament
 
 | Termo em português | Identificador no código | Definição e regras | Evitar como sinônimo |
 | --- | --- | --- | --- |
-| Cliente | `Customer` | Pessoa física ou jurídica atendida pela oficina. Possui somente nome e documento no cadastro atual. É o proprietário dos veículos e o titular das Ordens de Serviço. | Administrador, usuário |
+| Cliente | `Customer` | Pessoa física ou jurídica atendida pela oficina. Possui nome, documento e contatos opcionais. É o proprietário dos veículos e o titular das Ordens de Serviço. | Administrador, usuário |
 | Documento | `Document` | Objeto de valor que normaliza, classifica e valida um CPF ou CNPJ. Somente dígitos são persistidos e valores repetidos ou com dígitos verificadores inválidos são rejeitados. | Token, credencial |
+| Contato do Cliente | `email`, `phone` | Meio opcional para futuras notificações. E-mail e telefone são independentes, podem coexistir ou estar ambos ausentes; não existe canal preferencial cadastrado. | Credencial, canal obrigatório |
+| E-mail | `Email`, `email` | Endereço opcional validado e normalizado em letras minúsculas. Não identifica exclusivamente o Cliente. | Administrador, documento |
+| Telefone | `Phone`, `phone` | Número opcional normalizado e persistido no formato internacional E.164. Números brasileiros sem código do país recebem `+55`. Não identifica exclusivamente o Cliente. | WhatsApp, documento |
 | CPF | `DocumentType::Cpf`, `cpf` | Documento brasileiro de pessoa física com 11 dígitos e validação dos dígitos verificadores. Não é usado isoladamente como segredo de acompanhamento. | CNPJ, token de acompanhamento |
 | CNPJ | `DocumentType::Cnpj`, `cnpj` | Documento brasileiro de pessoa jurídica com 14 dígitos e validação dos dígitos verificadores. Não é usado isoladamente como segredo de acompanhamento. | CPF, token de acompanhamento |
 | Veículo | `Vehicle` | Bem pertencente obrigatoriamente a um Cliente, identificado por placa única, marca, modelo e ano. Uma OS somente aceita um veículo do cliente informado. | Ordem de Serviço |

@@ -7,6 +7,8 @@ use App\Application\Shared\Data\PaginatedResult;
 use App\Application\Shared\Exceptions\ResourceNotFound;
 use App\Domain\Customer\Customer;
 use App\Domain\Customer\ValueObjects\Document;
+use App\Domain\Customer\ValueObjects\Email;
+use App\Domain\Customer\ValueObjects\Phone;
 use App\Infrastructure\Persistence\Eloquent\Models\CustomerModel;
 
 class EloquentCustomerRepository implements CustomerRepository
@@ -53,6 +55,8 @@ class EloquentCustomerRepository implements CustomerRepository
             'name' => $customer->name,
             'document' => $customer->document->value,
             'document_type' => $customer->document->type->value,
+            'email' => $customer->email?->value,
+            'phone' => $customer->phone?->value,
         ])->save();
 
         return $this->toDomain($model);
@@ -80,6 +84,8 @@ class EloquentCustomerRepository implements CustomerRepository
             $model->getKey(),
             $model->name,
             new Document($model->document),
+            $model->email === null ? null : new Email($model->email),
+            $model->phone === null ? null : new Phone($model->phone),
         );
     }
 }

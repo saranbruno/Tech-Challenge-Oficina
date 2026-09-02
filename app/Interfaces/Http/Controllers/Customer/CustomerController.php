@@ -30,7 +30,12 @@ class CustomerController
 
     public function store(StoreCustomerRequest $request, CreateCustomer $createCustomer): JsonResponse
     {
-        $customer = $createCustomer->execute($request->string('name')->toString(), $request->string('document')->toString());
+        $customer = $createCustomer->execute(
+            $request->string('name')->toString(),
+            $request->string('document')->toString(),
+            $request->validated('email'),
+            $request->validated('phone'),
+        );
 
         return (new CustomerResource($customer))->response()->setStatusCode(201);
     }
@@ -42,7 +47,13 @@ class CustomerController
 
     public function update(UpdateCustomerRequest $request, int $customer, UpdateCustomer $updateCustomer): CustomerResource
     {
-        $updated = $updateCustomer->execute($customer, $request->string('name')->toString(), $request->string('document')->toString());
+        $updated = $updateCustomer->execute(
+            $customer,
+            $request->string('name')->toString(),
+            $request->string('document')->toString(),
+            $request->validated('email'),
+            $request->validated('phone'),
+        );
 
         return new CustomerResource($updated);
     }

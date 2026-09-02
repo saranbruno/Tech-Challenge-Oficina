@@ -12,8 +12,12 @@ final readonly class CreateCustomer
         private CustomerDataFactory $factory,
     ) {}
 
-    public function execute(string $name, string $document): Customer
-    {
-        return $this->customers->save($this->factory->make(null, $name, $document));
+    public function execute(
+        string $name,
+        string $document,
+        ?string $email = null,
+        ?string $phone = null,
+    ): Customer {
+        return $this->customers->save($this->factory->make(null, $name, $document, $email, $phone));
     }
 }

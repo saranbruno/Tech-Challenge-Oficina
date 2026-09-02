@@ -198,7 +198,7 @@ A Linguagem Ubiqua esta versionada em `docs/ddd/ubiquitous-language.md`. Os diag
 
 ## Cobertura dos dominios criticos
 
-A configuracao `phpunit.domain.xml` mede separadamente as oito classes que concentram as regras criticas de CPF/CNPJ, placa, estoque nao negativo, valor monetario exato, composicao e snapshots da OS, transicoes de estado e tempo medio. A imagem Docker fornece PCOV 1.0.12, mantendo a medicao reproduzivel sem misturar controllers e infraestrutura no percentual de dominio.
+A configuracao `phpunit.domain.xml` mede separadamente as classes que concentram as regras criticas de CPF/CNPJ, e-mail, telefone E.164, placa, estoque nao negativo, valor monetario exato, composicao e snapshots da OS, transicoes de estado e tempo medio. A imagem Docker fornece PCOV 1.0.12, mantendo a medicao reproduzivel sem misturar controllers e infraestrutura no percentual de dominio.
 
 A configuracao `phpunit.integration.xml` executa as suites Unit e Feature contra PostgreSQL e mede o mesmo recorte critico durante os fluxos HTTP e de persistencia. O teste `CompleteServiceOrderFlowTest` atravessa a API desde os cadastros ate a entrega, incluindo orçamento calculado pelo servidor, acompanhamento do cliente, aprovação, consumo de estoque e consulta da media.
 - Regras de negocio sao testadas prioritariamente como testes unitarios de Dominio.
