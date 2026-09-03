@@ -25,6 +25,7 @@ final readonly class CreateServiceOrder
         private ServiceRepository $services,
         private InventoryItemRepository $inventoryItems,
         private ServiceOrderRepository $serviceOrders,
+        private NotifyServiceOrderStatus $statusNotifications,
     ) {}
 
     public function execute(
@@ -73,6 +74,9 @@ final readonly class CreateServiceOrder
             ));
         }
 
-        return $this->serviceOrders->create($serviceOrder);
+        $createdServiceOrder = $this->serviceOrders->create($serviceOrder);
+        $this->statusNotifications->execute($createdServiceOrder);
+
+        return $createdServiceOrder;
     }
 }

@@ -2,8 +2,12 @@
 
 namespace Tests\Feature\Api;
 
+use App\Application\Notification\Contracts\EmailNotificationSender;
+use App\Application\Notification\Contracts\SmsNotificationSender;
 use App\Infrastructure\Persistence\Eloquent\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Support\Notification\FakeEmailNotificationSender;
+use Tests\Support\Notification\FakeSmsNotificationSender;
 use Tests\TestCase;
 
 class CompleteServiceOrderFlowTest extends TestCase
@@ -12,10 +16,17 @@ class CompleteServiceOrderFlowTest extends TestCase
 
     public function test_complete_service_order_flow_uses_real_api_and_postgresql(): void
     {
+        $emails = new FakeEmailNotificationSender;
+        $sms = new FakeSmsNotificationSender;
+        app()->instance(EmailNotificationSender::class, $emails);
+        app()->instance(SmsNotificationSender::class, $sms);
+
         $adminToken = $this->adminToken();
         $customerId = $this->withToken($adminToken)->postJson('/api/admin/customers', [
             'name' => 'Cliente Fluxo Completo',
             'document' => '529.982.247-25',
+            'email' => 'cliente@example.com',
+            'phone' => '+5511999999999',
         ])->assertCreated()->json('data.id');
         $vehicleId = $this->withToken($adminToken)->postJson('/api/admin/vehicles', [
             'customer_id' => $customerId,
@@ -94,6 +105,23 @@ class CompleteServiceOrderFlowTest extends TestCase
             ->getJson("/api/admin/service-orders-metrics/execution-time?service_id={$serviceId}")
             ->assertOk()
             ->assertJsonPath('data.eligible_orders', 1);
+
+        $cancelledOrder = $this->withToken($adminToken)->postJson('/api/admin/service-orders', [
+            'customer_document' => '52998224725',
+            'vehicle_id' => $vehicleId,
+            'services' => [['service_id' => $serviceId, 'quantity' => 1]],
+            'inventory_items' => [],
+        ])->assertCreated();
+        $this->withToken($adminToken)
+            ->postJson('/api/admin/service-orders/'.$cancelledOrder->json('data.id').'/cancel')
+            ->assertOk()
+            ->assertJsonPath('data.status', 'cancelled');
+
+        self::assertSame(
+            ['received', 'in_diagnosis', 'awaiting_approval', 'in_execution', 'finalized', 'delivered', 'received', 'cancelled'],
+            array_map(fn ($delivery): string => $delivery[1]->status->value, $emails->deliveries),
+        );
+        self::assertCount(8, $sms->deliveries);
     }
 
     private function adminToken(): string

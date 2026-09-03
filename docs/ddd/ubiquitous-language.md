@@ -10,7 +10,7 @@ Este glossário estabelece o vocabulário do domínio da oficina e seu mapeament
 | --- | --- | --- | --- |
 | Cliente | `Customer` | Pessoa física ou jurídica atendida pela oficina. Possui nome, documento e contatos opcionais. É o proprietário dos veículos e o titular das Ordens de Serviço. | Administrador, usuário |
 | Documento | `Document` | Objeto de valor que normaliza, classifica e valida um CPF ou CNPJ. Somente dígitos são persistidos e valores repetidos ou com dígitos verificadores inválidos são rejeitados. | Token, credencial |
-| Contato do Cliente | `email`, `phone` | Meio opcional para futuras notificações. E-mail e telefone são independentes, podem coexistir ou estar ambos ausentes; não existe canal preferencial cadastrado. | Credencial, canal obrigatório |
+| Contato do Cliente | `email`, `phone` | Meio opcional para notificações de status. E-mail e telefone são independentes, podem coexistir ou estar ambos ausentes; não existe canal preferencial cadastrado. | Credencial, canal obrigatório |
 | E-mail | `Email`, `email` | Endereço opcional validado e normalizado em letras minúsculas. Não identifica exclusivamente o Cliente. | Administrador, documento |
 | Telefone | `Phone`, `phone` | Número opcional normalizado e persistido no formato internacional E.164. Números brasileiros sem código do país recebem `+55`. Não identifica exclusivamente o Cliente. | WhatsApp, documento |
 | Notificação de Status | `ServiceOrderStatusNotification` | Mensagem de melhor esforço que informa somente a identificação da OS e o novo status já persistido. | Evento de domínio, garantia de entrega |
@@ -37,7 +37,7 @@ Este glossário estabelece o vocabulário do domínio da oficina e seu mapeament
 | Valor unitário | `UnitPrice`, `unit_price` | Objeto de valor monetário não negativo representado por inteiro em centavos, sem `float`. | Total, valor em ponto flutuante |
 | Subtotal | `subtotal` | Quantidade multiplicada pelo Snapshot de valor de um item da OS. | Total geral |
 | Total do orçamento | `totalAmount`, `total_amount` | Soma dos subtotais de Serviços, Peças e Insumos da OS, calculada exclusivamente pelo servidor. | Total enviado pelo cliente da API |
-| Disponibilização do orçamento | `CompleteServiceOrderDiagnosis`, `makeBudgetAvailable` | Ação que conclui o Diagnóstico, valida a existência de Serviço e move a OS para Aguardando aprovação. O canal implementado é a API. | Envio por e-mail, aprovação |
+| Disponibilização do orçamento | `CompleteServiceOrderDiagnosis`, `makeBudgetAvailable` | Ação que conclui o Diagnóstico, valida a existência de Serviço e move a OS para Aguardando aprovação; após persistir, tenta notificar os contatos disponíveis. | Envio por e-mail obrigatório, aprovação |
 | Aprovação | `ApproveClientServiceOrderBudget`, `approveBudget` | Autorização explícita feita pelo Cliente com documento e token válidos. Move a OS para Em execução e, na mesma transação, consome o estoque associado. | Autenticação administrativa, disponibilização |
 | Reparo adicional | `AddAdditionalRepairs`, `addAdditionalService` | Novo Serviço incluído na mesma OS enquanto ela aguarda aprovação. Usa o preço vigente como novo snapshot e recalcula o total. | Nova OS, edição genérica do orçamento |
 | Cancelamento | `CancelServiceOrder`, `cancel` | Encerramento terminal permitido apenas a partir de Recebida, Em diagnóstico ou Aguardando aprovação. Registra o instante do cancelamento. | Recusa com retomada, exclusão |

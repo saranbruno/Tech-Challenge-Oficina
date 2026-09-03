@@ -2,6 +2,7 @@
 
 namespace Tests\Unit\Infrastructure\Notification\Sms;
 
+use App\Application\Notification\Data\ServiceOrderStatusNotification;
 use App\Application\Notification\ServiceOrderStatusNotificationFactory;
 use App\Domain\Customer\ValueObjects\Phone;
 use App\Domain\ServiceOrder\Enums\ServiceOrderStatus;
@@ -47,7 +48,7 @@ final class TwilioSmsNotificationSenderTest extends TestCase
         $this->expectException(\InvalidArgumentException::class);
         (new TwilioSmsNotificationSender)->send(
             new Phone('+5511999999999'),
-            new \App\Application\Notification\Data\ServiceOrderStatusNotification(
+            new ServiceOrderStatusNotification(
                 73,
                 ServiceOrderStatus::Delivered,
                 'subject',

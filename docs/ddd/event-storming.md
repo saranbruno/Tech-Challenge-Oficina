@@ -203,14 +203,15 @@ flowchart TB
 
 ## Sistemas externos
 
-Não existe sistema externo participante dos fluxos modelados. O PostgreSQL é infraestrutura interna de persistência. Não há integração com e-mail, SMS, WhatsApp, pagamentos, fornecedores, filas, WebSocket ou SSE. A API REST reflete imediatamente o estado persistido.
+Os provedores de e-mail e SMS são sistemas externos opcionais acionados após a persistência das transições. O PostgreSQL é infraestrutura interna de persistência. Não há integração com WhatsApp, pagamentos, fornecedores, filas, WebSocket ou SSE. A API REST reflete imediatamente o estado persistido, mesmo quando um provedor de notificação falha.
 
 ## Hotspots e limites do MVP
 
 | Hotspot | Tratamento atual |
 | --- | --- |
 | Evento de domínio versus implementação | Os eventos são fatos de modelagem; não há classes de evento, mensageria ou processamento assíncrono. |
-| Disponibilização do orçamento | O orçamento fica disponível pela API; não existe notificação externa. |
+| Notificação de status | Após cada transição persistida, o dispatcher tenta e-mail e SMS conforme os contatos disponíveis; falhas são isoladas e registradas sem reverter a OS. |
+| Disponibilização do orçamento | O orçamento fica disponível pela API e a transição para `awaiting_approval` tenta notificar os contatos disponíveis. |
 | Recusa do orçamento | A recusa usa o cancelamento administrativo nos estados anteriores à execução; não existe comando público de recusa nem status adicional. |
 | Reparos adicionais | Somente Serviços podem ser acrescentados em `awaiting_approval`; não há versionamento formal do orçamento. |
 | Disponibilidade antes da aprovação | A composição não reserva estoque; a disponibilidade definitiva é verificada transacionalmente na aprovação. |

@@ -5,7 +5,6 @@ namespace App\Infrastructure\Notification\Sms;
 use App\Application\Notification\Contracts\SmsNotificationSender;
 use App\Application\Notification\Data\ServiceOrderStatusNotification;
 use App\Domain\Customer\ValueObjects\Phone;
-use Illuminate\Http\Client\RequestException;
 use Illuminate\Support\Facades\Http;
 use InvalidArgumentException;
 use RuntimeException;
