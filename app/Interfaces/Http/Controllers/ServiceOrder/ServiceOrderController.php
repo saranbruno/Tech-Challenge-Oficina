@@ -14,6 +14,7 @@ use App\Application\ServiceOrder\DeliverServiceOrder;
 use App\Application\ServiceOrder\FinalizeServiceOrder;
 use App\Application\ServiceOrder\GetServiceOrder;
 use App\Application\ServiceOrder\GetServiceOrderExecutionTimeMetrics;
+use App\Application\ServiceOrder\GetServiceOrderStatus;
 use App\Application\ServiceOrder\ListServiceOrders;
 use App\Application\ServiceOrder\StartServiceOrderDiagnosis;
 use App\Interfaces\Http\Pagination\LengthAwarePaginatorFactory;
@@ -21,6 +22,7 @@ use App\Interfaces\Http\Requests\ServiceOrder\AddAdditionalRepairsRequest;
 use App\Interfaces\Http\Requests\ServiceOrder\ServiceOrderExecutionTimeRequest;
 use App\Interfaces\Http\Requests\ServiceOrder\StoreServiceOrderRequest;
 use App\Interfaces\Http\Resources\ServiceOrderResource;
+use App\Interfaces\Http\Resources\ServiceOrderStatusResource;
 use DateTimeImmutable;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -37,6 +39,7 @@ class ServiceOrderController
         private readonly FinalizeServiceOrder $finalizeServiceOrder,
         private readonly GetServiceOrder $getServiceOrder,
         private readonly GetServiceOrderExecutionTimeMetrics $getServiceOrderExecutionTimeMetrics,
+        private readonly GetServiceOrderStatus $getServiceOrderStatus,
         private readonly ListServiceOrders $listServiceOrders,
         private readonly StartServiceOrderDiagnosis $startServiceOrderDiagnosis,
     ) {}
@@ -105,6 +108,11 @@ class ServiceOrderController
     public function show(int $serviceOrder): ServiceOrderResource
     {
         return new ServiceOrderResource($this->getServiceOrder->execute($serviceOrder));
+    }
+
+    public function status(int $serviceOrder): ServiceOrderStatusResource
+    {
+        return new ServiceOrderStatusResource($this->getServiceOrderStatus->execute($serviceOrder));
     }
 
     public function completeDiagnosis(int $serviceOrder): ServiceOrderResource

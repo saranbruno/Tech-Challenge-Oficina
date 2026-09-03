@@ -236,6 +236,7 @@ Endpoint protegido por JWT:
 - `POST /api/admin/service-orders`
 - `GET /api/admin/service-orders`
 - `GET /api/admin/service-orders/{serviceOrder}`
+- `GET /api/admin/service-orders/{serviceOrder}/status`
 - `GET /api/admin/service-orders-metrics/execution-time`
 - `POST /api/admin/service-orders/{serviceOrder}/diagnosis/start`
 - `POST /api/admin/service-orders/{serviceOrder}/diagnosis/complete`
@@ -243,9 +244,12 @@ Endpoint protegido por JWT:
 - `POST /api/admin/service-orders/{serviceOrder}/finalize`
 - `POST /api/admin/service-orders/{serviceOrder}/deliver`
 - `POST /api/client/service-orders/approve`
+- `POST /api/client/service-orders/status`
 - `POST /api/admin/service-orders/{serviceOrder}/cancel`
 
 Na criacao, a API administrativa retorna uma unica vez um token aleatorio de 64 caracteres. Somente o hash desse token e persistido. O cliente acompanha a OS enviando o token e seu CPF ou CNPJ para `POST /api/client/service-orders/tracking`; combinacoes incorretas retornam 404 e a resposta nao expoe identificadores do cliente ou veiculo.
+
+A consulta dedicada de status administrativa exige JWT e a consulta dedicada do cliente exige documento mais token. Ambas retornam somente `service_order_id`, `status`, `status_label` e `last_transition_at`; o detalhamento completo permanece em endpoint separado.
 
 Reparos adicionais podem incluir novos servicos somente em `awaiting_approval`, preservando snapshots e recalculando o total. A aprovacao explicita inicia `in_execution` e consome o estoque associado de forma transacional. O cancelamento e permitido somente em `received`, `in_diagnosis` ou `awaiting_approval`.
 

@@ -13,6 +13,7 @@ use App\Application\ServiceOrder\Contracts\ServiceOrderApproval;
 use App\Application\ServiceOrder\Contracts\ServiceOrderMetricsQuery;
 use App\Application\ServiceOrder\Contracts\ServiceOrderQuery;
 use App\Application\ServiceOrder\Contracts\ServiceOrderRepository;
+use App\Application\ServiceOrder\Contracts\ServiceOrderStatusQuery;
 use App\Application\Vehicle\Contracts\VehicleRepository;
 use App\Infrastructure\Auth\JwtAdminTokenProvider;
 use App\Infrastructure\Notification\Email\LaravelEmailNotificationSender;
@@ -25,6 +26,7 @@ use App\Infrastructure\Persistence\Eloquent\EloquentServiceOrderApproval;
 use App\Infrastructure\Persistence\Eloquent\EloquentServiceOrderMetricsQuery;
 use App\Infrastructure\Persistence\Eloquent\EloquentServiceOrderQuery;
 use App\Infrastructure\Persistence\Eloquent\EloquentServiceOrderRepository;
+use App\Infrastructure\Persistence\Eloquent\EloquentServiceOrderStatusQuery;
 use App\Infrastructure\Persistence\Eloquent\EloquentServiceRepository;
 use App\Infrastructure\Persistence\Eloquent\EloquentVehicleRepository;
 use Illuminate\Log\LogManager;
@@ -56,6 +58,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(ServiceOrderMetricsQuery::class, EloquentServiceOrderMetricsQuery::class);
         $this->app->bind(ServiceOrderQuery::class, EloquentServiceOrderQuery::class);
         $this->app->bind(ServiceOrderRepository::class, EloquentServiceOrderRepository::class);
+        $this->app->bind(ServiceOrderStatusQuery::class, EloquentServiceOrderStatusQuery::class);
         $this->app->bind(VehicleRepository::class, EloquentVehicleRepository::class);
     }
 

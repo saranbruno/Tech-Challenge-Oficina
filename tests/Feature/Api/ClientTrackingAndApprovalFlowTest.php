@@ -36,6 +36,65 @@ class ClientTrackingAndApprovalFlowTest extends TestCase
         ])->assertNotFound();
     }
 
+    public function test_dedicated_status_queries_are_minimal_and_secure(): void
+    {
+        [$token, $orderId, $adminToken] = $this->createOrder();
+
+        $this->withToken($adminToken)
+            ->getJson("/api/admin/service-orders/{$orderId}/status")
+            ->assertOk()
+            ->assertJsonPath('data.service_order_id', $orderId)
+            ->assertJsonPath('data.status', 'received')
+            ->assertJsonPath('data.status_label', 'Recebida')
+            ->assertJsonStructure(['data' => ['service_order_id', 'status', 'status_label', 'last_transition_at']])
+            ->assertJsonMissingPath('data.customer_id')
+            ->assertJsonMissingPath('data.total_amount');
+
+        $this->postJson('/api/client/service-orders/status', [
+            'customer_document' => '529.982.247-25',
+            'tracking_token' => $token,
+        ])->assertOk()
+            ->assertJsonPath('data.service_order_id', $orderId)
+            ->assertJsonPath('data.status', 'received')
+            ->assertJsonPath('data.status_label', 'Recebida')
+            ->assertJsonMissingPath('data.customer_id')
+            ->assertJsonMissingPath('data.total_amount');
+
+        $this->postJson('/api/client/service-orders/status', [
+            'customer_document' => '529.982.247-25',
+            'tracking_token' => str_repeat('a', 64),
+        ])->assertNotFound();
+    }
+
+    public function test_dedicated_status_queries_support_all_service_order_states(): void
+    {
+        [, $orderId, $adminToken] = $this->createOrder();
+        $states = [
+            'received' => ['received_at', 'Recebida'],
+            'in_diagnosis' => ['diagnosis_started_at', 'Em diagnóstico'],
+            'awaiting_approval' => ['awaiting_approval_at', 'Aguardando aprovação'],
+            'in_execution' => ['execution_started_at', 'Em execução'],
+            'finalized' => ['finalized_at', 'Finalizada'],
+            'delivered' => ['delivered_at', 'Entregue'],
+            'cancelled' => ['cancelled_at', 'Cancelada'],
+        ];
+
+        foreach ($states as $state => [$timestampColumn, $label]) {
+            $timestamp = now()->subMinutes(count($states));
+            DB::table('service_orders')->where('id', $orderId)->update([
+                'status' => $state,
+                $timestampColumn => $timestamp,
+            ]);
+
+            $this->withToken($adminToken)
+                ->getJson("/api/admin/service-orders/{$orderId}/status")
+                ->assertOk()
+                ->assertJsonPath('data.status', $state)
+                ->assertJsonPath('data.status_label', $label)
+                ->assertJsonPath('data.last_transition_at', $timestamp->toAtomString());
+        }
+    }
+
     public function test_additional_repairs_recalculate_budget_before_explicit_approval(): void
     {
         [$trackingToken, $orderId, $adminToken] = $this->createOrder();

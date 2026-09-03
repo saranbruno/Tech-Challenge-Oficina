@@ -4,14 +4,17 @@ namespace App\Interfaces\Http\Controllers\ServiceOrder;
 
 use App\Application\ServiceOrder\ApproveClientServiceOrderBudget;
 use App\Application\ServiceOrder\TrackServiceOrder;
+use App\Application\ServiceOrder\TrackServiceOrderStatus;
 use App\Interfaces\Http\Requests\ServiceOrder\TrackServiceOrderRequest;
 use App\Interfaces\Http\Resources\ClientServiceOrderResource;
+use App\Interfaces\Http\Resources\ClientServiceOrderStatusResource;
 
 class ClientServiceOrderController
 {
     public function __construct(
         private readonly ApproveClientServiceOrderBudget $approveClientServiceOrderBudget,
         private readonly TrackServiceOrder $trackServiceOrder,
+        private readonly TrackServiceOrderStatus $trackServiceOrderStatus,
     ) {}
 
     public function show(TrackServiceOrderRequest $request): ClientServiceOrderResource
@@ -28,6 +31,14 @@ class ClientServiceOrderController
             $request->string('customer_document')->toString(),
             $request->string('tracking_token')->toString(),
             new \DateTimeImmutable,
+        ));
+    }
+
+    public function status(TrackServiceOrderRequest $request): ClientServiceOrderStatusResource
+    {
+        return new ClientServiceOrderStatusResource($this->trackServiceOrderStatus->execute(
+            $request->string('customer_document')->toString(),
+            $request->string('tracking_token')->toString(),
         ));
     }
 }

@@ -136,6 +136,8 @@ O modelo `User` foi movido para a Infraestrutura. Cinco testes em `tests/Archite
 
 `LoggingNotificationFailureReporter` implementa na Infraestrutura o registro sanitizado das falhas. `LaravelEmailNotificationSender` e `ServiceOrderStatusMail` usam o mailer Laravel configurado por ambiente; o Compose fornece Mailpit local. `LoggingSmsNotificationSender` simula SMS em desenvolvimento e CI, enquanto `TwilioSmsNotificationSender` usa a API externa somente quando o driver e habilitado por configuracao. `NotifyServiceOrderStatus` aciona o dispatcher depois das transicoes persistidas da OS.
 
+As consultas de status usam `ServiceOrderStatusQuery` e `ServiceOrderStatusData`, separados do detalhamento da OS. O adapter seleciona somente os campos de status e dos instantes de transição; a Interface HTTP aplica o rótulo em português e não expõe composição, contatos ou dados administrativos na consulta mínima.
+
 ## Rotas
 
 As rotas da API possuem o prefixo global `/api`.

@@ -56,6 +56,7 @@ class ApiFoundationTest extends TestCase
             'api/admin/service-orders/{serviceOrder}/diagnosis/complete',
             'api/admin/service-orders/{serviceOrder}/diagnosis/start',
             'api/admin/service-orders/{serviceOrder}/finalize',
+            'api/admin/service-orders/{serviceOrder}/status',
             'api/admin/services',
             'api/admin/services',
             'api/admin/services/{service}',
@@ -67,6 +68,7 @@ class ApiFoundationTest extends TestCase
             'api/admin/vehicles/{vehicle}',
             'api/admin/vehicles/{vehicle}',
             'api/client/service-orders/approve',
+            'api/client/service-orders/status',
             'api/client/service-orders/tracking',
         ], $apiRoutes);
     }

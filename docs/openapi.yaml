@@ -715,6 +715,27 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
+  /admin/service-orders/{serviceOrder}/status:
+    parameters:
+      - $ref: '#/components/parameters/ServiceOrderId'
+    get:
+      operationId: getServiceOrderStatus
+      summary: Consulta somente o status atual de uma Ordem de Servico
+      tags:
+        - Service Orders
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Status atual e instante da ultima transicao
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceOrderStatusResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /admin/service-orders/{serviceOrder}/diagnosis/start:
     parameters:
       - $ref: '#/components/parameters/ServiceOrderId'
@@ -885,6 +906,30 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ClientServiceOrderResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+  /client/service-orders/status:
+    post:
+      operationId: trackClientServiceOrderStatus
+      summary: Consulta somente o status da OS com documento e token
+      tags:
+        - Client Service Orders
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TrackServiceOrderRequest'
+      responses:
+        '200':
+          description: Status atual da Ordem de Servico
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceOrderStatusResponse'
         '404':
           $ref: '#/components/responses/NotFound'
         '422':
@@ -1717,6 +1762,37 @@ components:
         meta:
           type: object
           additionalProperties: true
+    ServiceOrderStatusResponse:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          type: object
+          required:
+            - service_order_id
+            - status
+            - status_label
+            - last_transition_at
+          properties:
+            service_order_id:
+              type: integer
+              minimum: 1
+            status:
+              type: string
+              enum:
+                - received
+                - in_diagnosis
+                - awaiting_approval
+                - in_execution
+                - finalized
+                - delivered
+                - cancelled
+            status_label:
+              type: string
+            last_transition_at:
+              type: string
+              format: date-time
     ClientServiceOrderResponse:
       type: object
       required:
