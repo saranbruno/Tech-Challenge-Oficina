@@ -65,6 +65,8 @@ docker compose exec app php artisan db:seed
 
 A aplicacao fica disponivel em `http://localhost:8081` com a configuracao padrao.
 
+O Compose inicia a API somente depois de PostgreSQL e Mailpit estarem saudaveis. A API tambem possui healthcheck em `/up`; o arquivo `.env` e montado no container somente para leitura. O PostgreSQL usa o volume `postgres_data`, o Mailpit fica disponivel em `http://localhost:8025` e o SMS local usa o adapter de log configurado no `.env.example`.
+
 Consulte o estado dos containers:
 
 ```bash
