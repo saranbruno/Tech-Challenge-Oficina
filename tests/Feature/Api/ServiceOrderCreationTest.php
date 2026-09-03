@@ -87,6 +87,53 @@ class ServiceOrderCreationTest extends TestCase
             ->assertJsonCount(0, 'data.inventory_items');
     }
 
+    public function test_each_created_order_returns_a_distinct_explicit_id(): void
+    {
+        [, $vehicleId] = $this->createCustomerAndVehicle('52998224725', 'ABC1D23');
+        $serviceId = $this->createService('Diagnostico', 5000);
+        $token = $this->adminToken();
+        $payload = [
+            'customer_document' => '52998224725',
+            'vehicle_id' => $vehicleId,
+            'services' => [['service_id' => $serviceId, 'quantity' => 1]],
+            'inventory_items' => [],
+        ];
+
+        $firstId = $this->withToken($token)->postJson('/api/admin/service-orders', $payload)
+            ->assertCreated()
+            ->assertJsonStructure(['data' => ['id']])
+            ->json('data.id');
+        $secondId = $this->withToken($token)->postJson('/api/admin/service-orders', $payload)
+            ->assertCreated()
+            ->json('data.id');
+
+        self::assertIsInt($firstId);
+        self::assertIsInt($secondId);
+        self::assertNotSame($firstId, $secondId);
+    }
+
+    public function test_creation_rejects_duplicate_ids_and_non_positive_quantities(): void
+    {
+        [, $vehicleId] = $this->createCustomerAndVehicle('52998224725', 'ABC1D23');
+        $serviceId = $this->createService('Diagnostico', 5000);
+        $inventoryItemId = $this->createInventoryItem('Filtro', 'part', 2500, 2);
+
+        $this->withToken($this->adminToken())->postJson('/api/admin/service-orders', [
+            'customer_document' => '52998224725',
+            'vehicle_id' => $vehicleId,
+            'services' => [
+                ['service_id' => $serviceId, 'quantity' => 1],
+                ['service_id' => $serviceId, 'quantity' => 1],
+            ],
+            'inventory_items' => [
+                ['inventory_item_id' => $inventoryItemId, 'quantity' => 0],
+            ],
+        ])->assertUnprocessable()
+            ->assertJsonPath('error.code', 'validation_error');
+
+        self::assertSame(0, DB::table('service_orders')->count());
+    }
+
     public function test_invalid_composition_is_rejected_without_partial_persistence(): void
     {
         [, $vehicleId] = $this->createCustomerAndVehicle('52998224725', 'ABC1D23');
