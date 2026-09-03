@@ -26,6 +26,8 @@ O Dia 1 registrou a baseline reproduzivel, sem adicionar funcionalidade: Compose
 
 PHP e Composer locais nao sao necessarios para a execucao via Docker.
 
+O `Dockerfile` unico e reutilizavel no Docker Compose, Kind e CI. A imagem instala `pdo_pgsql` e PCOV, gera o autoload otimizado, declara metadados OCI, executa como o usuario nao privilegiado `app` e verifica `/up` por healthcheck. O contexto de build ignora dependencias instaladas, artefatos de cobertura, logs, caches e arquivos `.env`; segredos entram somente pela configuracao do ambiente.
+
 ## Configuracao
 
 Crie o arquivo de ambiente e substitua os valores locais de senha:

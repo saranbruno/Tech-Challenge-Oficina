@@ -1,7 +1,11 @@
 .git
+.gitignore
 .github
 .env
+.env.*
 vendor
+build
+.phpunit.result.cache
 storage/logs
 storage/framework/cache
 storage/framework/sessions
