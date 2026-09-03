@@ -3,7 +3,6 @@
 namespace App\Application\ServiceOrder;
 
 use App\Application\ServiceOrder\Contracts\ServiceOrderBudgetDecision;
-use App\Application\ServiceOrder\Data\BudgetDecisionResult;
 use App\Application\ServiceOrder\Enums\BudgetDecision;
 use App\Domain\ServiceOrder\ServiceOrder;
 use DateTimeImmutable;

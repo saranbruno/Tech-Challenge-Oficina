@@ -150,6 +150,8 @@ Os arquivos estao carregados e agrupados sob `/api/admin` e `/api/client`. Somen
 
 O webhook usa `X-Webhook-Signature` no formato `sha256=<hexadecimal>`. A assinatura e calculada sobre o corpo bruto da requisicao com o segredo `SERVICE_ORDER_WEBHOOK_SECRET`; `hash_equals` compara o valor recebido com o esperado. A janela de `occurred_at` e opcional e controlada por `SERVICE_ORDER_WEBHOOK_TIMESTAMP_TOLERANCE_SECONDS`.
 
+A consulta administrativa de OS e uma fila operacional filtrada por status e ordenada por prioridade explicita, depois por `received_at` e `id`. Os estados terminais continuam persistidos e podem ser consultados pelo detalhamento.
+
 ## Ciclo da Ordem de Servico
 
 A Ordem de Servico nasce em `received` e seu estado somente muda por operacoes explicitas do dominio. O fluxo principal e `received` para `in_diagnosis`, `awaiting_approval`, `in_execution`, `finalized` e `delivered`. O estado terminal `cancelled` e permitido somente a partir de `received`, `in_diagnosis` ou `awaiting_approval`.

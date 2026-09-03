@@ -29,7 +29,7 @@ class ServiceOrderAdministrationTest extends TestCase
             ->getJson('/api/admin/service-orders?per_page=1')
             ->assertOk()
             ->assertJsonCount(1, 'data')
-            ->assertJsonPath('data.0.id', $secondId)
+            ->assertJsonPath('data.0.id', $firstId)
             ->assertJsonPath('meta.per_page', 1)
             ->assertJsonPath('meta.total', 2);
 
@@ -41,6 +41,40 @@ class ServiceOrderAdministrationTest extends TestCase
             ->assertJsonPath('data.services.0.quantity', 2)
             ->assertJsonPath('data.inventory_items.0.quantity', 1)
             ->assertJsonPath('data.total_amount', 25000);
+    }
+
+    public function test_admin_queue_prioritizes_status_and_oldest_order_and_excludes_terminal_states(): void
+    {
+        $orders = [];
+        foreach (['received', 'in_diagnosis', 'awaiting_approval', 'in_execution'] as $index => $status) {
+            $orderId = $this->createServiceOrder($status, ['GHI7J89', 'JKL0M12', 'MNO3P45', 'PQR6S78'][$index]);
+            DB::table('service_orders')->where('id', $orderId)->update([
+                'received_at' => now()->subHours(20 - $index),
+            ]);
+            $orders[$status] = $orderId;
+        }
+        $oldestReceivedId = $this->createServiceOrder('received', 'STU9V01');
+        DB::table('service_orders')->where('id', $oldestReceivedId)->update([
+            'received_at' => now()->subHours(30),
+        ]);
+        $finalizedId = $this->createServiceOrder('finalized', 'VWX2Y34');
+        $deliveredId = $this->createServiceOrder('delivered', 'YZA5B67');
+        $cancelledId = $this->createServiceOrder('cancelled', 'BCD8E90');
+
+        $response = $this->withToken($this->adminToken())
+            ->getJson('/api/admin/service-orders?per_page=20')
+            ->assertOk();
+
+        self::assertSame([
+            $orders['in_execution'],
+            $orders['awaiting_approval'],
+            $orders['in_diagnosis'],
+            $oldestReceivedId,
+            $orders['received'],
+        ], array_column($response->json('data'), 'id'));
+        self::assertNotContains($finalizedId, array_column($response->json('data'), 'id'));
+        self::assertNotContains($deliveredId, array_column($response->json('data'), 'id'));
+        self::assertNotContains($cancelledId, array_column($response->json('data'), 'id'));
     }
 
     public function test_admin_finalizes_and_delivers_order_with_persisted_instants(): void
@@ -105,9 +139,10 @@ class ServiceOrderAdministrationTest extends TestCase
 
     private function createServiceOrder(string $status, string $plate = 'ABC1D23'): int
     {
+        $document = $plate === 'ABC1D23' ? '52998224725' : $this->validCnpj($plate);
         $customerId = DB::table('customers')->insertGetId([
             'name' => 'Cliente '.$plate,
-            'document' => $plate === 'ABC1D23' ? '52998224725' : '04252011000110',
+            'document' => $document,
             'document_type' => $plate === 'ABC1D23' ? 'cpf' : 'cnpj',
             'created_at' => now(),
             'updated_at' => now(),
@@ -160,6 +195,27 @@ class ServiceOrderAdministrationTest extends TestCase
         ]);
 
         return $serviceOrderId;
+    }
+
+    private function validCnpj(string $seed): string
+    {
+        $base = str_pad((string) (abs(crc32($seed)) % 1000000000000), 12, '0', STR_PAD_LEFT);
+        $firstDigit = $this->cnpjDigit($base, [5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2]);
+        $secondDigit = $this->cnpjDigit($base.$firstDigit, [6, 5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2]);
+
+        return $base.$firstDigit.$secondDigit;
+    }
+
+    private function cnpjDigit(string $value, array $weights): int
+    {
+        $sum = 0;
+        foreach (str_split($value) as $index => $digit) {
+            $sum += (int) $digit * $weights[$index];
+        }
+
+        $remainder = $sum % 11;
+
+        return $remainder < 2 ? 0 : 11 - $remainder;
     }
 
     private function adminToken(): string

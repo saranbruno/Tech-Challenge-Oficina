@@ -6,6 +6,7 @@ use App\Infrastructure\Persistence\Eloquent\Models\User;
 use DateTimeImmutable;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Testing\TestResponse;
 use Tests\TestCase;
 
 class ServiceOrderBudgetDecisionWebhookFlowTest extends TestCase
@@ -66,7 +67,7 @@ class ServiceOrderBudgetDecisionWebhookFlowTest extends TestCase
             ->assertJsonPath('error.code', 'invalid_service_order_transition');
     }
 
-    private function postDecision(int $orderId, string $decision): \Illuminate\Testing\TestResponse
+    private function postDecision(int $orderId, string $decision): TestResponse
     {
         $payload = [
             'service_order_id' => $orderId,

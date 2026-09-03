@@ -611,7 +611,8 @@ paths:
   /admin/service-orders:
     get:
       operationId: listServiceOrders
-      summary: Lista as Ordens de Servico
+      summary: Lista a fila operacional de Ordens de Servico
+      description: Retorna somente OS em in_execution, awaiting_approval, in_diagnosis ou received, nesta prioridade. Dentro do mesmo status, as OS mais antigas por received_at aparecem primeiro. OS finalizadas, entregues e canceladas permanecem acessiveis pelo detalhamento.
       tags:
         - Service Orders
       security:

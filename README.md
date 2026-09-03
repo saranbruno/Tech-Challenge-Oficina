@@ -235,6 +235,8 @@ Alteracoes posteriores nos catalogos nao modificam os valores registrados na OS.
 
 O webhook de decisao aplica `approved` de `awaiting_approval` para `in_execution`, com baixa atomica do estoque, ou `rejected` diretamente para `cancelled`, sem alterar estoque. A mesma decisao repetida e idempotente; uma decisao conflitante retorna conflito.
 
+A listagem administrativa funciona como fila operacional: retorna somente OS em `in_execution`, `awaiting_approval`, `in_diagnosis` e `received`, nessa prioridade e com as mais antigas primeiro dentro de cada status. OS finalizadas, entregues e canceladas continuam disponiveis no detalhamento e nao sao excluidas fisicamente.
+
 Endpoint protegido por JWT:
 
 - `POST /api/admin/service-orders`
