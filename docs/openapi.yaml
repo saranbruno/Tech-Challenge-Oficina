@@ -24,6 +24,8 @@ tags:
     description: Criacao, ciclo de vida e monitoramento administrativo das Ordens de Servico.
   - name: Client Service Orders
     description: Acompanhamento e aprovacao seguros pelo cliente.
+  - name: Webhooks
+    description: Recepcao segura de decisoes externas de orcamento.
 paths:
   /admin/auth/login:
     post:
@@ -961,6 +963,57 @@ paths:
           $ref: '#/components/responses/Conflict'
         '422':
           $ref: '#/components/responses/ValidationError'
+  /webhooks/service-orders/budget-decision:
+    post:
+      operationId: receiveServiceOrderBudgetDecision
+      summary: Recebe uma decisao externa de orcamento protegida por HMAC
+      description: Valida a assinatura HMAC-SHA256 sobre o corpo JSON bruto e aceita somente as decisoes approved ou rejected. A aplicacao da decisao ao ciclo da OS sera feita no Dia 13.
+      tags:
+        - Webhooks
+      security: []
+      parameters:
+        - name: X-Webhook-Signature
+          in: header
+          required: true
+          description: Assinatura no formato sha256= seguido do hexadecimal de HMAC-SHA256 do corpo bruto, usando SERVICE_ORDER_WEBHOOK_SECRET.
+          schema:
+            type: string
+            pattern: '^sha256=[a-f0-9]{64}$'
+          example: sha256=8b7c4a0b3f2d1e0f9a8b7c6d5e4f3a2b1c0d9e8f7a6b5c4d3e2f1a0b9c8d7e6f
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BudgetDecisionWebhookRequest'
+            example:
+              service_order_id: 42
+              decision: approved
+              occurred_at: '2026-09-02T15:04:05Z'
+      responses:
+        '202':
+          description: Payload autenticado e aceito para processamento
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required:
+                  - data
+                properties:
+                  data:
+                    type: object
+                    additionalProperties: false
+                    required:
+                      - accepted
+                    properties:
+                      accepted:
+                        type: boolean
+                        const: true
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '422':
+          $ref: '#/components/responses/ValidationError'
 components:
   parameters:
     InventoryItemId:
@@ -1552,6 +1605,25 @@ components:
           minLength: 64
           maxLength: 64
           example: 8f394ce8b625d4ed85ad7b3f3e70de5b22d48c3c7e607641e716b9e24a9f912d
+    BudgetDecisionWebhookRequest:
+      type: object
+      additionalProperties: false
+      required:
+        - service_order_id
+        - decision
+        - occurred_at
+      properties:
+        service_order_id:
+          type: integer
+          minimum: 1
+        decision:
+          type: string
+          enum:
+            - approved
+            - rejected
+        occurred_at:
+          type: string
+          format: date-time
     ServiceOrderServiceItem:
       type: object
       required:

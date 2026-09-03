@@ -144,8 +144,11 @@ As rotas da API possuem o prefixo global `/api`.
 
 - `routes/api/admin.php`: rotas administrativas protegidas por JWT.
 - `routes/api/client.php`: rotas de acompanhamento e aprovacao protegidas por documento e token da OS.
+- `routes/api/webhooks.php`: rota externa de decisao de orcamento protegida por HMAC-SHA256.
 
 Os arquivos estao carregados e agrupados sob `/api/admin` e `/api/client`. Somente funcionalidades concluidas publicam endpoints.
+
+O webhook usa `X-Webhook-Signature` no formato `sha256=<hexadecimal>`. A assinatura e calculada sobre o corpo bruto da requisicao com o segredo `SERVICE_ORDER_WEBHOOK_SECRET`; `hash_equals` compara o valor recebido com o esperado. A janela de `occurred_at` e opcional e controlada por `SERVICE_ORDER_WEBHOOK_TIMESTAMP_TOLERANCE_SECONDS`.
 
 ## Ciclo da Ordem de Servico
 

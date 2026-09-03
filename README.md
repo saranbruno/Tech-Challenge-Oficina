@@ -51,6 +51,8 @@ docker compose run --rm app php artisan jwt:secret
 
 As variaveis `JWT_TTL` e `JWT_REFRESH_TTL` representam minutos. O valor anterior de `ADMIN_PASSWORD` deve ser substituido por uma senha local segura e nao deve ser versionado.
 
+O webhook `POST /api/webhooks/service-orders/budget-decision` exige o cabecalho `X-Webhook-Signature` no formato `sha256=<hexadecimal>`. O valor e calculado com HMAC-SHA256 sobre o corpo JSON bruto usando `SERVICE_ORDER_WEBHOOK_SECRET`. O payload possui `service_order_id`, `decision` (`approved` ou `rejected`) e `occurred_at`; a janela opcional e configurada por `SERVICE_ORDER_WEBHOOK_TIMESTAMP_TOLERANCE_SECONDS`.
+
 ## Execucao
 
 ```bash

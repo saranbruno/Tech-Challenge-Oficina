@@ -70,6 +70,7 @@ class ApiFoundationTest extends TestCase
             'api/client/service-orders/approve',
             'api/client/service-orders/status',
             'api/client/service-orders/tracking',
+            'api/webhooks/service-orders/budget-decision',
         ], $apiRoutes);
     }
 }
