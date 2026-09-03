@@ -10,6 +10,7 @@ use App\Application\Notification\Contracts\NotificationFailureReporter;
 use App\Application\Notification\Contracts\SmsNotificationSender;
 use App\Application\Service\Contracts\ServiceRepository;
 use App\Application\ServiceOrder\Contracts\ServiceOrderApproval;
+use App\Application\ServiceOrder\Contracts\ServiceOrderBudgetDecision;
 use App\Application\ServiceOrder\Contracts\ServiceOrderMetricsQuery;
 use App\Application\ServiceOrder\Contracts\ServiceOrderQuery;
 use App\Application\ServiceOrder\Contracts\ServiceOrderRepository;
@@ -55,6 +56,7 @@ class AppServiceProvider extends ServiceProvider
         });
         $this->app->bind(ServiceRepository::class, EloquentServiceRepository::class);
         $this->app->bind(ServiceOrderApproval::class, EloquentServiceOrderApproval::class);
+        $this->app->bind(ServiceOrderBudgetDecision::class, EloquentServiceOrderApproval::class);
         $this->app->bind(ServiceOrderMetricsQuery::class, EloquentServiceOrderMetricsQuery::class);
         $this->app->bind(ServiceOrderQuery::class, EloquentServiceOrderQuery::class);
         $this->app->bind(ServiceOrderRepository::class, EloquentServiceOrderRepository::class);

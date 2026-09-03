@@ -170,6 +170,8 @@ A criacao completa adiciona pecas e insumos com snapshot de tipo e valor unitari
 
 A aprovacao e executada por uma operacao atomica do repositorio. Ela bloqueia primeiro a OS e depois os itens de estoque em ordem deterministica, valida todos os saldos antes de qualquer alteracao, registra as baixas vinculadas a OS e persiste a entrada em `in_execution` na mesma transacao. A restricao unica por OS e item complementa a validacao de estado contra baixas duplicadas. Qualquer insuficiencia reverte saldos, movimentos e transicao.
 
+O caso de uso `ProcessServiceOrderBudgetDecision` recebe a decisao autenticada pelo webhook. `approved` reutiliza a operacao atomica de aprovacao; `rejected` cancela a OS a partir de `awaiting_approval` sem tocar no estoque. Repeticoes da mesma decisao retornam o estado persistido sem repetir efeitos ou notificacoes, enquanto decisoes conflitantes atravessam a regra de transicao do agregado e retornam conflito HTTP.
+
 Os casos de uso `FinalizeServiceOrder` e `DeliverServiceOrder` concluem o ciclo por transicoes explicitas de `in_execution` para `finalized` e de `finalized` para `delivered`. A listagem paginada e o detalhamento reconstituem o agregado com servicos, pecas, insumos, snapshots e instantes. Nao existe endpoint de atualizacao generica da OS.
 
 O caso de uso `GetServiceOrderExecutionTimeMetrics` consulta somente OS entregues, opcionalmente filtradas pelo periodo de `delivered_at` e pelo servico associado. O dominio calcula o ciclo completo entre recebimento e entrega e cada intervalo entre estados consecutivos. OS incompletas e canceladas nao entram na media. O contrato apresenta duracoes inteiras em segundos e quantidade de ordens elegiveis; a ausencia de amostra produz medias nulas.

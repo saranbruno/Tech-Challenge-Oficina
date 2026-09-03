@@ -69,7 +69,7 @@ flowchart LR
 | Identidade Administrativa | Autenticar o Administrador e emitir ou renovar JWT. | `LoginAdmin`, `RefreshAdminToken`, `AdminTokenProvider` |
 | Cadastro de Atendimento | Manter Clientes e Veículos e proteger sua relação de propriedade. | `Customer`, `Document`, `Email`, `Phone`, `Vehicle`, `LicensePlate` |
 | Catálogo e Estoque | Manter Serviços, Peças, Insumos, saldos e movimentações. | `Service`, `InventoryItem`, `StockQuantity`, `StockMovementData` |
-| Atendimento da Oficina | Coordenar a OS, orçamento, acompanhamento, aprovação e ciclo operacional. | `ServiceOrder`, casos de uso em `Application/ServiceOrder` |
+| Atendimento da Oficina | Coordenar a OS, orçamento, acompanhamento, aprovação, decisão externa e ciclo operacional. | `ServiceOrder`, `ProcessServiceOrderBudgetDecision`, casos de uso em `Application/ServiceOrder` |
 | Comunicacao de Status | Preparar mensagens minimas e tentar todos os contatos disponiveis sem acoplar o Dominio a fornecedores. | `DispatchServiceOrderStatusNotification`, ports em `Application/Notification` |
 | Monitoramento | Calcular duração total e por estado das OS elegíveis. | `GetServiceOrderExecutionTimeMetrics`, `ServiceOrderExecutionTimeCalculator` |
 
@@ -382,7 +382,7 @@ stateDiagram-v2
     Finalizada --> Entregue: entregar veículo
     Recebida --> Cancelada: cancelar
     EmDiagnostico --> Cancelada: cancelar
-    AguardandoAprovacao --> Cancelada: cancelar
+    AguardandoAprovacao --> Cancelada: cancelar ou recusar orçamento pelo webhook
     Entregue --> [*]
     Cancelada --> [*]
 ```

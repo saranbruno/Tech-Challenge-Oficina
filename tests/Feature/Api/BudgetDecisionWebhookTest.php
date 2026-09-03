@@ -54,8 +54,8 @@ class BudgetDecisionWebhookTest extends TestCase
             ],
             content: $body,
         )
-            ->assertStatus(202)
-            ->assertJsonPath('data.accepted', true);
+            ->assertNotFound()
+            ->assertJsonPath('error.code', 'not_found');
     }
 
     public function test_webhook_rejects_decisions_outside_the_contract(): void

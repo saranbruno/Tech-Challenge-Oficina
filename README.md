@@ -233,6 +233,8 @@ A criacao identifica o cliente por CPF ou CNPJ normalizado, confirma que o veicu
 
 Alteracoes posteriores nos catalogos nao modificam os valores registrados na OS. A criacao nao altera o saldo dos itens; a baixa ocorre atomicamente quando a aprovacao faz a OS entrar em `in_execution`.
 
+O webhook de decisao aplica `approved` de `awaiting_approval` para `in_execution`, com baixa atomica do estoque, ou `rejected` diretamente para `cancelled`, sem alterar estoque. A mesma decisao repetida e idempotente; uma decisao conflitante retorna conflito.
+
 Endpoint protegido por JWT:
 
 - `POST /api/admin/service-orders`
@@ -248,6 +250,7 @@ Endpoint protegido por JWT:
 - `POST /api/client/service-orders/approve`
 - `POST /api/client/service-orders/status`
 - `POST /api/admin/service-orders/{serviceOrder}/cancel`
+- `POST /api/webhooks/service-orders/budget-decision`
 
 Na criacao, a API administrativa retorna uma unica vez um token aleatorio de 64 caracteres. Somente o hash desse token e persistido. O cliente acompanha a OS enviando o token e seu CPF ou CNPJ para `POST /api/client/service-orders/tracking`; combinacoes incorretas retornam 404 e a resposta nao expoe identificadores do cliente ou veiculo.
 

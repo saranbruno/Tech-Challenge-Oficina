@@ -967,7 +967,7 @@ paths:
     post:
       operationId: receiveServiceOrderBudgetDecision
       summary: Recebe uma decisao externa de orcamento protegida por HMAC
-      description: Valida a assinatura HMAC-SHA256 sobre o corpo JSON bruto e aceita somente as decisoes approved ou rejected. A aplicacao da decisao ao ciclo da OS sera feita no Dia 13.
+      description: Valida a assinatura HMAC-SHA256 sobre o corpo JSON bruto e aceita somente as decisoes approved ou rejected. A decisao aprovada inicia a execucao e a recusada cancela a OS; repeticoes da mesma decisao sao idempotentes.
       tags:
         - Webhooks
       security: []
@@ -991,8 +991,8 @@ paths:
               decision: approved
               occurred_at: '2026-09-02T15:04:05Z'
       responses:
-        '202':
-          description: Payload autenticado e aceito para processamento
+        '200':
+          description: Decisao aplicada ou repeticao idempotente da mesma decisao
           content:
             application/json:
               schema:
@@ -1005,11 +1005,21 @@ paths:
                     type: object
                     additionalProperties: false
                     required:
-                      - accepted
+                      - service_order_id
+                      - status
                     properties:
-                      accepted:
-                        type: boolean
-                        const: true
+                      service_order_id:
+                        type: integer
+                        minimum: 1
+                      status:
+                        type: string
+                        enum:
+                          - in_execution
+                          - cancelled
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '422':

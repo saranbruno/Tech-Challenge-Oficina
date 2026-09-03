@@ -97,6 +97,8 @@ flowchart TB
 
 ## Acompanhamento, aprovação e ciclo operacional
 
+O webhook externo usa o comando `ProcessServiceOrderBudgetDecision` depois da validação HMAC. A decisão aprovada segue o mesmo bloqueio transacional e consumo único de estoque da aprovação do Cliente. A decisão recusada gera diretamente o evento `OS cancelada`, sem movimentação de estoque; a repetição da mesma decisão não gera novo evento nem nova notificação.
+
 ```mermaid
 flowchart TB
     Client["Ator: Cliente"] --> Track["Comando: Acompanhar OS"]
