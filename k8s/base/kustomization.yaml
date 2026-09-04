@@ -3,6 +3,20 @@ kind: Kustomization
 namespace: oficina
 resources:
   - namespace.yaml
+  - configmap.yaml
   - app-deployment.yaml
   - app-service.yaml
   - migration-job.yaml
+secretGenerator:
+  - name: oficina-secrets
+    literals:
+      - APP_KEY=base64:ZmFrZS1hcHAta2V5LWZvci1leGFtcGxl
+      - DB_USERNAME=oficina
+      - DB_PASSWORD=change-me-only
+      - JWT_SECRET=change-me-jwt-secret-only
+      - SERVICE_ORDER_WEBHOOK_SECRET=change-me-webhook-secret-only
+      - MAIL_USERNAME=
+      - MAIL_PASSWORD=
+      - TWILIO_ACCOUNT_SID=
+      - TWILIO_AUTH_TOKEN=
+      - TWILIO_FROM=

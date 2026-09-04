@@ -67,6 +67,8 @@ A aplicacao fica disponivel em `http://localhost:8081` com a configuracao padrao
 
 O Compose inicia a API somente depois de PostgreSQL e Mailpit estarem saudaveis. A API tambem possui healthcheck em `/up`; o arquivo `.env` e montado no container somente para leitura. O PostgreSQL usa o volume `postgres_data`, o Mailpit fica disponivel em `http://localhost:8025` e o SMS local usa o adapter de log configurado no `.env.example`.
 
+Os manifestos Kubernetes usam `k8s/base` como base e os overlays `k8s/overlays/local` e `k8s/overlays/ci` para separar configuracoes. ConfigMap e Secret sao consumidos por `envFrom`; os valores versionados sao ficticios e devem ser substituidos por Secrets efemeros ou por um mecanismo seguro no ambiente de execucao. O arquivo `k8s/secret.env.example` serve somente como referencia de nomes, e arquivos locais de segredo sao ignorados pelo Git.
+
 Consulte o estado dos containers:
 
 ```bash
