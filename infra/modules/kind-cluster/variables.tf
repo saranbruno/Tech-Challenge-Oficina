@@ -11,7 +11,7 @@ variable "api_server_address" {
 
 variable "api_server_port" {
   type        = number
-  description = "Porta local usada pelo servidor da API Kubernetes."
+  description = "Porta local usada pelo servidor da API Kubernetes; zero solicita uma porta aleatoria."
 }
 
 variable "node_image" {

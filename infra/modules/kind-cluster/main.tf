@@ -29,11 +29,13 @@ resource "terraform_data" "kind_cluster" {
       kind_config="$(mktemp)"
       trap 'rm -f "$kind_config"' EXIT
       cat >"$kind_config" <<EOF
+      apiVersion: kind.x-k8s.io/v1alpha4
       kind: Cluster
-      apiServerAddress: ${var.api_server_address}
-      apiServerPort: ${var.api_server_port}
+      networking:
+        apiServerAddress: ${var.api_server_address}
+        apiServerPort: ${var.api_server_port}
       EOF
-      "${var.kind_binary}" create cluster --name "${var.cluster_name}" --image "${var.node_image}" --config "$kind_config" --wait "${var.wait_timeout}"
+      "${var.kind_binary}" create cluster --name "${var.cluster_name}" --image "${var.node_image}" --config "$kind_config" --kubeconfig "${pathexpand(var.kubeconfig_path)}" --wait "${var.wait_timeout}"
     EOT
   }
 

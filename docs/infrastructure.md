@@ -38,7 +38,7 @@ terraform -chdir=infra/environments/local init
 terraform -chdir=infra/environments/local validate
 terraform -chdir=infra/environments/local plan
 terraform -chdir=infra/environments/local apply
-kubectl --context kind-tech-challenge-terraform-local cluster-info
+kubectl --kubeconfig ~/.kube/tech-challenge-terraform-local.config --context kind-tech-challenge-terraform-local cluster-info
 ```
 
 O ambiente CI usa o mesmo modulo, com nome separado e ciclo de vida efemero. O runner deve disponibilizar Docker, Kind e Terraform no `PATH`:
@@ -47,7 +47,7 @@ O ambiente CI usa o mesmo modulo, com nome separado e ciclo de vida efemero. O r
 terraform -chdir=infra/environments/ci init
 terraform -chdir=infra/environments/ci validate
 terraform -chdir=infra/environments/ci apply -auto-approve
-kubectl --context kind-tech-challenge-terraform-ci cluster-info
+kubectl --kubeconfig ~/.kube/tech-challenge-terraform-ci.config --context kind-tech-challenge-terraform-ci cluster-info
 terraform -chdir=infra/environments/ci destroy -auto-approve
 ```
 

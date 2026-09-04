@@ -5,12 +5,12 @@ variable "cluster_name" {
 
 variable "node_image" {
   type    = string
-  default = "kindest/node:v1.37.0"
+  default = "kindest/node:v1.35.0"
 }
 
 variable "api_server_port" {
   type    = number
-  default = 36443
+  default = 0
 }
 
 variable "kind_binary" {
@@ -20,7 +20,7 @@ variable "kind_binary" {
 
 variable "kubeconfig_path" {
   type    = string
-  default = "~/.kube/config"
+  default = "~/.kube/tech-challenge-terraform-local.config"
 }
 
 variable "wait_timeout" {
