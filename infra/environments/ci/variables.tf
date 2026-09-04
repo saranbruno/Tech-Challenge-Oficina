@@ -8,6 +8,11 @@ variable "node_image" {
   default = "kindest/node:v1.37.0"
 }
 
+variable "api_server_port" {
+  type    = number
+  default = 36444
+}
+
 variable "kind_binary" {
   type    = string
   default = "kind"

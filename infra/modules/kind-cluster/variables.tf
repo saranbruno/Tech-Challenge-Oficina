@@ -3,6 +3,17 @@ variable "cluster_name" {
   description = "Nome do cluster Kind."
 }
 
+variable "api_server_address" {
+  type        = string
+  description = "Endereco local usado pelo servidor da API Kubernetes."
+  default     = "127.0.0.1"
+}
+
+variable "api_server_port" {
+  type        = number
+  description = "Porta local usada pelo servidor da API Kubernetes."
+}
+
 variable "node_image" {
   type        = string
   description = "Imagem kindest/node usada pelo cluster."
