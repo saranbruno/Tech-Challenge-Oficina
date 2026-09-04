@@ -27,3 +27,19 @@ variable "wait_timeout" {
   type    = string
   default = "120s"
 }
+
+variable "database_name" {
+  type    = string
+  default = "tech_challenge_oficina"
+}
+
+variable "database_username" {
+  type    = string
+  default = "oficina"
+}
+
+variable "database_password" {
+  type      = string
+  default   = "local-only-change-me"
+  sensitive = true
+}

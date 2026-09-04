@@ -9,10 +9,6 @@ terraform {
   }
 }
 
-provider "kubernetes" {
-  config_path = pathexpand(var.kubeconfig_path)
-}
-
 resource "terraform_data" "kind_cluster" {
   triggers_replace = {
     api_server_address = var.api_server_address

@@ -52,3 +52,19 @@ terraform -chdir=infra/environments/ci destroy -auto-approve
 ```
 
 Nao execute `destroy` no ambiente local persistente sem autorizacao. O estado Terraform e os arquivos `.terraform` sao locais e ignorados pelo Git; os arquivos `.terraform.lock.hcl` permanecem versionados para fixar o provider. O modulo nao recebe nem expoe credenciais.
+
+## PostgreSQL no Kubernetes
+
+O Dia 21 adiciona o modulo `infra/modules/postgresql`, aplicado depois do cluster Kind no mesmo ambiente Terraform. Ele cria o namespace `oficina`, um Secret sensível `postgres-secrets`, o Service interno `postgres` e o StatefulSet de uma réplica com PostgreSQL `18.4-alpine`, probes de startup, readiness e liveness, requests/limits e um PVC `data-postgres-0` de `1Gi` na StorageClass `standard`.
+
+O banco não possui porta publicada no host. A aplicação e o Job de migrations usam `DB_HOST=postgres` e recebem usuário e senha pelas chaves `POSTGRES_USER` e `POSTGRES_PASSWORD` do Secret criado pelo Terraform. Senhas reais devem ser fornecidas por variáveis sensíveis ou pelo ambiente de execução; o estado Terraform local não deve ser versionado.
+
+Validação do banco no cluster local:
+
+```bash
+terraform -chdir=infra/environments/local plan
+kubectl --kubeconfig ~/.kube/tech-challenge-terraform-local.config --context kind-tech-challenge-terraform-local -n oficina get statefulset,pod,pvc,service
+kubectl --kubeconfig ~/.kube/tech-challenge-terraform-local.config --context kind-tech-challenge-terraform-local -n oficina exec postgres-0 -- sh -c 'pg_isready -h postgres -U "$POSTGRES_USER" -d "$POSTGRES_DB"'
+```
+
+Para testar persistência, grave uma marca temporária com `psql`, recrie somente o pod `postgres-0`, aguarde a condição `Ready`, consulte a marca e remova a tabela de teste. A retenção do PVC é responsabilidade do ambiente local; não use `terraform destroy` para esse teste.

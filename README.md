@@ -71,6 +71,8 @@ Os manifestos Kubernetes usam `k8s/base` como base e os overlays `k8s/overlays/l
 
 O Terraform provisiona clusters Kind por meio do modulo compartilhado em `infra/modules/kind-cluster`. Para o ambiente local persistente, use `terraform -chdir=infra/environments/local init`, `validate`, `plan` e `apply`. Para o ambiente CI efemero, use os mesmos comandos em `infra/environments/ci` e finalize com `terraform destroy -auto-approve`. O runner CI precisa disponibilizar Docker, Kind e Terraform.
 
+O módulo `infra/modules/postgresql` provisiona o PostgreSQL dentro do Kubernetes com Secret sensível, Service interno, StatefulSet, probes e PVC. A aplicação usa o Service `postgres` e as credenciais fornecidas pelo ambiente; nenhum banco Kubernetes é exposto diretamente no host.
+
 Consulte o estado dos containers:
 
 ```bash
