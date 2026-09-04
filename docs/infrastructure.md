@@ -26,3 +26,29 @@ Validacao dos overlays:
 kubectl apply -k k8s/overlays/local --dry-run=server
 kubectl apply -k k8s/overlays/ci --dry-run=server
 ```
+
+## Terraform e Kind
+
+O Dia 20 adiciona o modulo reutilizavel `infra/modules/kind-cluster`, usado pelos ambientes `infra/environments/local` e `infra/environments/ci`. O modulo executa o binario Kind por `terraform_data`, configura o provider Kubernetes pelo kubeconfig local e expoe o nome do cluster, o contexto kubectl e o caminho do kubeconfig.
+
+O ambiente local representa o cluster persistente de desenvolvimento. Inicialize e valide com:
+
+```bash
+terraform -chdir=infra/environments/local init
+terraform -chdir=infra/environments/local validate
+terraform -chdir=infra/environments/local plan
+terraform -chdir=infra/environments/local apply
+kubectl --context kind-tech-challenge-terraform-local cluster-info
+```
+
+O ambiente CI usa o mesmo modulo, com nome separado e ciclo de vida efemero. O runner deve disponibilizar Docker, Kind e Terraform no `PATH`:
+
+```bash
+terraform -chdir=infra/environments/ci init
+terraform -chdir=infra/environments/ci validate
+terraform -chdir=infra/environments/ci apply -auto-approve
+kubectl --context kind-tech-challenge-terraform-ci cluster-info
+terraform -chdir=infra/environments/ci destroy -auto-approve
+```
+
+Nao execute `destroy` no ambiente local persistente sem autorizacao. O estado Terraform e os arquivos `.terraform` sao locais e ignorados pelo Git; os arquivos `.terraform.lock.hcl` permanecem versionados para fixar o provider. O modulo nao recebe nem expoe credenciais.

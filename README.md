@@ -69,6 +69,8 @@ O Compose inicia a API somente depois de PostgreSQL e Mailpit estarem saudaveis.
 
 Os manifestos Kubernetes usam `k8s/base` como base e os overlays `k8s/overlays/local` e `k8s/overlays/ci` para separar configuracoes. ConfigMap e Secret sao consumidos por `envFrom`; os valores versionados sao ficticios e devem ser substituidos por Secrets efemeros ou por um mecanismo seguro no ambiente de execucao. O arquivo `k8s/secret.env.example` serve somente como referencia de nomes, e arquivos locais de segredo sao ignorados pelo Git.
 
+O Terraform provisiona clusters Kind por meio do modulo compartilhado em `infra/modules/kind-cluster`. Para o ambiente local persistente, use `terraform -chdir=infra/environments/local init`, `validate`, `plan` e `apply`. Para o ambiente CI efemero, use os mesmos comandos em `infra/environments/ci` e finalize com `terraform destroy -auto-approve`. O runner CI precisa disponibilizar Docker, Kind e Terraform.
+
 Consulte o estado dos containers:
 
 ```bash
