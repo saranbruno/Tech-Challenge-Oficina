@@ -35,6 +35,14 @@ module "postgresql" {
   depends_on = [module.kind_cluster]
 }
 
+module "metrics_server" {
+  source = "../../modules/metrics-server"
+
+  kubelet_insecure_tls = true
+
+  depends_on = [module.kind_cluster]
+}
+
 output "cluster_name" {
   value = module.kind_cluster.cluster_name
 }

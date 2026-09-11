@@ -5,6 +5,7 @@ resources:
   - namespace.yaml
   - configmap.yaml
   - app-deployment.yaml
+  - app-hpa.yaml
   - app-service.yaml
   - migration-job.yaml
 secretGenerator:

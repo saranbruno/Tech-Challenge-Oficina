@@ -26,7 +26,7 @@ O Dia 1 registrou a baseline reproduzivel, sem adicionar funcionalidade: Compose
 
 PHP e Composer locais nao sao necessarios para a execucao via Docker.
 
-O `Dockerfile` unico e reutilizavel no Docker Compose, Kind e CI. A imagem instala `pdo_pgsql` e PCOV, gera o autoload otimizado, declara metadados OCI, executa como o usuario nao privilegiado `app` e verifica `/up` por healthcheck. O contexto de build ignora dependencias instaladas, artefatos de cobertura, logs, caches e arquivos `.env`; segredos entram somente pela configuracao do ambiente.
+O `Dockerfile` unico e reutilizavel no Docker Compose, Kind e CI. A imagem instala `pdo_pgsql` e PCOV, gera o autoload otimizado, declara metadados OCI, executa como o usuario nao privilegiado `app` e verifica `/up` por healthcheck. O contexto de build ignora dependencias instaladas, artefatos de cobertura, logs, caches, arquivos `.env` e os diretorios `infra` e `k8s`, incluindo estados Terraform e Secrets locais; segredos entram somente pela configuracao do ambiente.
 
 ## Configuracao
 
@@ -72,6 +72,8 @@ Os manifestos Kubernetes usam `k8s/base` como base e os overlays `k8s/overlays/l
 O Terraform provisiona clusters Kind por meio do modulo compartilhado em `infra/modules/kind-cluster`. Para o ambiente local persistente, use `terraform -chdir=infra/environments/local init`, `validate`, `plan` e `apply`. Para o ambiente CI efemero, use os mesmos comandos em `infra/environments/ci` e finalize com `terraform destroy -auto-approve`. O runner CI precisa disponibilizar Docker, Kind e Terraform.
 
 O módulo `infra/modules/postgresql` provisiona o PostgreSQL dentro do Kubernetes com Secret sensível, Service interno, StatefulSet, probes e PVC. A aplicação usa o Service `postgres` e as credenciais fornecidas pelo ambiente; nenhum banco Kubernetes é exposto diretamente no host.
+
+O modulo `infra/modules/metrics-server` instala o Metrics Server 0.9.0 nos dois ambientes Kind. O HPA `autoscaling/v2` em `k8s/base/app-hpa.yaml` controla de 1 a 4 replicas da API, com alvos simultaneos de 70% de CPU e 80% de memoria sobre os requests. A reducao usa estabilizacao de 300 segundos. Os comandos de instalacao, observacao e os limites dessa configuracao estao em [docs/infrastructure.md](docs/infrastructure.md#metrics-server-e-hpa).
 
 Consulte o estado dos containers:
 

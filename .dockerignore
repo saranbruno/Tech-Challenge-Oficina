@@ -1,6 +1,8 @@
 .git
 .gitignore
 .github
+infra
+k8s
 .env
 .env.*
 vendor
