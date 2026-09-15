@@ -75,6 +75,18 @@ O módulo `infra/modules/postgresql` provisiona o PostgreSQL dentro do Kubernete
 
 O modulo `infra/modules/metrics-server` instala o Metrics Server 0.9.0 nos dois ambientes Kind. O HPA `autoscaling/v2` em `k8s/base/app-hpa.yaml` controla de 1 a 4 replicas da API, com alvos simultaneos de 70% de CPU e 80% de memoria sobre os requests. A reducao usa estabilizacao de 300 segundos. Os comandos de instalacao, observacao e os limites dessa configuracao estao em [docs/infrastructure.md](docs/infrastructure.md#metrics-server-e-hpa).
 
+### Deploy local completo no Kind
+
+Com Python 3, Docker, Terraform, Kind e kubectl no `PATH`:
+
+```bash
+python3 scripts/k8s-local.py up
+python3 scripts/k8s-local.py status
+python3 scripts/k8s-local.py access
+```
+
+Swagger em `http://127.0.0.1:8082/docs` enquanto o ultimo comando estiver ativo. Para Mailpit, execute em outro terminal `python3 scripts/k8s-local.py access --service mailpit` e acesse `http://127.0.0.1:8026`. O fluxo provisiona cluster/banco, gera Secrets privados, constroi e carrega a imagem, executa migrations, aguarda rollouts e valida HTTP. Estado e chaves permanecem em `.local/k8s/local`, fora do Git e do build. O cluster existente dos dias anteriores e preservado. Seed, logs, ambientes temporarios e destruicao estao documentados em [deploy local automatizado](docs/infrastructure.md#deploy-local-automatizado-dia-23).
+
 Consulte o estado dos containers:
 
 ```bash

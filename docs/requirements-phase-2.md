@@ -71,3 +71,7 @@ O arquivo binario do enunciado oficial da Fase 2 nao esta versionado neste check
 - Nao criar `notification_channel`, tornar contatos obrigatorios, adicionar WhatsApp, criar `budget_rejected` ou versionar orcamentos.
 - Nao criar cadastros implicitamente na abertura da OS, excluir OS fisicamente nem oferecer alteracao generica de status.
 - Nao versionar `.env`, kubeconfig privado, estado Terraform com segredo, tokens ou credenciais reais.
+
+## Evidencia do Dia 23
+
+A automacao `scripts/k8s-local.py` completou duas instalacoes temporarias independentes em 2026-09-14. Cada uma criou Kind, PostgreSQL/PVC e Metrics Server por Terraform, construiu e carregou imagem local, executou migrations, aguardou os rollouts e validou API, Swagger, OpenAPI e Mailpit. A primeira tambem validou seed e port-forward. O requisito de automacao local esta concluido; os requisitos de cluster, banco e HPA conservam suas validacoes e limites próprios dos Dias 20 a 22. Detalhes em `docs/infrastructure.md` e `docs/project-progress.md`.

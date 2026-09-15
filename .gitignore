@@ -33,3 +33,7 @@ Homestead.yaml
 Thumbs.db
 AGENTS.md
 docs/project-progress.md
+
+.local
+__pycache__/
+*.py[cod]

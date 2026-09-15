@@ -15,3 +15,7 @@ storage/framework/views
 docs/*
 !docs/openapi.yaml
 README.md
+
+.local
+__pycache__/
+*.py[cod]
