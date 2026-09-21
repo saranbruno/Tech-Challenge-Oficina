@@ -1,0 +1,131 @@
+name: Integracao continua
+
+on:
+  pull_request:
+  push:
+    branches:
+      - fase-2
+      - main
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  APP_ENV: testing
+  APP_KEY: base64:dGVzdGluZy1hcHAta2V5LXNlY3JldC1mb3ItY2ktd29ya2Zsb3c=
+  APP_URL: http://localhost
+  DB_CONNECTION: pgsql
+  DB_HOST: 127.0.0.1
+  DB_PORT: 5432
+  DB_DATABASE: tech_challenge_oficina_test
+  DB_USERNAME: oficina
+  DB_PASSWORD: change_me
+  JWT_SECRET: testing-jwt-secret-with-at-least-thirty-two-characters
+  SERVICE_ORDER_WEBHOOK_SECRET: testing-webhook-secret-with-at-least-thirty-two-characters
+  MAIL_MAILER: array
+  NOTIFICATION_MAILER: array
+  QUEUE_CONNECTION: sync
+  CACHE_STORE: array
+  SESSION_DRIVER: array
+  MAILPIT_INTEGRATION_TEST: "false"
+
+jobs:
+  validate:
+    name: Validar aplicacao e infraestrutura
+    runs-on: ubuntu-24.04
+    services:
+      postgres:
+        image: postgres:18.4-alpine
+        env:
+          POSTGRES_DB: tech_challenge_oficina_test
+          POSTGRES_USER: oficina
+          POSTGRES_PASSWORD: change_me
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U oficina -d tech_challenge_oficina_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - name: Obter codigo
+        uses: actions/checkout@v6
+
+      - name: Configurar PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.5"
+          coverage: pcov
+          tools: composer:v2
+
+      - name: Restaurar cache do Composer
+        uses: actions/cache@v5
+        with:
+          path: ~/.cache/composer/files
+          key: composer-${{ runner.os }}-${{ hashFiles('composer.lock') }}
+          restore-keys: composer-${{ runner.os }}-
+
+      - name: Instalar dependencias
+        run: composer install --no-interaction --prefer-dist --no-progress --optimize-autoloader
+
+      - name: Aplicar migrations
+        run: php artisan migrate --force --no-interaction
+
+      - name: Verificar estilo
+        run: ./vendor/bin/pint --test
+
+      - name: Testar dominio com cobertura
+        run: |
+          mkdir -p build
+          ./vendor/bin/phpunit -c phpunit.domain.xml --coverage-text --coverage-clover build/coverage-domain.xml
+
+      - name: Testar integracao PostgreSQL com cobertura
+        run: ./vendor/bin/phpunit -c phpunit.integration.xml --coverage-text --coverage-clover build/coverage-integration.xml
+
+      - name: Validar OpenAPI
+        run: npx --yes @redocly/cli@1.34.0 lint docs/openapi.yaml
+
+      - name: Auditar dependencias
+        run: composer audit
+
+      - name: Configurar Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.16.1
+
+      - name: Validar Terraform
+        run: |
+          terraform -chdir=infra fmt -check -recursive
+          terraform -chdir=infra/environments/local init -backend=false -input=false
+          terraform -chdir=infra/environments/local validate
+          terraform -chdir=infra/environments/ci init -backend=false -input=false
+          terraform -chdir=infra/environments/ci validate
+
+      - name: Configurar kubectl
+        uses: azure/setup-kubectl@v4
+
+      - name: Validar manifestos Kubernetes
+        run: |
+          kubectl kustomize k8s/overlays/local >/dev/null
+          kubectl kustomize k8s/overlays/ci >/dev/null
+          kubectl apply --dry-run=client -k k8s/overlays/local
+          kubectl apply --dry-run=client -k k8s/overlays/ci
+
+      - name: Construir imagem sem publicar
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          push: false
+          tags: tech-challenge-oficina:ci
+
+      - name: Publicar relatorios de cobertura
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cobertura-${{ github.run_id }}
+          path: build/coverage-*.xml
+          if-no-files-found: warn

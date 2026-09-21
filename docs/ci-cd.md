@@ -1,5 +1,13 @@
 # Imagem de container e CI/CD
 
+## Integracao continua
+
+O workflow `.github/workflows/ci.yml` executa em `pull_request` e em push para `fase-2` ou `main`. Ele tem somente a permissao `contents: read` e cancela uma execucao anterior da mesma referencia quando uma nova execucao comeca.
+
+O job usa PostgreSQL 18.4 como servico efemero e instala as dependencias PHP com cache do Composer. Antes dos testes, aplica as migrations no banco de teste. A validacao inclui Pint, as suites de dominio e integracao com PCOV e relatorios Clover, lint do OpenAPI, `composer audit`, `terraform fmt` e `validate` nos ambientes local e CI, renderizacao e dry-run client dos dois overlays Kubernetes e build Docker sem publicacao. Os relatorios de cobertura sao preservados como artefato mesmo se uma etapa anterior falhar.
+
+O workflow nao publica imagem e nao usa Secrets de producao. A associacao de regras de protecao de branch para exigir o job `Validar aplicacao e infraestrutura` permanece uma configuracao do repositorio no GitHub.
+
 ## Publicacao no GHCR
 
 O workflow reutilizavel `.github/workflows/publish-image.yml` publica a API no pacote publico `ghcr.io/saranbruno/tech-challenge-oficina`. Ele so executa na branch `fase-2`, usa o `GITHUB_TOKEN` com as permissoes minimas `contents: read` e `packages: write` e nao recebe credenciais de registry versionadas.
