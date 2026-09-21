@@ -4,7 +4,8 @@ FROM php:8.5.8-cli
 
 LABEL org.opencontainers.image.title="Tech-Challenge-Oficina" \
     org.opencontainers.image.description="API da oficina mecanica da Fase 2" \
-    org.opencontainers.image.source="https://github.com/saranbruno/Tech-Challenge-Oficina"
+    org.opencontainers.image.source="https://github.com/saranbruno/Tech-Challenge-Oficina" \
+    org.opencontainers.image.licenses="MIT"
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends libpq-dev unzip $PHPIZE_DEPS \
