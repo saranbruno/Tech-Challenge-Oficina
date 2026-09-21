@@ -1,0 +1,154 @@
+name: Entrega continua no Kind
+
+on:
+  push:
+    branches:
+      - fase-2
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: read
+
+concurrency:
+  group: cd-kind-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  validate:
+    name: Validar antes do deploy
+    uses: ./.github/workflows/ci.yml
+    permissions:
+      contents: read
+
+  publish:
+    name: Publicar imagem
+    needs: validate
+    uses: ./.github/workflows/publish-image.yml
+    permissions:
+      contents: read
+      packages: write
+
+  deploy:
+    name: Implantar e validar no Kind
+    needs: publish
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      packages: read
+    env:
+      KUBECONFIG: ${{ runner.temp }}/tech-challenge-terraform-ci.config
+      TF_IN_AUTOMATION: "true"
+    steps:
+      - name: Obter codigo
+        uses: actions/checkout@v6
+
+      - name: Configurar Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.16.1
+
+      - name: Configurar kubectl
+        uses: azure/setup-kubectl@v4
+
+      - name: Instalar Kind
+        run: |
+          mkdir -p "$RUNNER_TEMP/bin"
+          curl --fail --location --silent --show-error --output "$RUNNER_TEMP/bin/kind" https://kind.sigs.k8s.io/dl/v0.31.0/kind-linux-amd64
+          chmod 0755 "$RUNNER_TEMP/bin/kind"
+          echo "$RUNNER_TEMP/bin" >> "$GITHUB_PATH"
+
+      - name: Gerar credencial efemera do PostgreSQL
+        run: echo "TF_VAR_database_password=$(openssl rand -hex 32)" >> "$GITHUB_ENV"
+
+      - name: Criar cluster e PostgreSQL
+        run: |
+          terraform -chdir=infra/environments/ci init -backend=false -input=false
+          terraform -chdir=infra/environments/ci apply -auto-approve -input=false -no-color -var "kubeconfig_path=$KUBECONFIG"
+          kubectl --kubeconfig "$KUBECONFIG" --context kind-tech-challenge-terraform-ci -n oficina rollout status statefulset/postgres --timeout=300s
+
+      - name: Renderizar configuracao efemera com imagem SHA
+        env:
+          IMAGE_NAME: ghcr.io/saranbruno/tech-challenge-oficina
+        run: |
+          render="$RUNNER_TEMP/render"
+          mkdir -p "$render"
+          cp -R k8s "$render/k8s"
+          GITHUB_SHA="$GITHUB_SHA" python3 - "$render/k8s/overlays/ci/kustomization.yaml" <<'PY'
+          import os
+          import sys
+          path = sys.argv[1]
+          source = open(path).read()
+          expected = 'newTag: fase-2'
+          if source.count(expected) != 1:
+              raise SystemExit('Tag base da imagem nao encontrada de forma unica.')
+          open(path, 'w').write(source.replace(expected, 'newTag: ' + os.environ['GITHUB_SHA']))
+          PY
+          cat > "$render/secret.env" <<EOF
+          APP_KEY=base64:$(openssl rand -base64 32 | tr -d '\n')
+          JWT_SECRET=$(openssl rand -hex 32)
+          SERVICE_ORDER_WEBHOOK_SECRET=$(openssl rand -hex 32)
+          EOF
+          mkdir -p "$render/overlay"
+          cat > "$render/overlay/kustomization.yaml" <<EOF
+          apiVersion: kustomize.config.k8s.io/v1beta1
+          kind: Kustomization
+          namespace: oficina
+          resources:
+            - ../k8s/overlays/ci
+          secretGenerator:
+            - name: oficina-secrets
+              behavior: replace
+              envs:
+                - ../secret.env
+          EOF
+          kubectl kustomize "$render/overlay" > "$RUNNER_TEMP/manifests.yaml"
+
+      - name: Aplicar migrations antes da API
+        run: |
+          python3 - "$RUNNER_TEMP/manifests.yaml" "$RUNNER_TEMP/config.yaml" "$RUNNER_TEMP/migrations.yaml" "$RUNNER_TEMP/api.yaml" <<'PY'
+          import sys
+          source, config, migrations, api = sys.argv[1:]
+          documents = open(source).read().split('\n---\n')
+          job = [document for document in documents if document.startswith('apiVersion:') and '\nkind: Job\n' in document]
+          deployment = [document for document in documents if document.startswith('apiVersion:') and '\nkind: Deployment\n' in document and '\n  name: oficina-api\n' in document]
+          if len(job) != 1 or len(deployment) != 1:
+              raise SystemExit('Renderizacao deve conter um Job e um Deployment da API.')
+          open(migrations, 'w').write(job[0] + '\n')
+          open(api, 'w').write(deployment[0] + '\n')
+          open(config, 'w').write('\n---\n'.join(document for document in documents if document not in job + deployment) + '\n')
+          PY
+          kubectl --kubeconfig "$KUBECONFIG" --context kind-tech-challenge-terraform-ci apply -f "$RUNNER_TEMP/config.yaml"
+          kubectl --kubeconfig "$KUBECONFIG" --context kind-tech-challenge-terraform-ci -n oficina delete job oficina-migrations --ignore-not-found --wait=true
+          kubectl --kubeconfig "$KUBECONFIG" --context kind-tech-challenge-terraform-ci apply -f "$RUNNER_TEMP/migrations.yaml"
+          kubectl --kubeconfig "$KUBECONFIG" --context kind-tech-challenge-terraform-ci -n oficina wait --for=condition=complete job/oficina-migrations --timeout=300s
+          kubectl --kubeconfig "$KUBECONFIG" --context kind-tech-challenge-terraform-ci apply -f "$RUNNER_TEMP/api.yaml"
+          kubectl --kubeconfig "$KUBECONFIG" --context kind-tech-challenge-terraform-ci -n oficina rollout status deployment/mailpit --timeout=300s
+          kubectl --kubeconfig "$KUBECONFIG" --context kind-tech-challenge-terraform-ci -n oficina rollout status deployment/oficina-api --timeout=300s
+
+      - name: Executar smoke tests
+        run: |
+          smoke='foreach (["http://oficina-api:8000/up", "http://oficina-api:8000/docs", "http://oficina-api:8000/docs/openapi.yaml", "http://mailpit:8025/readyz"] as $url) { $context = stream_context_create(["http" => ["timeout" => 10, "ignore_errors" => true]]); $body = file_get_contents($url, false, $context); $status = $http_response_header[0] ?? ""; if ($body === false || !str_contains($status, " 200 ")) { fwrite(STDERR, "$url $status\n"); exit(1); } echo "$url HTTP 200\n"; }'
+          kubectl --kubeconfig "$KUBECONFIG" --context kind-tech-challenge-terraform-ci -n oficina exec deployment/oficina-api -- php -r "$smoke"
+
+      - name: Coletar evidencias
+        if: always()
+        run: |
+          mkdir -p "$RUNNER_TEMP/evidence"
+          kubectl --kubeconfig "$KUBECONFIG" --context kind-tech-challenge-terraform-ci -n oficina get pods,deployments,services,jobs,hpa -o wide > "$RUNNER_TEMP/evidence/resources.txt" || true
+          kubectl --kubeconfig "$KUBECONFIG" --context kind-tech-challenge-terraform-ci -n oficina get events --sort-by=.lastTimestamp > "$RUNNER_TEMP/evidence/events.txt" || true
+          kubectl --kubeconfig "$KUBECONFIG" --context kind-tech-challenge-terraform-ci -n oficina logs deployment/oficina-api --all-containers=true --tail=200 > "$RUNNER_TEMP/evidence/api.log" || true
+          kubectl --kubeconfig "$KUBECONFIG" --context kind-tech-challenge-terraform-ci -n oficina logs job/oficina-migrations --tail=200 > "$RUNNER_TEMP/evidence/migrations.log" || true
+          terraform -chdir=infra/environments/ci output -no-color > "$RUNNER_TEMP/evidence/terraform-outputs.txt" || true
+
+      - name: Publicar evidencias
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: evidencias-kind-${{ github.run_id }}
+          path: ${{ runner.temp }}/evidence
+          if-no-files-found: warn
+
+      - name: Destruir ambiente temporario
+        if: always()
+        run: terraform -chdir=infra/environments/ci destroy -auto-approve -input=false -no-color -var "kubeconfig_path=$KUBECONFIG"

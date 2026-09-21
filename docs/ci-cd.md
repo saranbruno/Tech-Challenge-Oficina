@@ -8,6 +8,14 @@ O job usa PostgreSQL 18.4 como servico efemero e instala as dependencias PHP com
 
 O workflow nao publica imagem e nao usa Secrets de producao. A associacao de regras de protecao de branch para exigir o job `Validar aplicacao e infraestrutura` permanece uma configuracao do repositorio no GitHub.
 
+## Entrega continua no Kind temporario
+
+O workflow `.github/workflows/cd-kind.yml` executa em push para `fase-2` ou manualmente. Primeiro reutiliza a CI; depois reutiliza o workflow de publicacao do GHCR. O deploy usa a tag SHA do commit, nunca a tag movel `fase-2`.
+
+No mesmo runner, o workflow instala Kind, gera uma senha PostgreSQL e Secrets da aplicacao somente para aquela execucao, aplica Terraform no ambiente `ci`, espera o StatefulSet PostgreSQL, renderiza uma copia temporaria do overlay CI, executa o Job de migrations antes do Deployment da API e espera Mailpit e API. Os smoke tests internos verificam `/up`, Swagger, OpenAPI e Mailpit.
+
+Antes da limpeza, pods, Deployments, Services, Job, HPA, eventos, logs e outputs Terraform sao publicados como artefato. A etapa `Destruir ambiente temporario` usa `if: always()` no mesmo job do deploy e executa `terraform destroy`, inclusive quando uma etapa anterior falha. Isso nunca toca o ambiente Terraform local persistente.
+
 ## Publicacao no GHCR
 
 O workflow reutilizavel `.github/workflows/publish-image.yml` publica a API no pacote publico `ghcr.io/saranbruno/tech-challenge-oficina`. Ele so executa na branch `fase-2`, usa o `GITHUB_TOKEN` com as permissoes minimas `contents: read` e `packages: write` e nao recebe credenciais de registry versionadas.
