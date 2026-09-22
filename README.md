@@ -8,7 +8,7 @@ Autor: Bruno da Silva Saran.
 
 A evolucao da Fase 2 ocorre na branch `fase-2` em um roadmap de 30 dias, preservando os comportamentos validos da Fase 1. A [matriz de requisitos](docs/requirements-phase-2.md) relaciona cada requisito consolidado com criterio verificavel, implementacao, teste, evidencia e dias responsaveis. O acompanhamento operacional permanece em `docs/project-progress.md`.
 
-O Dia 1 registrou a baseline reproduzivel, sem adicionar funcionalidade: Compose e PostgreSQL saudaveis, 131 testes integrados aprovados com 466 assercoes, 100% das 165 linhas criticas cobertas e OpenAPI valido. A auditoria inicial encontrou advisories no pacote transitivo `league/commonmark`; o lockfile foi atualizado da versao 2.8.3 para 2.10.0 e a auditoria final nao encontrou advisories.
+O Dia 1 registrou a baseline reproduzivel, sem adicionar funcionalidade. A matriz em `docs/requirements-phase-2.md` e o progresso em `docs/project-progress.md` mantem os resultados por etapa; os comandos de validacao usam PostgreSQL real e os artefatos de cobertura nao sao versionados. A auditoria inicial encontrou advisories no pacote transitivo `league/commonmark`; o lockfile foi atualizado da versao 2.8.3 para 2.10.0 e a auditoria final nao encontrou advisories.
 
 ## Tecnologias
 
@@ -115,7 +115,7 @@ A validacao integrada usa PostgreSQL e executa testes unitarios e todos os Featu
 docker compose exec app ./vendor/bin/phpunit -c phpunit.integration.xml --coverage-text --coverage-clover build/coverage-integration.xml
 ```
 
-Na medicao do Dia 7 da Fase 2, os 175 testes executaram 583 assercoes em PostgreSQL, com um teste opt-in do Mailpit pulado no modo padrao. As 15 classes criticas atingiram 100% das classes, 46 metodos e 221 linhas durante a suite integrada. O relatorio Clover e gerado localmente em `build/coverage-integration.xml` e nao e versionado.
+As suites de dominio e integracao devem ser executadas no container com PostgreSQL; os numeros observados por etapa ficam registrados no progresso do projeto. O teste opt-in do Mailpit e pulado no modo padrao. Os relatorios Clover sao gerados localmente em `build/coverage-domain.xml` e `build/coverage-integration.xml` e nao sao versionados.
 
 ## Encerramento
 
@@ -292,8 +292,10 @@ O monitoramento administrativo considera somente OS em `delivered` com todos os 
 
 O acompanhamento detalhado das etapas esta em `docs/project-progress.md`.
 
+Os workflows de integracao e entrega estao descritos em [docs/ci-cd.md](docs/ci-cd.md), a infraestrutura local e Kubernetes em [docs/infrastructure.md](docs/infrastructure.md), e a politica de notificacoes em [docs/notifications.md](docs/notifications.md).
+
 ## Entrega final
 
-O documento final esta em [docs/final-delivery.pdf](docs/final-delivery.pdf). Sua fonte renderizavel esta em `docs/final-delivery.html`.
+Os artefatos finais da Fase 1 permanecem em [docs/final-delivery.pdf](docs/final-delivery.pdf) e `docs/final-delivery.html`. Os artefatos especificos da Fase 2 serao mantidos em `docs/fase-2/` sem sobrescrever a entrega anterior.
 
 A documentacao DDD indicada na entrega esta reunida em [docs/ddd](docs/ddd), com Linguagem Ubiqua, diagramas e Event Storming alinhados ao codigo implementado.

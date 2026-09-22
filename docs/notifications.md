@@ -1,6 +1,6 @@
 # Notificacoes de status
 
-## Escopo implementado ate o Dia 8
+## Escopo implementado ate o Dia 9
 
 O nucleo de notificacoes do Dia 6 pertence a camada de Aplicacao e nao depende de SMTP, Mailpit, Twilio, Laravel Mail ou transporte HTTP. Ele recebe a identificacao da Ordem de Servico, o novo status ja persistido e os contatos opcionais do Cliente.
 
@@ -34,7 +34,7 @@ A mensagem informa somente a identificacao da OS e seu novo status. Os sete esta
 
 ## Ordem da operacao
 
-O dispatcher nao altera nem persiste a Ordem de Servico. O contrato exige que ele seja chamado somente depois de a transicao ter sido persistida com sucesso. A integracao com todos os casos de uso de transicao e os testes de ausencia de envio em transacao invalida ou revertida pertencem ao Dia 9.
+O dispatcher nao altera nem persiste a Ordem de Servico. O contrato exige que ele seja chamado somente depois de a transicao ter sido persistida com sucesso. A integracao com as transicoes de diagnostico, aprovacao, cancelamento, finalizacao e entrega foi concluida no Dia 9; transicoes invalidas ou revertidas nao geram notificacao.
 
 O adapter de e-mail foi implementado na Infraestrutura com `LaravelEmailNotificationSender` e `ServiceOrderStatusMail`. Ele usa o mailer selecionado por `NOTIFICATION_MAILER`, sem levar configuracao de fornecedor para o Dominio ou para a Aplicacao.
 
@@ -56,9 +56,4 @@ O corpo do SMS e limitado a 160 caracteres. O objeto de valor `Phone` valida e n
 
 Para simular uma tentativa local, mantenha `NOTIFICATION_SMS_DRIVER=log`. Os testes usam fakes em memoria e `Http::fake`, portanto nao fazem chamadas pagas ao Twilio.
 
-Os adapters concretos restantes permanecem separados:
-
-- Dia 8: SMS local fake/log e producao configuravel por Twilio, concluido;
-- Dia 9: ligacao do dispatcher a todas as transicoes persistidas.
-
-Os testes do Dia 6 usam adapters fake em memoria e nao acessam rede ou servicos pagos.
+Os adapters concretos permanecem separados: o e-mail usa Mailpit local ou SMTP configuravel, e o SMS usa log local/CI ou Twilio por Secrets externos. Os testes usam adapters fake em memoria e `Http::fake`, portanto nao fazem chamadas pagas ao Twilio.
