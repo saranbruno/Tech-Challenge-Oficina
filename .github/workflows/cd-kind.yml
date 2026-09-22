@@ -37,11 +37,13 @@ jobs:
       contents: read
       packages: read
     env:
-      KUBECONFIG: ${{ runner.temp }}/tech-challenge-terraform-ci.config
       TF_IN_AUTOMATION: "true"
     steps:
       - name: Obter codigo
         uses: actions/checkout@v6
+
+      - name: Definir kubeconfig efemero
+        run: echo "KUBECONFIG=$RUNNER_TEMP/tech-challenge-terraform-ci.config" >> "$GITHUB_ENV"
 
       - name: Configurar Terraform
         uses: hashicorp/setup-terraform@v3
