@@ -131,11 +131,11 @@ docker compose down -v
 
 ## Analise de vulnerabilidades
 
-O Dia 23 executou um scan real do codigo-fonte com Semgrep 1.89.0 e um audit de dependencias com Composer.
+Em 2026-10-05, a revisao do Dia 28 executou Semgrep 1.89.0 e `composer audit --locked`. A auditoria encontrou quatro avisos no lockfile anterior; tres dependencias foram atualizadas em `composer.lock`, e a auditoria automatica apos a atualizacao nao encontrou avisos. A validacao da imagem e dos testes com as novas versoes permanece registrada no progresso do Dia 28.
 
 - Relatorio tecnico: `docs/vulnerability-report.md`
-- Semgrep: 201 arquivos rastreados, 27 regras executadas, 0 findings
-- Composer audit: nenhuma advisory encontrada
+- Semgrep: 334 arquivos rastreados, 114 regras em 286 arquivos, 0 findings; houve analise parcial de oito arquivos
+- Composer: quatro avisos iniciais; nenhum aviso na auditoria automatica apos a atualizacao pontual
 
 Os resultados nao substituem revisao manual e testes de comportamento.
 

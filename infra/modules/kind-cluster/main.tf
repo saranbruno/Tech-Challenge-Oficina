@@ -40,3 +40,19 @@ resource "terraform_data" "kind_cluster" {
     command = "${self.triggers_replace.kind_binary} delete cluster --name ${self.triggers_replace.cluster_name}"
   }
 }
+
+resource "terraform_data" "kindnet_memory_limit" {
+  triggers_replace = {
+    cluster_id   = terraform_data.kind_cluster.id
+    memory_limit = "256Mi"
+  }
+
+  provisioner "local-exec" {
+    interpreter = ["/bin/bash", "-c"]
+    command     = <<-EOT
+      set -e
+      kubectl --kubeconfig "${pathexpand(var.kubeconfig_path)}" --context "kind-${var.cluster_name}" -n kube-system patch daemonset kindnet --type=json -p='[{"op":"replace","path":"/spec/template/spec/containers/0/resources/limits/memory","value":"256Mi"}]'
+      kubectl --kubeconfig "${pathexpand(var.kubeconfig_path)}" --context "kind-${var.cluster_name}" -n kube-system rollout status daemonset/kindnet --timeout=180s
+    EOT
+  }
+}

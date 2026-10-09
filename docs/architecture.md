@@ -160,7 +160,7 @@ Cada transicao preserva seu instante proprio. A tabela `service_orders` mantem o
 
 O caso de uso `StartServiceOrderDiagnosis` localiza a OS, solicita ao agregado a transicao de `received` para `in_diagnosis` e persiste `diagnosis_started_at`. A interface HTTP apenas aciona esse caso de uso; repeticoes e estados incompativeis sao rejeitados pelo dominio como conflito.
 
-O caso de uso `CompleteServiceOrderDiagnosis` conclui o diagnostico somente quando a OS esta em `in_diagnosis` e possui ao menos um servico. A composicao e os snapshots persistidos formam o orcamento disponibilizado pela API. A transicao para `awaiting_approval` registra `awaiting_approval_at`; nenhuma notificacao externa ou aprovacao e executada nesta acao.
+O caso de uso `CompleteServiceOrderDiagnosis` conclui o diagnostico somente quando a OS esta em `in_diagnosis` e possui ao menos um servico. A composicao e os snapshots persistidos formam o orcamento disponibilizado pela API. A transicao para `awaiting_approval` registra `awaiting_approval_at` e tenta notificar os contatos disponiveis apos a persistencia; nenhuma aprovacao e executada nesta acao.
 
 O acompanhamento do cliente combina CPF ou CNPJ normalizado com um token aleatorio especifico da OS. A aplicacao persiste somente o hash SHA-256 do token e devolve o valor original apenas na criacao administrativa. A consulta publica usa POST, responde 404 para qualquer combinacao incorreta e possui Resource proprio que omite cliente, veiculo e token.
 

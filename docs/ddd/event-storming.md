@@ -29,6 +29,10 @@ flowchart LR
     Available --> Approve["Comando: Aprovar orçamento"]
     Client --> Approve
     Approve --> Execution["Evento: Execução iniciada e estoque consumido"]
+    External["Ator: integração externa"] --> Decision["Comando: Decidir orçamento via webhook HMAC"]
+    Available --> Decision
+    Decision -->|approved| Execution
+    Decision -->|rejected| Cancelled
     Execution --> Finalize["Comando: Finalizar execução"]
     Admin --> Finalize
     Finalize --> Finalized["Evento: OS finalizada"]
@@ -93,7 +97,7 @@ flowchart TB
 | Diagnóstico iniciado | `status = in_diagnosis`, `diagnosis_started_at` | `StartServiceOrderDiagnosis` |
 | Orçamento disponibilizado | `status = awaiting_approval`, `awaiting_approval_at` | `CompleteServiceOrderDiagnosis` |
 | Reparos adicionais incluídos | novos Serviços e total recalculado | `AddAdditionalRepairs` |
-| Ordem de Serviço cancelada | `status = cancelled`, `cancelled_at` | `CancelServiceOrder` |
+| Ordem de Serviço cancelada | `status = cancelled`, `cancelled_at` | `CancelServiceOrder` ou `ProcessServiceOrderBudgetDecision` com `rejected` |
 
 ## Acompanhamento, aprovação e ciclo operacional
 
@@ -214,7 +218,7 @@ Os provedores de e-mail e SMS são sistemas externos opcionais acionados após a
 | Evento de domínio versus implementação | Os eventos são fatos de modelagem; não há classes de evento, mensageria ou processamento assíncrono. |
 | Notificação de status | Após cada transição persistida, o dispatcher tenta e-mail e SMS conforme os contatos disponíveis; falhas são isoladas e registradas sem reverter a OS. |
 | Disponibilização do orçamento | O orçamento fica disponível pela API e a transição para `awaiting_approval` tenta notificar os contatos disponíveis. |
-| Recusa do orçamento | A recusa usa o cancelamento administrativo nos estados anteriores à execução; não existe comando público de recusa nem status adicional. |
+| Recusa do orçamento | O webhook HMAC aceita `rejected` somente em `awaiting_approval` e cancela a OS sem baixa de estoque; o cancelamento administrativo continua disponível nos estados anteriores à execução. Não existe status adicional. |
 | Reparos adicionais | Somente Serviços podem ser acrescentados em `awaiting_approval`; não há versionamento formal do orçamento. |
 | Disponibilidade antes da aprovação | A composição não reserva estoque; a disponibilidade definitiva é verificada transacionalmente na aprovação. |
 | Acompanhamento em tempo real | Não há canal push; cada consulta REST lê o estado persistido mais recente. |

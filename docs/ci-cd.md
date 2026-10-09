@@ -51,4 +51,4 @@ Essa substituicao deve ocorrer em uma copia temporaria do overlay no runner. Os 
 
 ## Rollback
 
-Para voltar a uma versao conhecida, aplique o mesmo procedimento usando o SHA completo previamente validado. Nunca use `fase-2` como referencia de rollback, pois essa tag e movel. O rollback do deploy sera automatizado no fluxo de entrega continua do Dia 26.
+Para voltar a uma versao conhecida no cluster local, aplique o mesmo procedimento usando o SHA completo previamente validado. Nunca use `fase-2` como referencia de rollback, pois essa tag e movel. O workflow de CD cria e destroi um cluster temporario por execucao; ele nao implementa rollback automatico nem altera o cluster local persistente.

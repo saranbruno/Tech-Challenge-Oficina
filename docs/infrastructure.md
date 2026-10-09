@@ -31,6 +31,8 @@ kubectl apply -k k8s/overlays/ci --dry-run=server
 
 O Dia 20 adiciona o modulo reutilizavel `infra/modules/kind-cluster`, usado pelos ambientes `infra/environments/local` e `infra/environments/ci`. O modulo executa o binario Kind por `terraform_data`, parametriza endereco e porta da API, configura o provider Kubernetes pelo kubeconfig local e expoe o nome do cluster, o contexto kubectl e o caminho do kubeconfig.
 
+O modulo ajusta o limite de memoria do DaemonSet `kindnet` para `256Mi` apos criar o cluster e aguarda o rollout. No cluster local existente, o limite original de `50Mi` levou a recuperacao repetida de paginas de memoria durante a execucao do `iptables` pelo `kindnetd`. Em uma amostra de 10 segundos, o cgroup do pod leu 362.377.216 bytes do disco; depois do ajuste, o control plane inteiro leu 249.856 bytes no mesmo intervalo. O recurso Terraform separado aplica o ajuste tambem em clusters existentes, sem substitui-los. Revise o `plan` antes de aplicar ao ambiente persistente.
+
 O ambiente local representa o cluster persistente de desenvolvimento. Inicialize e valide com:
 
 ```bash
