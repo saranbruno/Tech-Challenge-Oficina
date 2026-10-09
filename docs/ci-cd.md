@@ -6,13 +6,15 @@ O workflow `.github/workflows/ci.yml` executa em `pull_request` e em push para `
 
 O job usa PostgreSQL 18.4 como servico efemero e instala as dependencias PHP com cache do Composer. Antes dos testes, aplica as migrations no banco de teste. A validacao inclui Pint, as suites de dominio e integracao com PCOV e relatorios Clover, lint do OpenAPI, `composer audit`, `terraform fmt` e `validate` nos ambientes local e CI, renderizacao e dry-run client dos dois overlays Kubernetes e build Docker sem publicacao. Os relatorios de cobertura sao preservados como artefato mesmo se uma etapa anterior falhar.
 
+A CI gera uma `APP_KEY` aleatoria de 32 bytes no runner antes das migrations. O valor e efemero e nao e gravado no repositorio. Na execucao remota do commit `fc65370`, a chave de teste anterior decodificava para 38 bytes e causou tres erros `Unsupported cipher or incorrect key length` na suite HTTP, interrompendo a publicacao e o deploy. A correcao passou na reproducao local da suite integrada com configuracao equivalente a do runner; uma nova execucao remota ainda e necessaria para confirmar o pipeline completo.
+
 O workflow nao publica imagem e nao usa Secrets de producao. A associacao de regras de protecao de branch para exigir o job `Validar aplicacao e infraestrutura` permanece uma configuracao do repositorio no GitHub.
 
 ## Entrega continua no Kind temporario
 
 O workflow `.github/workflows/cd-kind.yml` executa em push para `fase-2` ou manualmente. Primeiro reutiliza a CI; depois reutiliza o workflow de publicacao do GHCR. O deploy usa a tag SHA do commit, nunca a tag movel `fase-2`.
 
-No mesmo runner, o workflow instala Kind, gera uma senha PostgreSQL e Secrets da aplicacao somente para aquela execucao, aplica Terraform no ambiente `ci`, espera o StatefulSet PostgreSQL, renderiza uma copia temporaria do overlay CI, executa o Job de migrations antes do Deployment da API e espera Mailpit e API. Os smoke tests internos verificam `/up`, Swagger, OpenAPI e Mailpit.
+No mesmo runner, o workflow instala Kind, gera uma senha PostgreSQL e Secrets da aplicacao somente para aquela execucao, aplica primeiro o modulo Terraform do cluster para criar o kubeconfig e depois o plano completo do ambiente `ci`, espera o StatefulSet PostgreSQL, renderiza uma copia temporaria do overlay CI, executa o Job de migrations antes do Deployment da API e espera Mailpit e API. Os smoke tests internos verificam `/up`, Swagger, OpenAPI e Mailpit.
 
 Antes da limpeza, pods, Deployments, Services, Job, HPA, eventos, logs e outputs Terraform sao publicados como artefato. A etapa `Destruir ambiente temporario` usa `if: always()` no mesmo job do deploy e executa `terraform destroy`, inclusive quando uma etapa anterior falha. Isso nunca toca o ambiente Terraform local persistente.
 

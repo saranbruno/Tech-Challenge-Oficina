@@ -95,7 +95,7 @@ docker compose ps
 
 ## Testes
 
-Os testes usam PostgreSQL. A base de testes sera configurada junto aos testes de integracao nas etapas correspondentes.
+Os testes de integracao usam PostgreSQL; a configuracao da base de testes fica em `phpunit.integration.xml`.
 
 ```bash
 docker compose exec app php artisan test
@@ -107,7 +107,7 @@ A imagem inclui PCOV 1.0.12 para medir a cobertura real das classes criticas do 
 docker compose exec app ./vendor/bin/phpunit -c phpunit.domain.xml --coverage-text --coverage-clover build/coverage-domain.xml
 ```
 
-Na medicao atual da Fase 2, os testes criticos executam 78 testes e 143 assercoes. As 13 classes criticas, incluindo os objetos de valor de Cliente e o nucleo de notificacoes, atingiram 100% das classes, metodos e 211 linhas. O relatorio Clover e gerado localmente em `build/coverage-domain.xml` e nao e versionado.
+Os resultados e a cobertura medidos em cada etapa ficam registrados em `docs/project-progress.md`. O relatorio Clover e gerado localmente em `build/coverage-domain.xml` e nao e versionado.
 
 A validacao integrada usa PostgreSQL e executa testes unitarios e todos os Feature Tests, incluindo um fluxo completo da OS pela API:
 

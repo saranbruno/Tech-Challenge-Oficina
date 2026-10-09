@@ -17,7 +17,6 @@ concurrency:
 
 env:
   APP_ENV: testing
-  APP_KEY: base64:dGVzdGluZy1hcHAta2V5LXNlY3JldC1mb3ItY2ktd29ya2Zsb3c=
   APP_URL: http://localhost
   DB_CONNECTION: pgsql
   DB_HOST: 127.0.0.1
@@ -72,6 +71,9 @@ jobs:
 
       - name: Instalar dependencias
         run: composer install --no-interaction --prefer-dist --no-progress --optimize-autoloader
+
+      - name: Gerar chave efemera da aplicacao
+        run: echo "APP_KEY=base64:$(openssl rand -base64 32 | tr -d '\n')" >> "$GITHUB_ENV"
 
       - name: Aplicar migrations
         run: php artisan migrate --force --no-interaction

@@ -100,14 +100,14 @@ O HPA aponta para o Deployment `oficina-api` e calcula CPU e memoria simultaneam
 | Parametro | Valor |
 | --- | --- |
 | Replicas minimas / maximas | 1 / 4 |
-| Requests da API | CPU 100m; memoria 128Mi |
+| Requests da API | CPU 100m; memoria 256Mi |
 | Limits da API | CPU 500m; memoria 512Mi |
 | Alvo de CPU | 70% do request, equivalente a 70m por pod |
-| Alvo de memoria | 80% do request, equivalente a 102,4Mi por pod |
+| Alvo de memoria | 80% do request, equivalente a 204,8Mi por pod |
 | Subida | Sem estabilizacao adicional; maior permissao entre 2 pods ou 100% a cada 60 segundos |
 | Descida | Janela de 300 segundos; no maximo 1 pod removido a cada 60 segundos |
 
-O manifesto do Deployment omite `spec.replicas` para que reaplicar o overlay nao redefina a escala controlada pelo HPA. O limite de quatro replicas restringe a carga no Kind; requests e capacidade disponivel do no ainda podem impedir que novos pods sejam agendados. Memoria que permanece alocada em repouso pode sustentar replicas adicionais. O HPA nao aumenta a capacidade do no nem escala o PostgreSQL.
+O manifesto do Deployment omite `spec.replicas` para que reaplicar o overlay nao redefina a escala controlada pelo HPA. O limite de quatro replicas restringe a carga no Kind; requests e capacidade disponivel do no ainda podem impedir que novos pods sejam agendados. O request de memoria de 256Mi deixa a utilizacao observada em repouso abaixo da metade do alvo de 80%, permitindo ao HPA reduzir de duas replicas para uma depois da janela de estabilizacao. O HPA nao aumenta a capacidade do no nem escala o PostgreSQL.
 
 Com a imagem da API carregada ou acessivel e o Deployment saudavel, aplique e observe:
 
@@ -141,7 +141,11 @@ O script `scripts/load-test.sh` gera requisicoes concorrentes para um endpoint H
 
 O script `scripts/hpa-evidence.sh` coleta o estado inicial, amostras de HPA, replicas, pods, metricas, eventos e estado final. Ele pode iniciar o script de carga em paralelo com `LOAD_COMMAND='LOAD_TEST_URL=http://127.0.0.1:8081/up LOAD_TEST_DURATION_SECONDS=300 LOAD_TEST_CONCURRENCY=64 LOAD_TEST_OUTPUT=evidence/load.csv bash scripts/load-test.sh' HPA_OUTPUT_DIR=evidence/hpa HPA_SAMPLE_SECONDS=15 bash scripts/hpa-evidence.sh`. Em um runner, substitua a URL por um endpoint acessivel no cluster ou execute a carga com `kubectl exec`.
 
+A coleta padrao apos a carga dura 60 amostras de 15 segundos, cobrindo varias janelas de estabilizacao de 300 segundos e a politica de remover no maximo uma replica a cada 60 segundos. No Kind local, use `KUBECONFIG=~/.kube/tech-challenge-terraform-local.config` e encaminhe o Service da API para uma porta livre, como `kubectl -n oficina port-forward service/oficina-api 8082:8000`, antes de apontar `LOAD_TEST_URL` para `http://127.0.0.1:8082/up`. Esse encaminhamento serve para gerar carga; a distribuicao entre replicas deve ser observada por requisicoes ao Service dentro do cluster.
+
 Para validar retorno ao minimo, aguarde o cooldown configurado no HPA depois que a carga terminar e confira `kubectl -n oficina get hpa oficina-api`, `kubectl -n oficina get deployment oficina-api` e os arquivos `cooldown-*` gerados. Durante a mesma execucao, recrie somente o pod da API e depois o pod `postgres-0`; a API deve voltar a `Ready` e a marca gravada no PVC deve permanecer. Os arquivos de evidencia devem ser preservados para o video e o PDF. Nenhum resultado de carga ou escala e considerado comprovado antes da execucao desses comandos em um cluster ativo.
+
+Na validacao local de 2026-10-08, 64 workers requisitaram `/up` do Kind por 180 segundos: 7.284 respostas HTTP 200 e nenhuma falha. O HPA registrou CPU acima do alvo e elevou a API de uma para quatro replicas, todas `Ready`. Com quatro replicas, 120 requisicoes internas ao Service retornaram HTTP 200 e os logs de `/up` cresceram em cada um dos quatro pods. Durante a recriacao de um pod da API, outra sonda interna obteve 300 respostas HTTP 200 em 300 tentativas. Uma marca temporaria na tabela `cache` permaneceu apos recriar `postgres-0`, com o mesmo PVC `Bound`; a marca foi removida em seguida. Os arquivos brutos estao em `.local/evidence/day27`, ignorado pelo Git. O request de memoria da API foi aumentado de 128Mi para 256Mi apos a carga porque a memoria em repouso antes ocupava aproximadamente metade do request e podia sustentar replicas extras. O HPA voltou de quatro para uma replica com o novo request. Um segundo ciclo com o manifesto final gerou 4.797 respostas HTTP 200 em 120 segundos, zero falhas, nova subida de uma para quatro replicas e retorno a uma replica apos a estabilizacao. O pod final ficou `Ready` e `ScalingActive=True` continuou com metricas conhecidas de CPU e memoria. A validacao usou consultas de saude sem criar OS no banco persistente; o volume e a persistencia foram testados separadamente com uma marca temporaria.
 
 ## Deploy local automatizado (Dia 23)
 

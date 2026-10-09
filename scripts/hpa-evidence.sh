@@ -5,7 +5,7 @@ hpa_name="${HPA_NAME:-oficina-api}"
 deployment_name="${HPA_DEPLOYMENT:-oficina-api}"
 sample_seconds="${HPA_SAMPLE_SECONDS:-15}"
 sample_count="${HPA_SAMPLE_COUNT:-20}"
-cooldown_count="${HPA_COOLDOWN_COUNT:-20}"
+cooldown_count="${HPA_COOLDOWN_COUNT:-60}"
 output_dir="${HPA_OUTPUT_DIR:-hpa-evidence-$(date -u +%Y%m%dT%H%M%SZ)}"
 
 [[ "$sample_seconds" =~ ^[1-9][0-9]*$ ]]

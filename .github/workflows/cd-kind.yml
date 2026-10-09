@@ -66,6 +66,7 @@ jobs:
       - name: Criar cluster e PostgreSQL
         run: |
           terraform -chdir=infra/environments/ci init -backend=false -input=false
+          terraform -chdir=infra/environments/ci apply -target=module.kind_cluster -auto-approve -input=false -no-color -var "kubeconfig_path=$KUBECONFIG"
           terraform -chdir=infra/environments/ci apply -auto-approve -input=false -no-color -var "kubeconfig_path=$KUBECONFIG"
           kubectl --kubeconfig "$KUBECONFIG" --context kind-tech-challenge-terraform-ci -n oficina rollout status statefulset/postgres --timeout=300s
 
