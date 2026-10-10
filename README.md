@@ -38,20 +38,20 @@ cp .env.example .env
 
 As portas padrao deste projeto sao `8081` para a aplicacao e `5433` para o PostgreSQL. Elas podem ser alteradas em `.env` por meio de `APP_PORT` e `DB_FORWARD_PORT`.
 
-Gere a chave da aplicacao depois de construir a imagem:
+Construa a imagem e gere a chave da aplicacao sem tentar escrever no arquivo montado somente para leitura:
 
 ```bash
 docker compose build
-docker compose run --rm app php artisan key:generate
+docker compose run --rm --no-deps app php artisan key:generate --show
 ```
 
-Gere um segredo JWT e configure a senha do administrador inicial no arquivo `.env`:
+Copie a chave exibida para `APP_KEY` no arquivo `.env`. Gere o segredo JWT:
 
 ```bash
-docker compose run --rm app php artisan jwt:secret
+docker compose run --rm --no-deps app php artisan jwt:secret --show
 ```
 
-As variaveis `JWT_TTL` e `JWT_REFRESH_TTL` representam minutos. O valor anterior de `ADMIN_PASSWORD` deve ser substituido por uma senha local segura e nao deve ser versionado.
+Copie o segredo exibido para `JWT_SECRET`. Antes de iniciar os servicos, configure `DB_PASSWORD`, `ADMIN_PASSWORD` e `SERVICE_ORDER_WEBHOOK_SECRET` com valores privados fortes; nao use `change_me`. Gere cada valor com `openssl rand -hex 32`, se precisar. Nunca versione o arquivo `.env` nem compartilhe as saidas desses comandos. As variaveis `JWT_TTL` e `JWT_REFRESH_TTL` representam minutos.
 
 O webhook `POST /api/webhooks/service-orders/budget-decision` exige o cabecalho `X-Webhook-Signature` no formato `sha256=<hexadecimal>`. O valor e calculado com HMAC-SHA256 sobre o corpo JSON bruto usando `SERVICE_ORDER_WEBHOOK_SECRET`. O payload possui `service_order_id`, `decision` (`approved` ou `rejected`) e `occurred_at`; a janela opcional e configurada por `SERVICE_ORDER_WEBHOOK_TIMESTAMP_TOLERANCE_SECONDS`.
 
@@ -224,7 +224,7 @@ A [execucao validada do Dia 26](https://github.com/saranbruno/Tech-Challenge-Ofi
 
 ## OpenAPI e Swagger UI
 
-A especificacao OpenAPI 3.1 esta em `docs/openapi.yaml` e documenta as 40 operacoes HTTP, incluindo autenticacao, parametros, requests, responses, erros, exemplos e os sete estados atuais da OS. O Swagger UI 5.32.1 fica disponivel em `http://localhost:8081/docs` depois que o ambiente Docker inicia. O documento bruto servido para o visualizador pode ser consultado em `http://localhost:8081/docs/openapi.yaml`.
+A [especificacao OpenAPI 3.1](docs/openapi.yaml) documenta as 40 operacoes HTTP, incluindo autenticacao, parametros, requests, responses, erros, exemplos e os sete estados atuais da OS. O [Swagger UI 5.32.1](http://localhost:8081/docs) fica disponivel depois que o ambiente Docker inicia. O [documento bruto servido](http://localhost:8081/docs/openapi.yaml) tambem pode ser consultado nesse ambiente.
 
 Valide o contrato localmente com:
 
@@ -361,6 +361,8 @@ Os workflows de integracao e entrega estao descritos em [docs/ci-cd.md](docs/ci-
 
 ## Entrega final
 
-Os artefatos finais da Fase 1 permanecem em [docs/final-delivery.pdf](docs/final-delivery.pdf) e `docs/final-delivery.html`. Os artefatos especificos da Fase 2 serao mantidos em `docs/fase-2/` sem sobrescrever a entrega anterior.
+Os artefatos finais da Fase 1 permanecem em [docs/final-delivery.pdf](docs/final-delivery.pdf) e `docs/final-delivery.html`. A Fase 2 possui [documento HTML](docs/fase-2/final-delivery.html), [PDF com arquitetura incorporada](docs/fase-2/final-delivery.pdf), [roteiro de demonstracao](docs/fase-2/video-script.md) e [instrucoes dos artefatos](docs/fase-2/README.md).
+
+O video da Fase 2 ainda nao foi gravado. Seu link sera inserido aqui e no PDF apos publicacao no YouTube ou Vimeo e conferencia da duracao de ate 15 minutos. A [auditoria final](docs/fase-2/evidence/day30-final-audit.md) registra as condicoes que ainda impedem o encerramento.
 
 A documentacao DDD indicada na entrega esta reunida em [docs/ddd](docs/ddd), com Linguagem Ubiqua, diagramas e Event Storming alinhados ao codigo implementado.
