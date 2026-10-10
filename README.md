@@ -8,12 +8,12 @@ Autor: Bruno da Silva Saran.
 
 A evolucao da Fase 2 ocorre na branch `fase-2` em um roadmap de 30 dias, preservando os comportamentos validos da Fase 1. A [matriz de requisitos](docs/requirements-phase-2.md) relaciona cada requisito consolidado com criterio verificavel, implementacao, teste, evidencia e dias responsaveis. O acompanhamento operacional permanece em `docs/project-progress.md`.
 
-O Dia 1 registrou a baseline reproduzivel, sem adicionar funcionalidade. A matriz em `docs/requirements-phase-2.md` e o progresso em `docs/project-progress.md` mantem os resultados por etapa; os comandos de validacao usam PostgreSQL real e os artefatos de cobertura nao sao versionados. A auditoria inicial encontrou advisories no pacote transitivo `league/commonmark`; o lockfile foi atualizado da versao 2.8.3 para 2.10.0 e a auditoria final nao encontrou advisories.
+O Dia 1 registrou a baseline reproduzivel. A matriz em `docs/requirements-phase-2.md` e as evidencias em `docs/fase-2/evidence/` registram os resultados publicados; `docs/project-progress.md` e um roteiro operacional local, ignorado pelo Git. Os comandos de validacao usam PostgreSQL real, e os arquivos de cobertura nao sao versionados. O lockfile inclui as correcoes de seguranca revisadas em `docs/vulnerability-report.md`.
 
 ## Tecnologias
 
 - PHP 8.5.8
-- Laravel Framework 13.19.0
+- Laravel Framework 13.34.0
 - Composer 2.10.2
 - PostgreSQL 18.4
 - Docker e Docker Compose
@@ -69,7 +69,7 @@ O Compose inicia a API somente depois de PostgreSQL e Mailpit estarem saudaveis.
 
 Os manifestos Kubernetes usam `k8s/base` como base e os overlays `k8s/overlays/local` e `k8s/overlays/ci` para separar configuracoes. ConfigMap e Secret sao consumidos por `envFrom`; os valores versionados sao ficticios e devem ser substituidos por Secrets efemeros ou por um mecanismo seguro no ambiente de execucao. O arquivo `k8s/secret.env.example` serve somente como referencia de nomes, e arquivos locais de segredo sao ignorados pelo Git.
 
-O Terraform provisiona clusters Kind por meio do modulo compartilhado em `infra/modules/kind-cluster`. Para o ambiente local persistente, use `terraform -chdir=infra/environments/local init`, `validate`, `plan` e `apply`. Para o ambiente CI efemero, use os mesmos comandos em `infra/environments/ci` e finalize com `terraform destroy -auto-approve`. O runner CI precisa disponibilizar Docker, Kind e Terraform.
+O Terraform provisiona clusters Kind por meio do modulo compartilhado em `infra/modules/kind-cluster`. Na primeira instalacao, aplique o modulo do cluster antes do plano completo para criar o kubeconfig usado pelo provider Kubernetes. Os comandos exatos para os ambientes local persistente e CI efemero estao em [Terraform e Kind](docs/infrastructure.md#terraform-e-kind). O runner hospedado cria e destroi seu proprio cluster; ele nao acessa o cluster desta maquina.
 
 O módulo `infra/modules/postgresql` provisiona o PostgreSQL dentro do Kubernetes com Secret sensível, Service interno, StatefulSet, probes e PVC. A aplicação usa o Service `postgres` e as credenciais fornecidas pelo ambiente; nenhum banco Kubernetes é exposto diretamente no host.
 
@@ -131,11 +131,11 @@ docker compose down -v
 
 ## Analise de vulnerabilidades
 
-Em 2026-10-05, a revisao do Dia 28 executou Semgrep 1.89.0 e `composer audit --locked`. A auditoria encontrou quatro avisos no lockfile anterior; tres dependencias foram atualizadas em `composer.lock`, e a auditoria automatica apos a atualizacao nao encontrou avisos. A validacao da imagem e dos testes com as novas versoes permanece registrada no progresso do Dia 28.
+Em 2026-10-10, a revisao do Dia 28 repetiu Semgrep 1.89.0 e `composer audit --locked` no estado atual. A revisao anterior corrigiu quatro avisos com atualizacoes de Laravel, CommonMark e Flysystem. A imagem com esse lockfile passou nos testes e no deploy remoto do Dia 26.
 
 - Relatorio tecnico: `docs/vulnerability-report.md`
-- Semgrep: 334 arquivos rastreados, 114 regras em 286 arquivos, 0 findings; houve analise parcial de oito arquivos
-- Composer: quatro avisos iniciais; nenhum aviso na auditoria automatica apos a atualizacao pontual
+- Semgrep: 114 regras em 287 arquivos, zero achados; oito arquivos tiveram analise parcial e duas regras excederam o tempo no PDF historico
+- Composer: nenhum aviso de vulnerabilidade ou pacote abandonado na auditoria atual
 
 Os resultados nao substituem revisao manual e testes de comportamento.
 
@@ -153,13 +153,78 @@ PostgreSQL foi escolhido como banco unico da aplicacao e dos testes de integraca
 
 O monolito utiliza DDD pragmatico com as camadas de Dominio, Aplicacao, Infraestrutura e Interface HTTP. As regras de dependencia e as convencoes estao descritas em `docs/architecture.md`.
 
+```mermaid
+flowchart LR
+    HTTP["Interface HTTP: rotas, controllers e validacao"] --> APP["Aplicacao: casos de uso, DTOs e contratos"]
+    APP --> DOMAIN["Dominio: entidades, valores e regras"]
+    INFRA["Infraestrutura: adapters Eloquent, JWT, e-mail e SMS"] -. "implementa contratos" .-> APP
+    BOOT["Container Laravel"] -. "conecta implementacoes" .-> INFRA
+    INFRA --> PG["PostgreSQL"]
+    INFRA --> MAIL["Mailpit local ou SMTP configurado"]
+    INFRA --> SMS["Log local ou Twilio configurado"]
+```
+
+As setas internas representam dependencias de codigo. Persistencia e notificacoes chegam aos casos de uso por contratos; o Dominio permanece independente dos adapters.
+
 A documentacao do dominio inclui a [Linguagem Ubiqua](docs/ddd/ubiquitous-language.md), os [diagramas DDD](docs/ddd/diagrams.md) de Contexto Estrategico, Agregados, Classes de Dominio e Sequencia dos fluxos principais e o [Event Storming](docs/ddd/event-storming.md) da Ordem de Servico e da gestao de estoque.
 
 As rotas administrativas e do cliente estao separadas sob `/api/admin` e `/api/client`. Os CRUDs implementados usam casos de uso independentes do transporte HTTP e persistencia Eloquent implementada na camada de Infraestrutura.
 
+## Infraestrutura local e do runner
+
+```mermaid
+flowchart TB
+    subgraph COMPOSE["Docker Compose: desenvolvimento"]
+        CA["API Laravel"] --> CP["PostgreSQL com volume"]
+        CA --> CM["Mailpit"]
+    end
+    subgraph LOCAL["Kind local persistente"]
+        LB["Build Docker local"] --> LK["Deployment API"]
+        LT["Terraform"] --> LP
+        LT --> LM
+        LK --> LP["PostgreSQL StatefulSet e PVC"]
+        LM["Metrics Server"] --> LH["HPA por CPU e memoria"]
+        LH --> LK
+    end
+    subgraph RUNNER["GitHub Actions: runner hospedado"]
+        RT["Terraform"] --> RP
+        RT --> RM
+        RK["Deployment API"]
+        RK --> RP["PostgreSQL StatefulSet e PVC"]
+        RM["Metrics Server"] --> RH["HPA por CPU e memoria"]
+        RH --> RK
+        CLEAN["terraform destroy em always"] --> RK
+    end
+    GHCR["GHCR publico: imagem SHA"] --> RK
+```
+
+Compose e Kind sao alternativas de execucao local. No Kind, ConfigMap e Secrets fornecem configuracao, Services conectam os pods e probes verificam `/up`. O ambiente local preserva seu estado; a CD destroi o ambiente temporario mesmo depois de falhas. O HPA controla de uma a quatro replicas da API, com requests de 100m de CPU e 256Mi de memoria. A carga do Dia 27 comprovou subida de uma para quatro replicas e retorno a uma; o PostgreSQL preservou dados apos recriar seu pod.
+
+## CI/CD e GHCR
+
+O push para `fase-2` dispara a entrega continua; a CI tambem executa em pull requests e push para `main`. O fluxo reutiliza os workflows de validacao e publicacao, usa permissoes minimas e gera credenciais efemeras mascaradas no runner.
+
+```mermaid
+flowchart LR
+    START["Push fase-2 ou execucao manual"] --> CI["CI: testes PostgreSQL, cobertura, lints, audit e build"]
+    CI --> IMAGE["Publicar imagem GHCR com SHA"]
+    IMAGE --> KIND["Terraform: bootstrap Kind e apply completo"]
+    KIND --> CONFIG["ConfigMap, Secrets e manifestos"]
+    CONFIG --> MIGRATE["Job de migrations"]
+    MIGRATE --> API["Rollout API e Mailpit"]
+    API --> SMOKE["Smoke API, Swagger, OpenAPI e Mailpit"]
+    SMOKE --> EVIDENCE["Coletar e publicar evidencias em always"]
+    EVIDENCE --> DESTROY["Destruir Kind temporario em always"]
+    KIND -. "apos falha posterior" .-> EVIDENCE
+    MIGRATE -. "apos falha" .-> EVIDENCE
+    API -. "apos falha" .-> EVIDENCE
+```
+
+A [execucao validada do Dia 26](https://github.com/saranbruno/Tech-Challenge-Oficina/actions/runs/38092377887) completou o fluxo, incluindo quatro smoke tests HTTP 200 e destruicao dos 15 recursos Terraform. O download anonimo da imagem e o SHA implantado foram conferidos. A politica de tags, rollback e configuracao dos workflows esta em [CI/CD](docs/ci-cd.md); os resultados e limites estao nas [evidencias do Dia 26](docs/fase-2/evidence/day26-cd-kind.md). Os Dias 24 e 25 mantem fechamento separado, incluindo a verificacao de protecao de branch.
+
 ## OpenAPI e Swagger UI
 
-A especificacao OpenAPI 3.1 esta em `docs/openapi.yaml` e documenta as 37 operacoes realmente implementadas, incluindo autenticacao, parametros, requests, responses, erros, exemplos e os sete estados atuais da OS. O Swagger UI 5.32.1 fica disponivel em `http://localhost:8081/docs` depois que o ambiente Docker inicia. O documento bruto servido para o visualizador pode ser consultado em `http://localhost:8081/docs/openapi.yaml`.
+A especificacao OpenAPI 3.1 esta em `docs/openapi.yaml` e documenta as 40 operacoes HTTP, incluindo autenticacao, parametros, requests, responses, erros, exemplos e os sete estados atuais da OS. O Swagger UI 5.32.1 fica disponivel em `http://localhost:8081/docs` depois que o ambiente Docker inicia. O documento bruto servido para o visualizador pode ser consultado em `http://localhost:8081/docs/openapi.yaml`.
 
 Valide o contrato localmente com:
 
@@ -215,7 +280,7 @@ Todos os endpoints exigem JWT administrativo:
 
 ## Servicos
 
-O catalogo de servicos possui somente `name` e `unit_price`. O valor unitario e informado e persistido como um numero inteiro de centavos, sem `float`, e nao pode ser negativo. A quantidade de um servico sera definida futuramente no item da ordem de servico, sem fazer parte do catalogo.
+O catalogo de servicos possui somente `name` e `unit_price`. O valor unitario e informado e persistido como um numero inteiro de centavos, sem `float`, e nao pode ser negativo. A quantidade de um servico e definida no item da ordem de servico, sem fazer parte do catalogo.
 
 Todos os endpoints exigem JWT administrativo:
 
@@ -261,7 +326,7 @@ O webhook de decisao aplica `approved` de `awaiting_approval` para `in_execution
 
 A listagem administrativa funciona como fila operacional: retorna somente OS em `in_execution`, `awaiting_approval`, `in_diagnosis` e `received`, nessa prioridade e com as mais antigas primeiro dentro de cada status. OS finalizadas, entregues e canceladas continuam disponiveis no detalhamento e nao sao excluidas fisicamente.
 
-Endpoint protegido por JWT:
+As operacoes administrativas exigem JWT. As operacoes do cliente usam documento e token de acompanhamento; o webhook usa HMAC. Rotas do ciclo da OS:
 
 - `POST /api/admin/service-orders`
 - `GET /api/admin/service-orders`
@@ -290,7 +355,7 @@ O monitoramento administrativo considera somente OS em `delivered` com todos os 
 
 ## Progresso
 
-O acompanhamento detalhado das etapas esta em `docs/project-progress.md`.
+O acompanhamento operacional local das etapas esta em `docs/project-progress.md`, ignorado pelo Git. A [matriz de requisitos](docs/requirements-phase-2.md) e as [evidencias publicadas](docs/fase-2/evidence/) preservam os resultados verificaveis no repositorio.
 
 Os workflows de integracao e entrega estao descritos em [docs/ci-cd.md](docs/ci-cd.md), a infraestrutura local e Kubernetes em [docs/infrastructure.md](docs/infrastructure.md), e a politica de notificacoes em [docs/notifications.md](docs/notifications.md).
 

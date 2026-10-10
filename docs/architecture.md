@@ -8,19 +8,19 @@ O Tech-Challenge-Oficina utiliza um monolito Laravel organizado por DDD pragmati
 
 ### Dominio
 
-Local previsto: `app/Domain`.
+Local: `app/Domain`.
 
 Contem entidades, objetos de valor, enums, regras de transicao, calculos e excecoes de negocio. Nao depende de Laravel, Eloquent, HTTP ou formatos de resposta.
 
 ### Aplicacao
 
-Local previsto: `app/Application`.
+Local: `app/Application`.
 
 Contem casos de uso, comandos e objetos de entrada e saida. Coordena dominio e persistencia por contratos definidos na fronteira da aplicacao. Nao conhece Request, JsonResponse ou Inertia.
 
 ### Infraestrutura
 
-Local previsto: `app/Infrastructure`.
+Local: `app/Infrastructure`.
 
 Contem implementacoes tecnicas, incluindo persistencia Eloquent, PostgreSQL e JWT. Implementa os contratos exigidos pelas camadas internas e pode depender do framework.
 

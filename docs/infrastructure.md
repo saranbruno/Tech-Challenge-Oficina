@@ -14,7 +14,16 @@ Cada overlay inclui um Deployment e um Service `ClusterIP` do Mailpit, acessivel
 
 O arquivo `k8s/secret.env.example` documenta os nomes esperados. Para um ambiente real, gere o Secret fora do Git e aplique-o por um mecanismo seguro. Arquivos `k8s/secret.env` e `k8s/overlays/*/secret.env` sao ignorados pelo Git.
 
-Validacao local:
+Renderizacao sem cluster:
+
+```bash
+kubectl kustomize k8s/overlays/local > /tmp/oficina-local.yaml
+kubectl kustomize k8s/overlays/ci > /tmp/oficina-ci.yaml
+```
+
+Os arquivos acima contem somente os valores ficticios versionados. A CI valida ambos com kubeconform 0.8.0 em modo estrito contra Kubernetes 1.35.0, sem precisar de cluster. `kubectl apply --dry-run=client` ainda pode consultar OpenAPI e descoberta na API Kubernetes.
+
+Validacao com um cluster ativo e kubeconfig configurado:
 
 ```bash
 kubectl apply -k k8s/base --dry-run=client
@@ -36,8 +45,12 @@ O modulo ajusta o limite de memoria do DaemonSet `kindnet` para `256Mi` apos cri
 O ambiente local representa o cluster persistente de desenvolvimento. Inicialize e valide com:
 
 ```bash
+read -rsp 'Senha privada do PostgreSQL local: ' TF_VAR_database_password
+export TF_VAR_database_password
 terraform -chdir=infra/environments/local init
 terraform -chdir=infra/environments/local validate
+terraform -chdir=infra/environments/local plan -target=module.kind_cluster
+terraform -chdir=infra/environments/local apply -target=module.kind_cluster
 terraform -chdir=infra/environments/local plan
 terraform -chdir=infra/environments/local apply
 kubectl --kubeconfig ~/.kube/tech-challenge-terraform-local.config --context kind-tech-challenge-terraform-local cluster-info
@@ -46,12 +59,17 @@ kubectl --kubeconfig ~/.kube/tech-challenge-terraform-local.config --context kin
 O ambiente CI usa o mesmo modulo, com nome separado e ciclo de vida efemero. O runner deve disponibilizar Docker, Kind e Terraform no `PATH`:
 
 ```bash
+export TF_VAR_database_password="$(openssl rand -hex 32)"
 terraform -chdir=infra/environments/ci init
 terraform -chdir=infra/environments/ci validate
+terraform -chdir=infra/environments/ci apply -target=module.kind_cluster -auto-approve
 terraform -chdir=infra/environments/ci apply -auto-approve
 kubectl --kubeconfig ~/.kube/tech-challenge-terraform-ci.config --context kind-tech-challenge-terraform-ci cluster-info
 terraform -chdir=infra/environments/ci destroy -auto-approve
+unset TF_VAR_database_password
 ```
+
+O apply direcionado resolve somente o bootstrap do kubeconfig e deve ser seguido do plano completo. Na primeira instalacao local, forneca `TF_VAR_database_password` com uma senha privada antes do plano completo e preserve essa configuracao para as operacoes posteriores. Na CD, o workflow define explicitamente o kubeconfig temporario e mascara a credencial antes de exporta-la. A execucao [38092377887](https://github.com/saranbruno/Tech-Challenge-Oficina/actions/runs/38092377887) comprovou esse bootstrap, o banco, o deploy e a destruicao; os resultados estao nas [evidencias do Dia 26](fase-2/evidence/day26-cd-kind.md). Para desenvolver neste host, prefira a automacao local descrita abaixo; ela impede control planes simultaneos e preserva as credenciais entre execucoes.
 
 Nao execute `destroy` no ambiente local persistente sem autorizacao. O estado Terraform e os arquivos `.terraform` sao locais e ignorados pelo Git; os arquivos `.terraform.lock.hcl` permanecem versionados para fixar o provider. O modulo nao recebe nem expoe credenciais.
 
