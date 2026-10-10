@@ -61,7 +61,10 @@ jobs:
           echo "$RUNNER_TEMP/bin" >> "$GITHUB_PATH"
 
       - name: Gerar credencial efemera do PostgreSQL
-        run: echo "TF_VAR_database_password=$(openssl rand -hex 32)" >> "$GITHUB_ENV"
+        run: |
+          database_password="$(openssl rand -hex 32)"
+          echo "::add-mask::$database_password"
+          echo "TF_VAR_database_password=$database_password" >> "$GITHUB_ENV"
 
       - name: Criar cluster e PostgreSQL
         run: |
@@ -87,12 +90,20 @@ jobs:
               raise SystemExit('Tag base da imagem nao encontrada de forma unica.')
           open(path, 'w').write(source.replace(expected, 'newTag: ' + os.environ['GITHUB_SHA']))
           PY
-          cat > "$render/secret.env" <<EOF
+          mkdir -p "$render/overlay"
+          umask 077
+          cat > "$render/overlay/secret.env" <<EOF
           APP_KEY=base64:$(openssl rand -base64 32 | tr -d '\n')
+          DB_USERNAME=oficina
+          DB_PASSWORD=$TF_VAR_database_password
           JWT_SECRET=$(openssl rand -hex 32)
           SERVICE_ORDER_WEBHOOK_SECRET=$(openssl rand -hex 32)
+          MAIL_USERNAME=
+          MAIL_PASSWORD=
+          TWILIO_ACCOUNT_SID=
+          TWILIO_AUTH_TOKEN=
+          TWILIO_FROM=
           EOF
-          mkdir -p "$render/overlay"
           cat > "$render/overlay/kustomization.yaml" <<EOF
           apiVersion: kustomize.config.k8s.io/v1beta1
           kind: Kustomization
@@ -103,7 +114,7 @@ jobs:
             - name: oficina-secrets
               behavior: replace
               envs:
-                - ../secret.env
+                - secret.env
           EOF
           kubectl kustomize "$render/overlay" > "$RUNNER_TEMP/manifests.yaml"
 
