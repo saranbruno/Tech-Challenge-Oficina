@@ -111,12 +111,19 @@ jobs:
       - name: Configurar kubectl
         uses: azure/setup-kubectl@v4
 
+      - name: Instalar kubeconform
+        run: |
+          curl --fail --location --silent --show-error --output "$RUNNER_TEMP/kubeconform.tar.gz" https://github.com/yannh/kubeconform/releases/download/v0.8.0/kubeconform-linux-amd64.tar.gz
+          echo "9bc2bffbf71f261128533edaf912153948b7ff238f9a531ae6d34466ec287883  $RUNNER_TEMP/kubeconform.tar.gz" | sha256sum --check
+          mkdir -p "$RUNNER_TEMP/bin"
+          tar -xzf "$RUNNER_TEMP/kubeconform.tar.gz" -C "$RUNNER_TEMP/bin" kubeconform
+          echo "$RUNNER_TEMP/bin" >> "$GITHUB_PATH"
+
       - name: Validar manifestos Kubernetes
         run: |
-          kubectl kustomize k8s/overlays/local >/dev/null
-          kubectl kustomize k8s/overlays/ci >/dev/null
-          kubectl apply --dry-run=client -k k8s/overlays/local
-          kubectl apply --dry-run=client -k k8s/overlays/ci
+          set -o pipefail
+          kubectl kustomize k8s/overlays/local | kubeconform -strict -summary -kubernetes-version 1.35.0
+          kubectl kustomize k8s/overlays/ci | kubeconform -strict -summary -kubernetes-version 1.35.0
 
       - name: Construir imagem sem publicar
         uses: docker/build-push-action@v7
