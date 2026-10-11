@@ -1,6 +1,6 @@
 # Dia 25 — Integração contínua
 
-Estado: bloqueado somente pela configuração de proteção de branch. Validações técnicas concluídas; configuração administrativa adiada pelo usuário para depois.
+Estado: critérios técnicos atendidos em 2026-10-10; registro final preparado em PR para integração em `fase-2`.
 
 ## CI aprovada
 
@@ -24,8 +24,17 @@ O commit `5520878b05cad1c8ddde75bd27f87ab9c245bd91` removeu o teste por atualiza
 
 Logs completos preservados em `.local/evidence/day25/valid-pr-ci.log` e `controlled-failure.log`. A falha prova a interrupção do job; não prova, sozinha, uma restrição de merge no GitHub.
 
-## Única pendência
+## Proteção conferida
 
-`main` e `fase-2` estavam com `protected=false` e zero rulesets. A integração retornou HTTP 403 no endpoint administrativo, sem acesso para configurar a proteção. O usuário pediu para terminar o restante e configurar depois. As instruções estão em [proteção de branch](../branch-protection.md).
+Após o usuário salvar as regras, a consulta autenticada dos metadados das duas branches confirmou:
 
-F2-CI-01 permanece parcial até conferir as regras reais exigindo CI verde. Não foram alterados endpoints, migrations, dependências ou regras de negócio.
+| Branch | protected | Check obrigatório | Aplicação | enforcement_level |
+| --- | --- | --- | --- | --- |
+| main | true | Validar aplicacao e infraestrutura | GitHub Actions, app_id 15368 | everyone |
+| fase-2 | true | Validar aplicacao e infraestrutura | GitHub Actions, app_id 15368 | everyone |
+
+A integração ainda recebe HTTP 403 no endpoint administrativo completo, mas o endpoint de branch expõe o nome do check obrigatório e sua aplicação a todos. A lista de rulesets vazia é compatível com proteção clássica de branch. Não foi necessário alterar permissões ou tentar um merge com teste falhando.
+
+A [CI da PR 38097224986](https://github.com/saranbruno/Tech-Challenge-Oficina/actions/runs/38097224986) e a [CD 38097221444](https://github.com/saranbruno/Tech-Challenge-Oficina/actions/runs/38097221444) concluíram com sucesso para `6838d6e`.
+
+F2-CI-01 tem evidências técnicas completas: CI verde, falha controlada e check obrigatório para todos nas duas branches. O registro final fica pronto após integrar esta documentação em `fase-2`. Não foram alterados endpoints, migrations, dependências ou regras de negócio. Detalhes em [proteção de branch](../branch-protection.md).

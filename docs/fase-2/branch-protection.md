@@ -1,10 +1,10 @@
-# Proteção de branch — configuração pendente do Dia 25
+# Proteção de branch — conferência do Dia 25
 
 A CI já verifica o código. A proteção de branch é a configuração que exige o resultado aprovado antes do merge. O enunciado exige CI/CD; a tarefa de impedir merge quando etapas obrigatórias falham foi aprovada no roadmap do Dia 25.
 
 Em 2026-10-10, os metadados públicos mostraram `protected=false` para `main` e `fase-2`, e a lista de rulesets estava vazia. A integração retornou HTTP 403 no endpoint administrativo de proteção. O usuário pediu para concluir as validações disponíveis e fazer essa configuração depois.
 
-## Configurar depois das validações
+## Configuração de referência
 
 Abra [Settings → Branches](https://github.com/saranbruno/Tech-Challenge-Oficina/settings/branches) com a conta administradora.
 
@@ -20,8 +20,10 @@ Não é necessário exigir aprovação de outra pessoa para esse trabalho indivi
 
 Procedimento conferido na [documentação oficial do GitHub](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-protected-branches/managing-a-branch-protection-rule).
 
-## Evidência para fechar o Dia 25
+## Evidência conferida em 2026-10-10
 
-Conferir as duas regras ativas e o nome exato do check obrigatório. Como a integração não possui acesso administrativo, capturas das regras salvas podem complementar os metadados públicos; `protected=true` sozinho não prova qual check é obrigatório. Não enviar tokens ou credenciais.
+O usuário configurou as regras. Os endpoints de metadados `branches/main` e `branches/fase-2` retornaram `protected=true`, com `required_status_checks.contexts` contendo `Validar aplicacao e infraestrutura`, `app_id=15368` (GitHub Actions) e `enforcement_level=everyone`.
 
-O teste controlado de CI está documentado nas [evidências do Dia 25](evidence/day25-ci.md). A proteção só será registrada como concluída após a conferência da configuração real.
+A leitura administrativa completa ainda retorna HTTP 403; a exigência do check e a aplicação a todos são visíveis nos metadados das branches. As demais opções da interface não foram verificadas individualmente e não são usadas como evidência. Os resultados da CI verde e da falha controlada estão nas [evidências do Dia 25](evidence/day25-ci.md).
+
+Alterações em `fase-2` seguem por PR com o check aprovado. A integração final em `main` continua pertencendo ao Dia 30, com vídeo e autorização pendentes.
