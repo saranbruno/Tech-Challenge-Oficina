@@ -8,7 +8,7 @@ O job usa PostgreSQL 18.4 como servico efemero e instala as dependencias PHP com
 
 A CI gera uma `APP_KEY` aleatoria de 32 bytes no runner antes das migrations, registra seu mascaramento no GitHub Actions e nao grava o valor no repositorio. Na execucao remota do commit `fc65370`, a chave de teste anterior decodificava para 38 bytes e causou tres erros `Unsupported cipher or incorrect key length` na suite HTTP. No commit `06fa53f`, os testes passaram, mas a etapa de manifestos falhou porque `kubectl apply --dry-run=client` tentou consultar a API de um cluster inexistente. No commit `89bccc8`, a CI completa passou, inclusive a validacao dos dois overlays com kubeconform e o build da imagem.
 
-O workflow nao publica imagem e nao usa Secrets de producao. A CI verde e a falha controlada foram comprovadas nas [evidencias do Dia 25](fase-2/evidence/day25-ci.md). A unica pendencia e configurar a protecao de `main` e `fase-2`, exigindo o job `Validar aplicacao e infraestrutura`; o [guia de configuracao](fase-2/branch-protection.md) explica a etapa administrativa adiada pelo usuario.
+O workflow nao publica imagem e nao usa Secrets de producao. A CI verde e a falha controlada foram comprovadas nas [evidencias do Dia 25](fase-2/evidence/day25-ci.md). As branches `main` e `fase-2` estao protegidas, exigindo `Validar aplicacao e infraestrutura` do GitHub Actions para todos, inclusive administradores. A [conferencia da protecao](fase-2/branch-protection.md) registra os metadados reais e os limites da leitura administrativa.
 
 ## Entrega continua no Kind temporario
 
