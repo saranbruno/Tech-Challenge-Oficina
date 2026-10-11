@@ -8,7 +8,7 @@ O job usa PostgreSQL 18.4 como servico efemero e instala as dependencias PHP com
 
 A CI gera uma `APP_KEY` aleatoria de 32 bytes no runner antes das migrations, registra seu mascaramento no GitHub Actions e nao grava o valor no repositorio. Na execucao remota do commit `fc65370`, a chave de teste anterior decodificava para 38 bytes e causou tres erros `Unsupported cipher or incorrect key length` na suite HTTP. No commit `06fa53f`, os testes passaram, mas a etapa de manifestos falhou porque `kubectl apply --dry-run=client` tentou consultar a API de um cluster inexistente. No commit `89bccc8`, a CI completa passou, inclusive a validacao dos dois overlays com kubeconform e o build da imagem.
 
-O workflow nao publica imagem e nao usa Secrets de producao. A associacao de regras de protecao de branch para exigir o job `Validar aplicacao e infraestrutura` permanece uma configuracao do repositorio no GitHub.
+O workflow nao publica imagem e nao usa Secrets de producao. A CI verde e a falha controlada foram comprovadas nas [evidencias do Dia 25](fase-2/evidence/day25-ci.md). A unica pendencia e configurar a protecao de `main` e `fase-2`, exigindo o job `Validar aplicacao e infraestrutura`; o [guia de configuracao](fase-2/branch-protection.md) explica a etapa administrativa adiada pelo usuario.
 
 ## Entrega continua no Kind temporario
 
@@ -41,7 +41,7 @@ docker pull ghcr.io/saranbruno/tech-challenge-oficina:<sha-completo>
 docker inspect ghcr.io/saranbruno/tech-challenge-oficina:<sha-completo> --format '{{ index .Config.Labels "org.opencontainers.image.revision" }}'
 ```
 
-O pull deve ocorrer antes de considerar a imagem pronta para clusters. A publicacao e essa validacao externa devem ser registradas com o SHA e a saida reais no progresso do Dia 24.
+O fechamento do [Dia 24](fase-2/evidence/day24-image-ghcr.md) confirmou pull anonimo, digest, labels OCI e deploy com healthcheck para o SHA df59d7b. O pacote publico pode ser consumido sem segredo de registry.
 
 ## Uso nos overlays Kubernetes
 

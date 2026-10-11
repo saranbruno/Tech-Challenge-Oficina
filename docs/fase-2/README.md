@@ -6,6 +6,8 @@ Os artefatos finais da Fase 1 permanecem em `docs/`. Estes arquivos pertencem so
 - [Documento PDF](final-delivery.pdf): versão exportada do HTML, com links clicáveis.
 - [Roteiro do vídeo](video-script.md): duração alvo 13:30; gravação/publicação ainda pendentes.
 - [Reprodução em ambiente limpo do Dia 29](evidence/day29-clean-environment.md).
+- [Imagem pública do Dia 24](evidence/day24-image-ghcr.md).
+- [Validação de CI do Dia 25](evidence/day25-ci.md) e [proteção de branch pendente](branch-protection.md).
 - [Auditoria do Dia 30](evidence/day30-final-audit.md): rastreabilidade e condições de encerramento.
 
 HTML e PDF estão em preparação. Não representam entrega encerrada enquanto houver condições obrigatórias pendentes. Quando existir vídeo público ou não listado, inserir o endereço no HTML e no README principal, regenerar o PDF e conferir os links e a duração real.
