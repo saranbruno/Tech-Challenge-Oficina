@@ -2,7 +2,7 @@
 
 namespace Tests\Feature\Database;
 
-use App\Models\User;
+use App\Infrastructure\Persistence\Eloquent\Models\User;
 use Database\Seeders\AdminUserSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;

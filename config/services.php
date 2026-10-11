@@ -23,4 +23,9 @@ return [
         ],
     ],
 
+    'service_order_webhook' => [
+        'secret' => env('SERVICE_ORDER_WEBHOOK_SECRET'),
+        'timestamp_tolerance_seconds' => env('SERVICE_ORDER_WEBHOOK_TIMESTAMP_TOLERANCE_SECONDS', 300),
+    ],
+
 ];

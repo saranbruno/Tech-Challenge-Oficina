@@ -2,7 +2,7 @@
 
 namespace Tests\Feature\Api;
 
-use App\Models\User;
+use App\Infrastructure\Persistence\Eloquent\Models\User;
 use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
@@ -95,11 +95,13 @@ class InventoryItemCrudTest extends TestCase
             'quantity_after' => 4,
         ]);
 
-        $this->withToken($token)->getJson("/api/admin/inventory-items/{$itemId}/movements")
+        $movements = $this->withToken($token)->getJson("/api/admin/inventory-items/{$itemId}/movements")
             ->assertOk()
             ->assertJsonPath('data.0.quantity_after', 4)
             ->assertJsonPath('data.1.quantity_after', 10)
             ->assertJsonStructure(['data', 'links', 'meta']);
+
+        self::assertIsString($movements->json('data.0.created_at'));
 
         $this->withToken($token)->deleteJson("/api/admin/inventory-items/{$itemId}")
             ->assertConflict()

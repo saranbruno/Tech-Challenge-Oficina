@@ -24,6 +24,8 @@ tags:
     description: Criacao, ciclo de vida e monitoramento administrativo das Ordens de Servico.
   - name: Client Service Orders
     description: Acompanhamento e aprovacao seguros pelo cliente.
+  - name: Webhooks
+    description: Recepcao segura de decisoes externas de orcamento.
 paths:
   /admin/auth/login:
     post:
@@ -609,7 +611,8 @@ paths:
   /admin/service-orders:
     get:
       operationId: listServiceOrders
-      summary: Lista as Ordens de Servico
+      summary: Lista a fila operacional de Ordens de Servico
+      description: Retorna somente OS em in_execution, awaiting_approval, in_diagnosis ou received, nesta prioridade. Dentro do mesmo status, as OS mais antigas por received_at aparecem primeiro. OS finalizadas, entregues e canceladas permanecem acessiveis pelo detalhamento.
       tags:
         - Service Orders
       security:
@@ -711,6 +714,27 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ServiceOrderResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /admin/service-orders/{serviceOrder}/status:
+    parameters:
+      - $ref: '#/components/parameters/ServiceOrderId'
+    get:
+      operationId: getServiceOrderStatus
+      summary: Consulta somente o status atual de uma Ordem de Servico
+      tags:
+        - Service Orders
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Status atual e instante da ultima transicao
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceOrderStatusResponse'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '404':
@@ -889,6 +913,30 @@ paths:
           $ref: '#/components/responses/NotFound'
         '422':
           $ref: '#/components/responses/ValidationError'
+  /client/service-orders/status:
+    post:
+      operationId: trackClientServiceOrderStatus
+      summary: Consulta somente o status da OS com documento e token
+      tags:
+        - Client Service Orders
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TrackServiceOrderRequest'
+      responses:
+        '200':
+          description: Status atual da Ordem de Servico
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceOrderStatusResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationError'
   /client/service-orders/approve:
     post:
       operationId: approveClientServiceOrderBudget
@@ -914,6 +962,67 @@ paths:
           $ref: '#/components/responses/NotFound'
         '409':
           $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+  /webhooks/service-orders/budget-decision:
+    post:
+      operationId: receiveServiceOrderBudgetDecision
+      summary: Recebe uma decisao externa de orcamento protegida por HMAC
+      description: Valida a assinatura HMAC-SHA256 sobre o corpo JSON bruto e aceita somente as decisoes approved ou rejected. A decisao aprovada inicia a execucao e a recusada cancela a OS; repeticoes da mesma decisao sao idempotentes.
+      tags:
+        - Webhooks
+      security: []
+      parameters:
+        - name: X-Webhook-Signature
+          in: header
+          required: true
+          description: Assinatura no formato sha256= seguido do hexadecimal de HMAC-SHA256 do corpo bruto, usando SERVICE_ORDER_WEBHOOK_SECRET.
+          schema:
+            type: string
+            pattern: '^sha256=[a-f0-9]{64}$'
+          example: sha256=8b7c4a0b3f2d1e0f9a8b7c6d5e4f3a2b1c0d9e8f7a6b5c4d3e2f1a0b9c8d7e6f
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BudgetDecisionWebhookRequest'
+            example:
+              service_order_id: 42
+              decision: approved
+              occurred_at: '2026-09-02T15:04:05Z'
+      responses:
+        '200':
+          description: Decisao aplicada ou repeticao idempotente da mesma decisao
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required:
+                  - data
+                properties:
+                  data:
+                    type: object
+                    additionalProperties: false
+                    required:
+                      - service_order_id
+                      - status
+                    properties:
+                      service_order_id:
+                        type: integer
+                        minimum: 1
+                      status:
+                        type: string
+                        enum:
+                          - in_execution
+                          - cancelled
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '422':
           $ref: '#/components/responses/ValidationError'
 components:
@@ -1055,6 +1164,22 @@ components:
           maxLength: 18
           description: CPF ou CNPJ, com ou sem pontuacao.
           example: 529.982.247-25
+        email:
+          type:
+            - string
+            - 'null'
+          format: email
+          maxLength: 254
+          description: E-mail opcional, normalizado para letras minusculas.
+          example: cliente@example.com
+        phone:
+          type:
+            - string
+            - 'null'
+          maxLength: 30
+          pattern: '^\+?[0-9\s().-]+$'
+          description: Telefone opcional; numeros brasileiros podem ser enviados com formatacao e sao armazenados em E.164.
+          example: (11) 99876-5432
     Customer:
       type: object
       required:
@@ -1062,6 +1187,8 @@ components:
         - name
         - document
         - document_type
+        - email
+        - phone
       properties:
         id:
           type: integer
@@ -1077,6 +1204,19 @@ components:
           enum:
             - cpf
             - cnpj
+        email:
+          type:
+            - string
+            - 'null'
+          format: email
+          example: cliente@example.com
+        phone:
+          type:
+            - string
+            - 'null'
+          pattern: '^\+[1-9][0-9]{7,14}$'
+          description: Telefone normalizado no formato E.164.
+          example: '+5511998765432'
     CustomerResponse:
       type: object
       required:
@@ -1476,6 +1616,25 @@ components:
           minLength: 64
           maxLength: 64
           example: 8f394ce8b625d4ed85ad7b3f3e70de5b22d48c3c7e607641e716b9e24a9f912d
+    BudgetDecisionWebhookRequest:
+      type: object
+      additionalProperties: false
+      required:
+        - service_order_id
+        - decision
+        - occurred_at
+      properties:
+        service_order_id:
+          type: integer
+          minimum: 1
+        decision:
+          type: string
+          enum:
+            - approved
+            - rejected
+        occurred_at:
+          type: string
+          format: date-time
     ServiceOrderServiceItem:
       type: object
       required:
@@ -1686,6 +1845,37 @@ components:
         meta:
           type: object
           additionalProperties: true
+    ServiceOrderStatusResponse:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          type: object
+          required:
+            - service_order_id
+            - status
+            - status_label
+            - last_transition_at
+          properties:
+            service_order_id:
+              type: integer
+              minimum: 1
+            status:
+              type: string
+              enum:
+                - received
+                - in_diagnosis
+                - awaiting_approval
+                - in_execution
+                - finalized
+                - delivered
+                - cancelled
+            status_label:
+              type: string
+            last_transition_at:
+              type: string
+              format: date-time
     ClientServiceOrderResponse:
       type: object
       required:

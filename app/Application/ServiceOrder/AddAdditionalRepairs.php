@@ -4,10 +4,10 @@ namespace App\Application\ServiceOrder;
 
 use App\Application\Service\Contracts\ServiceRepository;
 use App\Application\ServiceOrder\Contracts\ServiceOrderRepository;
-use App\Application\ServiceOrder\Data\RequestedServiceData;
+use App\Application\ServiceOrder\Data\RequestedServiceCollection;
+use App\Domain\ServiceOrder\Exceptions\InvalidAdditionalRepair;
 use App\Domain\ServiceOrder\ServiceOrder;
 use App\Domain\ServiceOrder\ServiceOrderService;
-use DomainException;
 
 final readonly class AddAdditionalRepairs
 {
@@ -16,19 +16,15 @@ final readonly class AddAdditionalRepairs
         private ServiceRepository $services,
     ) {}
 
-    public function execute(int $serviceOrderId, array $requestedServices): ServiceOrder
+    public function execute(int $serviceOrderId, RequestedServiceCollection $requestedServices): ServiceOrder
     {
-        if ($requestedServices === []) {
-            throw new DomainException('Informe ao menos um reparo adicional.');
+        if ($requestedServices->isEmpty()) {
+            throw new InvalidAdditionalRepair('Informe ao menos um reparo adicional.');
         }
 
         $serviceOrder = $this->serviceOrders->findOrFail($serviceOrderId);
 
-        foreach ($requestedServices as $requestedService) {
-            if (! $requestedService instanceof RequestedServiceData) {
-                throw new DomainException('A composicao de reparos adicionais e invalida.');
-            }
-
+        foreach ($requestedServices->all() as $requestedService) {
             $service = $this->services->findOrFail($requestedService->serviceId);
             $serviceOrder->addAdditionalService(new ServiceOrderService(
                 $service->id,

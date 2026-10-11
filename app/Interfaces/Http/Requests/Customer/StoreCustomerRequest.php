@@ -16,6 +16,8 @@ class StoreCustomerRequest extends FormRequest
         return [
             'name' => ['required', 'string', 'max:255'],
             'document' => ['required', 'string', 'max:18'],
+            'email' => ['nullable', 'string', 'email:rfc', 'max:254'],
+            'phone' => ['nullable', 'string', 'max:30', 'regex:/^\+?[0-9\s().-]+$/'],
         ];
     }
 }

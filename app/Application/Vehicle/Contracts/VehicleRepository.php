@@ -2,11 +2,12 @@
 
 namespace App\Application\Vehicle\Contracts;
 
+use App\Application\Shared\Data\PaginatedResult;
 use App\Domain\Vehicle\Vehicle;
 
 interface VehicleRepository
 {
-    public function paginate(int $perPage): mixed;
+    public function paginate(int $perPage): PaginatedResult;
 
     public function findOrFail(int $id): Vehicle;
 

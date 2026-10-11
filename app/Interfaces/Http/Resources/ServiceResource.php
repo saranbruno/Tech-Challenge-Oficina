@@ -10,12 +10,17 @@ class ServiceResource extends JsonResource
 {
     public function toArray(Request $request): array
     {
-        $service = $this->resource;
+        $service = $this->service();
 
         return [
-            'id' => $service instanceof Service ? $service->id : $service->getKey(),
+            'id' => $service->id,
             'name' => $service->name,
-            'unit_price' => $service instanceof Service ? $service->unitPrice->cents : $service->unit_price,
+            'unit_price' => $service->unitPrice->cents,
         ];
+    }
+
+    private function service(): Service
+    {
+        return $this->resource;
     }
 }

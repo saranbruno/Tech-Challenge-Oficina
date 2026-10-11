@@ -1,0 +1,95 @@
+# Matriz de requisitos da Fase 2
+
+## Finalidade e fontes
+
+Esta matriz converte os requisitos consolidados da Fase 2 em criterios verificaveis e os relaciona com implementacao, testes, evidencia e dias do roadmap. As fontes usadas no Dia 1 foram o enunciado consolidado em `AGENTS.md`, as decisoes aprovadas em `docs/project-progress.md` e a baseline executavel da Fase 1.
+
+O enunciado oficial `SOAT - Fase 2 - Tech challenge.pdf`, fornecido pelo usuario, foi lido integralmente em 2026-10-10: seis paginas, SHA-256 `f93a4a5cc91ddec19398302f6ad5a027ceaf2a8ee5c510258d9e291d28b34b0e`. O binario permanece fora do repositorio. A conferencia dos Dias 29 e 30 confirmou que os requisitos consolidados cobrem as exigencias das paginas 3 a 6, sem identificar novo requisito funcional. As decisoes adicionais aprovadas em AGENTS.md, como HMAC, contatos opcionais, idempotencia e persistencia, permanecem criterios internos de aceite.
+
+## Estados da matriz
+
+- `Baseline presente`: o comportamento ja existe na Fase 1, mas ainda sera revisto no dia indicado.
+- `Parcial`: parte do requisito existe e a complementacao esta planejada.
+- `Pendente`: o requisito sera implementado em dias posteriores.
+- `Concluido`: implementacao, teste, documentacao e evidencia foram validados.
+
+## Requisitos funcionais e de qualidade
+
+| ID | Requisito e criterio verificavel | Baseline do Dia 1 | Implementacao prevista | Teste ou evidencia exigida | Dias | Estado |
+| --- | --- | --- | --- | --- | --- | --- |
+| F2-ARQ-01 | Aplicar Clean Code com nomes claros, responsabilidades coesas, contratos concretos e sem alterar comportamentos validos da Fase 1. | Os Dias 3 e 4 separaram casos de uso e responsabilidades de persistencia, tiparam composicoes, metricas e paginacao e eliminaram `mixed` de Dominio e Aplicacao. | `app/Domain/**`, `app/Application/**`, convencoes em `docs/architecture.md`. | 137 testes e 478 assercoes aprovados em PostgreSQL; cobertura critica e integrada de 100% das 158 linhas monitoradas. | 2, 3 e 4 | Concluido |
+| F2-ARQ-02 | Aplicar Clean Architecture com dependencia `Interface HTTP -> Aplicacao -> Dominio`; Eloquent, Laravel, HTTP e fornecedores permanecem fora do Dominio. | Os adapters convertem Eloquent em entidades ou DTOs antes das fronteiras; o modelo administrativo esta na Infraestrutura e os testes arquiteturais protegem imports, helpers, Eloquent e `mixed`. | Contratos internos, adapters de Infraestrutura e testes em `tests/Architecture/**`. | Cinco testes arquiteturais com fixture controlada, mapa de dependencias atualizado e suite funcional aprovada. | 2, 3 e 4 | Concluido |
+| F2-TST-01 | Manter testes automatizados dos fluxos criticos em PostgreSQL e cobertura real minima de 80% dos dominios criticos. | Clone limpo no Dia 29: 84 testes de dominio, 152 assercoes e 100% das 211 linhas monitoradas; 192 integrados, 693 assercoes, um opt-in ignorado e 100% das 221 linhas monitoradas. O opt-in Mailpit passou separadamente. | Testes unitarios, Feature e de persistencia adicionados junto a cada comportamento. | Relatorios PHPUnit/PCOV, PostgreSQL real e pipeline verde. | 3 a 15, 25 e 29 | Concluido |
+| F2-OS-01 | Abrir OS somente com cliente, veiculo, servicos e itens previamente cadastrados; validar propriedade, existencia, duplicidade e quantidades; calcular total exato; persistir em transacao; responder 201 com ID unico. | Fluxo por referencias, snapshots, transacao, total em centavos e `id` implementados e validados. | Request, caso de uso, agregado, repositorio e Resource de OS. | Testes de sucesso, propriedade, duplicidade, rollback, snapshots e resposta 201 com `id`; suite integrada aprovada. | 11 e 15 | Concluido |
+| F2-OS-02 | Oferecer consulta dedicada de status para administrador autenticado e cliente com documento mais token, com payload minimo e sem enumeracao. | Consultas dedicadas administrativa e do cliente implementadas com payload minimo; combinacoes incorretas retornam 404. | Nenhuma implementacao restante; contrato OpenAPI permanece sincronizado. | Testes de autenticacao, payload minimo, token incorreto e todos os sete estados; suite integrada e lint OpenAPI aprovados. | 10 e 15 | Concluido |
+| F2-OS-03 | Receber decisao externa de orcamento em webhook generico com `approved` ou `rejected`, assinatura HMAC do corpo bruto e segredo somente no ambiente. | Webhook generico com HMAC sobre o corpo bruto, decisoes limitadas ao contrato e segredo configurado pelo ambiente implementado e validado. | `POST /api/webhooks/service-orders/budget-decision`, middleware, request, controller e configuracao. | Assinatura ausente, invalida e valida; decisao invalida; segredo ausente de resposta e logs; suite integrada aprovada. | 12 e 15 | Concluido |
+| F2-OS-04 | Aprovar de forma atomica e sem baixa duplicada; recusar de `awaiting_approval` para `cancelled` sem alterar estoque; repeticoes idempotentes e conflitos coerentes. | Aprovacao, recusa, idempotencia e conflitos implementados no webhook com persistencia transacional. | Dominio, caso de uso do webhook e persistencia transacional, preservando o endpoint anterior. | Aprovacao, recusa, repeticao, conflito e contagem das movimentacoes de estoque; suite integrada aprovada. | 13 e 15 | Concluido |
+| F2-OS-05 | Listar a fila exatamente por `in_execution`, `awaiting_approval`, `in_diagnosis`, `received`, com a OS mais antiga primeiro no mesmo estado; terminais ficam fora sem exclusao fisica. | Fila operacional priorizada implementada; detalhamento existente preserva consulta dos estados terminais. | Consulta operacional e consulta historica no repositorio e API administrativa. | Fixture com todos os estados e datas controladas, detalhamento dos terminais e suite integrada aprovada. | 14 e 15 | Concluido |
+| F2-NOT-01 | Aceitar `email` e `phone` opcionais no cliente, inclusive ambos ausentes, sem `notification_channel`; validar somente valores informados. | O cadastro aceita contatos independentes e nullable; e-mail e normalizado em minusculas e telefone em E.164, sem unicidade adicional. | Migration, objetos de valor, CRUD, persistencia, Resource e OpenAPI sincronizados no Dia 5. | Testes de criacao e atualizacao sem contatos, com cada contato, com ambos, formatos invalidos e constraint PostgreSQL; suite integrada com 156 testes aprovados. | 5 | Concluido |
+| F2-NOT-02 | Apos cada transicao persistida, tentar todos os canais disponiveis; falhas sao independentes, nao revertem status e operacoes invalidas nao notificam. | Dispatcher, portas, mensagens, reporter, adapters de e-mail e SMS e integracao com criacao, diagnostico, aprovacao, cancelamento, finalizacao e entrega foram implementados. | Nenhuma implementacao restante; observabilidade adicional permanece opcional. | Fluxo PostgreSQL com ambos os contatos confirmou oito tentativas em seis transicoes da OS principal e uma transicao de cancelamento; falhas independentes cobertas pelos testes do Dia 6. | 6 e 9 | Concluido |
+| F2-NOT-03 | Usar Mailpit e SMS fake/log localmente e em CI; permitir SMTP e Twilio em producao somente por configuracao e Secrets. | Mailpit, adapter de e-mail, template e SMTP configuravel foram implementados; SMS local e Twilio configuravel foram implementados no Dia 8. | Integracao concluida nos Dias 9 e 17; clone limpo do Dia 29 validou SMTP real via Mailpit e SMS log com os quatro casos de contatos. | E-mail entregue no Mailpit por teste opt-in; SMS log/fake observavel, testes sem rede paga, configuracao Twilio exigida pelo adapter e secrets ausentes do Git. | 7, 8, 9 e 17 | Concluido |
+
+## Requisitos de infraestrutura e entrega
+
+| ID | Requisito e criterio verificavel | Baseline do Dia 1 | Implementacao prevista | Teste ou evidencia exigida | Dias | Estado |
+| --- | --- | --- | --- | --- | --- | --- |
+| F2-CON-01 | Manter um Dockerfile reproduzivel e um Compose local com aplicacao, PostgreSQL e Mailpit, healthchecks e configuracao segura. | Dockerfile, aplicacao, PostgreSQL e Mailpit com healthcheck proprio sobem; healthcheck da aplicacao e Compose completo permanecem para os Dias 16 e 17. | `Dockerfile`, `.dockerignore`, `docker-compose.yml`, `.env.example` e README. | Build sem cache, servicos saudaveis, migrations, `/up`, Swagger, Mailpit e SMS fake. | 16 e 17 | Concluido |
+| F2-K8S-01 | Versionar Namespace, Deployment, Service, ConfigMap, Secret gerado com seguranca, Job de migrations, probes e recursos em `/k8s`. | Diretorio `/k8s` inexistente. | Bases e overlays `local` e `ci` com Kustomize. | Renderizacao e dry-run, selectors coerentes, Job concluido e pods Ready. | 18 e 19 | Concluido |
+| F2-K8S-02 | Executar PostgreSQL no Kubernetes com StatefulSet, Service interno, PVC, probes e credenciais externas ao codigo. | PostgreSQL existe somente no Compose. | Modulo Terraform de PostgreSQL e integracao com o cluster. | Banco Ready, API conectada pelo Service, PVC associado e dados preservados apos recriar o pod. | 21, 23, 26 e 27 | Concluido |
+| F2-K8S-03 | Usar HPA `autoscaling/v2` com CPU e memoria simultaneamente, Metrics Server e requests/limits compativeis. | Metrics Server 0.9.0 integrado ao Terraform local/CI; HPA autoscaling/v2 configurado com CPU 70%, memoria 80% e 1 a 4 replicas. | Requests da API de 100m de CPU e 256Mi de memoria; targets reais validados e carga executada no Kind local. | Duas cargas de 180 e 120 segundos produziram 7.284 e 4.797 respostas HTTP 200 sem falhas; HPA subiu de 1 a 4 e retornou a 1 com CPU e memoria conhecidas e `ScalingActive=True`. | 22 e 27 | Concluido |
+| F2-IAC-01 | Provisionar por Terraform o Kind local persistente e o Kind temporario do runner, com `plan`, `apply`, outputs e `destroy` seguro. | Diretorio `/infra` inexistente. | Modulo Kind e ambientes `local` e `ci`. | `terraform fmt`, `validate`, `apply`, `kubectl cluster-info` e `destroy` somente no ambiente temporario. | 20, 23 e 26 | Concluido |
+| F2-IMG-01 | Publicar imagem publica no GHCR com tag imutavel por SHA, tag auxiliar `fase-2`, labels OCI e pull anonimo comprovado. | CD 38096058858 publicou e implantou df59d7b; pull anonimo renovado e labels OCI confirmados no fechamento do Dia 24. | `.github/workflows/publish-image.yml`, overlays e `docs/fase-2/evidence/day24-image-ghcr.md`. | Imagem publica, digest identificado, SHA implantado e quatro smoke tests HTTP 200. | 24 e 26 | Concluido |
+| F2-CI-01 | Em PR e push, executar dependencias, build, PostgreSQL, migrations, Pint, testes, cobertura, OpenAPI, audit, Terraform, Kubernetes e build Docker sem publicar em PR. | CI de PR 38096062454 e push 38096058706 aprovadas; falha controlada 38096918016 interrompeu o job e pulou o build. Protecao conferida: main/fase-2, check obrigatorio do GitHub Actions e enforcement everyone. Registro final do fechamento documentado nesta PR. | `.github/workflows/ci.yml`, `docs/fase-2/evidence/day25-ci.md` e guia `docs/fase-2/branch-protection.md`. | Job verde e falha controlada bloqueando o pipeline, sem secrets em logs. | 25 | Concluido |
+| F2-CD-01 | No runner hospedado, publicar imagem, criar Kind temporario, provisionar PostgreSQL, aplicar configuracao e manifests, migrar, aguardar rollouts, fazer smoke, coletar evidencias e destruir sempre. | A execucao `38092377887` passou por todas as etapas; quatro smoke tests retornaram HTTP 200, evidencias foram publicadas e 15 recursos foram destruidos. A limpeza apos falha posterior tambem foi comprovada na execucao `38091893737`. | `.github/workflows/cd-kind.yml`, Terraform, overlay `ci` e `docs/fase-2/evidence/day26-cd-kind.md`. | Logs e artefatos de cada etapa; destruicao confirmada apos sucesso e falha posterior. | 26 | Concluido |
+| F2-DOC-01 | Manter OpenAPI/Swagger, README, arquitetura, DDD, notificacoes, infraestrutura e CI/CD sincronizados apenas com o implementado. | OpenAPI 3.1 valida e documenta 37 operacoes da Fase 1; documentos arquiteturais existem. | README, arquitetura, DDD, notificacoes, infraestrutura e CI/CD revisados com as evidencias aprovadas; fechamento em `docs/fase-2/evidence/day28-documentation.md`. | OpenAPI com 40 operacoes validado; 15 diagramas renderizados; links e ancoras conferidos; auditoria e scan atuais registrados. | 1, 15 e 28 a 30 | Concluido |
+| F2-ENT-01 | Entregar video publico ou nao listado com ate 15 minutos demonstrando deploy, CI/CD, APIs e HPA; PDF da Fase 2 com repositorio, arquitetura e link do video. | HTML/PDF da Fase 2 com arquitetura incorporada e roteiro preparados no Dia 29; video ainda nao gravado. | Publicar e conferir o video, inserir link definitivo no README e PDF, preservando a Fase 1. | Duracao maxima, links clicaveis, demonstracao observavel e PDF inspecionado. | 29 e 30 | Parcial |
+| F2-REP-01 | Manter repositorio publico, branch `fase-2`, rastreabilidade por commit e integrar em `main` somente com CI verde e autorizacao. | Clone publico da fase-2 confirmado em 2026-10-10; soat-architecture tem permissao write; PR #1 aberta em rascunho, sem merge. | Historico da branch, PR, verificacao de visibilidade e acesso de `soat-architecture`. | Referencias remotas, pull anonimo quando aplicavel, checks da PR e confirmacao de acesso. | 1, 24 e 30 | Parcial |
+
+## Inventario da baseline do Dia 1
+
+### Codigo e dados
+
+- 43 rotas Laravel no total, das quais 37 sao operacoes da API: 3 de autenticacao, 5 de clientes, 5 de veiculos, 5 de servicos, 7 de estoque, 10 administrativas de OS e 2 do cliente.
+- 12 migrations aplicadas em PostgreSQL.
+- 17 tabelas publicas: `cache`, `cache_locks`, `customers`, `failed_jobs`, `inventory_items`, `job_batches`, `jobs`, `migrations`, `password_reset_tokens`, `service_order_inventory_items`, `service_order_services`, `service_orders`, `services`, `sessions`, `stock_movements`, `users` e `vehicles`.
+- Sete estados de OS: `received`, `in_diagnosis`, `awaiting_approval`, `in_execution`, `finalized`, `delivered` e `cancelled`.
+- Integracoes atuais: PostgreSQL, JWT administrativo e Swagger UI; e-mail configurado com driver `log`, fila sincrona e nenhuma integracao paga externa.
+
+### Execucao validada
+
+- Docker 29.5.2, Docker Compose 5.1.4, PHP 8.5.8, Laravel 13.19.0, Composer 2.10.2 e PostgreSQL 18.4.
+- Pint aprovado em 164 arquivos.
+- Suite critica: 50 testes, 73 assercoes, 87,50% das classes, 96,67% dos metodos e 98,79% das linhas.
+- Suite integrada: 131 testes, 466 assercoes e 100% das oito classes, 30 metodos e 165 linhas criticas.
+- OpenAPI valido com a configuracao recomendada do Redocly CLI.
+- `league/commonmark` atualizado de 2.8.3 para 2.10.0 apos a auditoria inicial detectar seis advisories; auditoria final sem advisories.
+
+## Proibicoes que tambem funcionam como criterios de aceite
+
+- Nao criar frontend, aplicativo mobile, microservicos, cloud permanente, pagamentos, agendamento, fornecedores ou logistica de compras.
+- Nao adicionar Redis, RabbitMQ, Kafka ou outro broker para notificacoes sem nova autorizacao.
+- Nao criar `notification_channel`, tornar contatos obrigatorios, adicionar WhatsApp, criar `budget_rejected` ou versionar orcamentos.
+- Nao criar cadastros implicitamente na abertura da OS, excluir OS fisicamente nem oferecer alteracao generica de status.
+- Nao versionar `.env`, kubeconfig privado, estado Terraform com segredo, tokens ou credenciais reais.
+
+## Evidencia do Dia 23
+
+A automacao `scripts/k8s-local.py` completou duas instalacoes temporarias independentes em 2026-09-14. Cada uma criou Kind, PostgreSQL/PVC e Metrics Server por Terraform, construiu e carregou imagem local, executou migrations, aguardou os rollouts e validou API, Swagger, OpenAPI e Mailpit. A primeira tambem validou seed e port-forward. O requisito de automacao local esta concluido; os requisitos de cluster, banco e HPA conservam suas validacoes e limites próprios dos Dias 20 a 22. Detalhes em `docs/infrastructure.md` e `docs/project-progress.md`.
+
+## Conferencia do enunciado oficial — 2026-10-10
+
+| Pagina | Exigencia | IDs e documentos correspondentes |
+| --- | --- | --- |
+| 3 | Clean Code, Clean Architecture ou Hexagonal e testes dos fluxos criticos. | F2-ARQ-01, F2-ARQ-02, F2-TST-01; arquitetura e testes automatizados. |
+| 3 | Abertura com identificacao unica, status, aprovacao/recusa externa e fila por prioridade/antiguidade sem terminais. | F2-OS-01 a F2-OS-05; OpenAPI e testes HTTP. |
+| 3 | Comunicacao de atualizacao de status, por ferramenta como e-mail. | F2-NOT-01 a F2-NOT-03; SMTP/Mailpit e SMS configuravel. |
+| 3–4 | Dockerfile e Compose para desenvolvimento local. | F2-CON-01; build e servicos saudaveis no clone limpo. |
+| 4 | YAML Kubernetes com Deployment, Service, ConfigMap, Secrets e HPA CPU/memoria. | F2-K8S-01 a F2-K8S-03; k8s, Metrics Server e carga. |
+| 4 | Terraform para cluster e banco; documentar recursos e comandos. | F2-IAC-01 e F2-K8S-02; infra e docs/infrastructure.md. |
+| 4 | Pipeline com build, testes, imagem, deploy de aplicacao/banco e manifestos. | F2-CI-01, F2-IMG-01 e F2-CD-01; workflows e evidencias remotas. |
+| 5 | Mesmo repositorio com codigo, Docker, k8s, infra, pipeline e README com tres desenhos e instrucoes. | F2-REP-01 e F2-DOC-01; README e docs/fase-2. |
+| 5 | Collection completa via Postman, Swagger ou equivalente. | docs/openapi.yaml e Swagger /docs com 40 operacoes. |
+| 5–6 | Video YouTube/Vimeo publico ou nao listado, ate 15 minutos, mostrando deploy, CI/CD, APIs e escalabilidade. | F2-ENT-01; roteiro preparado, gravacao/publicacao pendentes. |
+| 6 | PDF com repositorio compartilhado com soat-architecture, arquitetura e link do video. | F2-ENT-01 e F2-REP-01; PDF com arquitetura/links preparado, avaliador confirmado, link do video pendente. |
+
+A formulacao sobre exclusao da listagem exige filtragem logica e nao exige remocao fisica ou soft delete. O enunciado nao obriga cloud permanente, contatos obrigatorios, broker, pagamentos ou versionamento de orcamento. O video ainda nao foi gravado, conforme informado pelo usuario. A conferencia do PDF original nao encerra a Fase 2 enquanto os entregaveis estiverem pendentes.

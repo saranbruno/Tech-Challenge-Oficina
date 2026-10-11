@@ -2,13 +2,14 @@
 
 namespace App\Application\Auth\Contracts;
 
-use App\Models\User;
+use App\Application\Auth\Data\AuthenticatedAdminData;
+use App\Application\Auth\Data\TokenData;
 
 interface AdminTokenProvider
 {
-    public function attempt(string $email, string $password): ?string;
+    public function attempt(string $email, string $password): ?TokenData;
 
-    public function refresh(string $token): string;
+    public function refresh(string $token): TokenData;
 
-    public function user(): ?User;
+    public function user(): ?AuthenticatedAdminData;
 }

@@ -4,6 +4,33 @@
 
 Os diagramas representam o monólito implementado e usam os identificadores reais do código. As divisões abaixo são limites conceituais internos, não microserviços. Os eventos, políticas, atores, read models, hotspots e fluxos de erro estão detalhados no [Event Storming](event-storming.md).
 
+## Componentes e dependencias apos o Dia 4
+
+As setas representam as dependencias conformes encontradas no codigo. Os Dias 3 e 4 removeram configuracao Laravel, modelos Eloquent e paginadores das fronteiras internas. A Interface HTTP recebe somente entidades, DTOs e resultados da Aplicacao; a Infraestrutura concentra os modelos Eloquent, inclusive o usuario administrativo.
+
+```mermaid
+flowchart LR
+    HTTP[Interface HTTP]
+    Application[Aplicacao]
+    Domain[Dominio]
+    Infrastructure[Infraestrutura]
+    Composition[Composition root Laravel]
+    Laravel[Laravel e configuracao]
+    Eloquent[Eloquent e PostgreSQL]
+
+    HTTP --> Application
+    HTTP --> Domain
+    Application --> Domain
+    Infrastructure --> Application
+    Infrastructure --> Domain
+    Infrastructure --> Eloquent
+    Composition --> Application
+    Composition --> Infrastructure
+    HTTP --> Laravel
+```
+
+O Dominio nao possui dependencia proibida. A composicao do Laravel e o ponto autorizado a conhecer ports e adapters concretos. Testes em `tests/Architecture` protegem automaticamente a direcao das dependencias, a ausencia de helpers Laravel nas camadas internas, a localizacao do Eloquent e a proibicao de `mixed` em Dominio e Aplicacao.
+
 ## Contexto Estratégico
 
 ```mermaid
@@ -40,12 +67,13 @@ flowchart LR
 | Contexto conceitual | Responsabilidade | Principais identificadores |
 | --- | --- | --- |
 | Identidade Administrativa | Autenticar o Administrador e emitir ou renovar JWT. | `LoginAdmin`, `RefreshAdminToken`, `AdminTokenProvider` |
-| Cadastro de Atendimento | Manter Clientes e Veículos e proteger sua relação de propriedade. | `Customer`, `Document`, `Vehicle`, `LicensePlate` |
-| Catálogo e Estoque | Manter Serviços, Peças, Insumos, saldos e movimentações. | `Service`, `InventoryItem`, `StockQuantity`, `StockMovementModel` |
-| Atendimento da Oficina | Coordenar a OS, orçamento, acompanhamento, aprovação e ciclo operacional. | `ServiceOrder`, casos de uso em `Application/ServiceOrder` |
+| Cadastro de Atendimento | Manter Clientes e Veículos e proteger sua relação de propriedade. | `Customer`, `Document`, `Email`, `Phone`, `Vehicle`, `LicensePlate` |
+| Catálogo e Estoque | Manter Serviços, Peças, Insumos, saldos e movimentações. | `Service`, `InventoryItem`, `StockQuantity`, `StockMovementData` |
+| Atendimento da Oficina | Coordenar a OS, orçamento, acompanhamento, aprovação, decisão externa e ciclo operacional. | `ServiceOrder`, `ProcessServiceOrderBudgetDecision`, casos de uso em `Application/ServiceOrder` |
+| Comunicacao de Status | Preparar mensagens minimas e tentar todos os contatos disponiveis sem acoplar o Dominio a fornecedores. | `DispatchServiceOrderStatusNotification`, ports em `Application/Notification` |
 | Monitoramento | Calcular duração total e por estado das OS elegíveis. | `GetServiceOrderExecutionTimeMetrics`, `ServiceOrderExecutionTimeCalculator` |
 
-Não há sistema externo de notificações, pagamentos, filas ou tempo real. A API REST lê o estado persistido e o PostgreSQL é o único banco da aplicação.
+O núcleo interno de notificações e os adapters de e-mail e SMS são acionados após transições persistidas. O Compose fornece Mailpit local; SMTP de produção e Twilio permanecem configuráveis por ambiente. O SMS local usa adapter de log e nenhum segredo aparece no código. Ainda não há filas, pagamentos ou tempo real. A API REST lê o estado persistido e o PostgreSQL é o único banco da aplicação.
 
 ## Agregados e relações
 
@@ -53,18 +81,22 @@ Não há sistema externo de notificações, pagamentos, filas ou tempo real. A A
 flowchart TB
     CustomerRoot["Customer<br/>raiz de agregado"]
     Document["Document<br/>objeto de valor"]
+    Email["Email<br/>objeto de valor opcional"]
+    Phone["Phone<br/>objeto de valor opcional"]
     VehicleRoot["Vehicle<br/>raiz de agregado"]
     Plate["LicensePlate<br/>objeto de valor"]
     ServiceRoot["Service<br/>raiz de agregado"]
     InventoryRoot["InventoryItem<br/>raiz de agregado"]
     Stock["StockQuantity<br/>objeto de valor"]
-    Movement["StockMovementModel<br/>registro imutável"]
+    Movement["StockMovementData<br/>resultado interno de leitura"]
     OrderRoot["ServiceOrder<br/>raiz de agregado"]
     OrderService["ServiceOrderService<br/>entidade interna"]
     OrderInventory["ServiceOrderInventoryItem<br/>entidade interna"]
     UnitPrice["UnitPrice<br/>objeto de valor"]
 
     CustomerRoot -->|possui| Document
+    CustomerRoot -. pode possuir .-> Email
+    CustomerRoot -. pode possuir .-> Phone
     VehicleRoot -->|referencia customerId| CustomerRoot
     VehicleRoot -->|possui| Plate
     ServiceRoot -->|possui| UnitPrice
@@ -98,6 +130,8 @@ classDiagram
         +int id
         +string name
         +Document document
+        +Email email
+        +Phone phone
     }
     class Document {
         +string value
@@ -107,6 +141,12 @@ classDiagram
         <<enumeration>>
         Cpf
         Cnpj
+    }
+    class Email {
+        +string value
+    }
+    class Phone {
+        +string value
     }
     class Vehicle {
         +int id
@@ -185,10 +225,13 @@ classDiagram
         Cancelled
     }
     class ServiceOrderExecutionTimeCalculator {
-        +calculate(ServiceOrder[]) array
+        +calculate(ServiceOrder[]) ServiceOrderExecutionTimeMetrics
     }
+    class ServiceOrderExecutionTimeMetrics
 
     Customer *-- Document
+    Customer o-- Email
+    Customer o-- Phone
     Document --> DocumentType
     Vehicle *-- LicensePlate
     Vehicle --> Customer : customerId
@@ -207,6 +250,7 @@ classDiagram
     ServiceOrderInventoryItem --> InventoryItemType
     ServiceOrderInventoryItem *-- UnitPrice
     ServiceOrderExecutionTimeCalculator ..> ServiceOrder
+    ServiceOrderExecutionTimeCalculator --> ServiceOrderExecutionTimeMetrics
 ```
 
 ## Sequência: criação e disponibilização do orçamento
@@ -338,7 +382,7 @@ stateDiagram-v2
     Finalizada --> Entregue: entregar veículo
     Recebida --> Cancelada: cancelar
     EmDiagnostico --> Cancelada: cancelar
-    AguardandoAprovacao --> Cancelada: cancelar
+    AguardandoAprovacao --> Cancelada: cancelar ou recusar orçamento pelo webhook
     Entregue --> [*]
     Cancelada --> [*]
 ```

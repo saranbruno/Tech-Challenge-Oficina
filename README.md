@@ -4,10 +4,16 @@ Back-end do Sistema Integrado de Atendimento e Execucao de Servicos para uma ofi
 
 Autor: Bruno da Silva Saran.
 
+## Fase 2
+
+A evolucao da Fase 2 ocorre na branch `fase-2` em um roadmap de 30 dias, preservando os comportamentos validos da Fase 1. A [matriz de requisitos](docs/requirements-phase-2.md) relaciona cada requisito consolidado com criterio verificavel, implementacao, teste, evidencia e dias responsaveis. O acompanhamento operacional permanece em `docs/project-progress.md`.
+
+O Dia 1 registrou a baseline reproduzivel. A matriz em `docs/requirements-phase-2.md` e as evidencias em `docs/fase-2/evidence/` registram os resultados publicados; `docs/project-progress.md` e um roteiro operacional local, ignorado pelo Git. Os comandos de validacao usam PostgreSQL real, e os arquivos de cobertura nao sao versionados. O lockfile inclui as correcoes de seguranca revisadas em `docs/vulnerability-report.md`.
+
 ## Tecnologias
 
 - PHP 8.5.8
-- Laravel Framework 13.19.0
+- Laravel Framework 13.34.0
 - Composer 2.10.2
 - PostgreSQL 18.4
 - Docker e Docker Compose
@@ -20,6 +26,8 @@ Autor: Bruno da Silva Saran.
 
 PHP e Composer locais nao sao necessarios para a execucao via Docker.
 
+O `Dockerfile` unico e reutilizavel no Docker Compose, Kind e CI. A imagem instala `pdo_pgsql` e PCOV, gera o autoload otimizado, declara metadados OCI, executa como o usuario nao privilegiado `app` e verifica `/up` por healthcheck. O contexto de build ignora dependencias instaladas, artefatos de cobertura, logs, caches, arquivos `.env` e os diretorios `infra` e `k8s`, incluindo estados Terraform e Secrets locais; segredos entram somente pela configuracao do ambiente.
+
 ## Configuracao
 
 Crie o arquivo de ambiente e substitua os valores locais de senha:
@@ -30,20 +38,22 @@ cp .env.example .env
 
 As portas padrao deste projeto sao `8081` para a aplicacao e `5433` para o PostgreSQL. Elas podem ser alteradas em `.env` por meio de `APP_PORT` e `DB_FORWARD_PORT`.
 
-Gere a chave da aplicacao depois de construir a imagem:
+Construa a imagem e gere a chave da aplicacao sem tentar escrever no arquivo montado somente para leitura:
 
 ```bash
 docker compose build
-docker compose run --rm app php artisan key:generate
+docker compose run --rm --no-deps app php artisan key:generate --show
 ```
 
-Gere um segredo JWT e configure a senha do administrador inicial no arquivo `.env`:
+Copie a chave exibida para `APP_KEY` no arquivo `.env`. Gere o segredo JWT:
 
 ```bash
-docker compose run --rm app php artisan jwt:secret
+docker compose run --rm --no-deps app php artisan jwt:secret --show
 ```
 
-As variaveis `JWT_TTL` e `JWT_REFRESH_TTL` representam minutos. O valor anterior de `ADMIN_PASSWORD` deve ser substituido por uma senha local segura e nao deve ser versionado.
+Copie o segredo exibido para `JWT_SECRET`. Antes de iniciar os servicos, configure `DB_PASSWORD`, `ADMIN_PASSWORD` e `SERVICE_ORDER_WEBHOOK_SECRET` com valores privados fortes; nao use `change_me`. Gere cada valor com `openssl rand -hex 32`, se precisar. Nunca versione o arquivo `.env` nem compartilhe as saidas desses comandos. As variaveis `JWT_TTL` e `JWT_REFRESH_TTL` representam minutos.
+
+O webhook `POST /api/webhooks/service-orders/budget-decision` exige o cabecalho `X-Webhook-Signature` no formato `sha256=<hexadecimal>`. O valor e calculado com HMAC-SHA256 sobre o corpo JSON bruto usando `SERVICE_ORDER_WEBHOOK_SECRET`. O payload possui `service_order_id`, `decision` (`approved` ou `rejected`) e `occurred_at`; a janela opcional e configurada por `SERVICE_ORDER_WEBHOOK_TIMESTAMP_TOLERANCE_SECONDS`.
 
 ## Execucao
 
@@ -55,6 +65,28 @@ docker compose exec app php artisan db:seed
 
 A aplicacao fica disponivel em `http://localhost:8081` com a configuracao padrao.
 
+O Compose inicia a API somente depois de PostgreSQL e Mailpit estarem saudaveis. A API tambem possui healthcheck em `/up`; o arquivo `.env` e montado no container somente para leitura. O PostgreSQL usa o volume `postgres_data`, o Mailpit fica disponivel em `http://localhost:8025` e o SMS local usa o adapter de log configurado no `.env.example`.
+
+Os manifestos Kubernetes usam `k8s/base` como base e os overlays `k8s/overlays/local` e `k8s/overlays/ci` para separar configuracoes. ConfigMap e Secret sao consumidos por `envFrom`; os valores versionados sao ficticios e devem ser substituidos por Secrets efemeros ou por um mecanismo seguro no ambiente de execucao. O arquivo `k8s/secret.env.example` serve somente como referencia de nomes, e arquivos locais de segredo sao ignorados pelo Git.
+
+O Terraform provisiona clusters Kind por meio do modulo compartilhado em `infra/modules/kind-cluster`. Na primeira instalacao, aplique o modulo do cluster antes do plano completo para criar o kubeconfig usado pelo provider Kubernetes. Os comandos exatos para os ambientes local persistente e CI efemero estao em [Terraform e Kind](docs/infrastructure.md#terraform-e-kind). O runner hospedado cria e destroi seu proprio cluster; ele nao acessa o cluster desta maquina.
+
+O módulo `infra/modules/postgresql` provisiona o PostgreSQL dentro do Kubernetes com Secret sensível, Service interno, StatefulSet, probes e PVC. A aplicação usa o Service `postgres` e as credenciais fornecidas pelo ambiente; nenhum banco Kubernetes é exposto diretamente no host.
+
+O modulo `infra/modules/metrics-server` instala o Metrics Server 0.9.0 nos dois ambientes Kind. O HPA `autoscaling/v2` em `k8s/base/app-hpa.yaml` controla de 1 a 4 replicas da API, com alvos simultaneos de 70% de CPU e 80% de memoria sobre os requests. A reducao usa estabilizacao de 300 segundos. Os comandos de instalacao, observacao e os limites dessa configuracao estao em [docs/infrastructure.md](docs/infrastructure.md#metrics-server-e-hpa).
+
+### Deploy local completo no Kind
+
+Com Python 3, Docker, Terraform, Kind e kubectl no `PATH`:
+
+```bash
+python3 scripts/k8s-local.py up
+python3 scripts/k8s-local.py status
+python3 scripts/k8s-local.py access
+```
+
+Swagger em `http://127.0.0.1:8082/docs` enquanto o ultimo comando estiver ativo. Para Mailpit, execute em outro terminal `python3 scripts/k8s-local.py access --service mailpit` e acesse `http://127.0.0.1:8026`. O fluxo provisiona cluster/banco, gera Secrets privados, constroi e carrega a imagem, executa migrations, aguarda rollouts e valida HTTP. Estado e chaves permanecem em `.local/k8s/local`, fora do Git e do build. O cluster existente dos dias anteriores e preservado. Seed, logs, ambientes temporarios e destruicao estao documentados em [deploy local automatizado](docs/infrastructure.md#deploy-local-automatizado-dia-23).
+
 Consulte o estado dos containers:
 
 ```bash
@@ -63,7 +95,7 @@ docker compose ps
 
 ## Testes
 
-Os testes usam PostgreSQL. A base de testes sera configurada junto aos testes de integracao nas etapas correspondentes.
+Os testes de integracao usam PostgreSQL; a configuracao da base de testes fica em `phpunit.integration.xml`.
 
 ```bash
 docker compose exec app php artisan test
@@ -75,7 +107,7 @@ A imagem inclui PCOV 1.0.12 para medir a cobertura real das classes criticas do 
 docker compose exec app ./vendor/bin/phpunit -c phpunit.domain.xml --coverage-text --coverage-clover build/coverage-domain.xml
 ```
 
-Na medicao do Dia 18, os 50 testes de dominio executaram 73 assercoes. A cobertura obtida nas oito classes criticas foi de 87,50% das classes, 96,67% dos metodos e 98,79% das linhas. O relatorio Clover e gerado localmente em `build/coverage-domain.xml` e nao e versionado.
+Os resultados e a cobertura medidos em cada etapa ficam registrados em `docs/project-progress.md`. O relatorio Clover e gerado localmente em `build/coverage-domain.xml` e nao e versionado.
 
 A validacao integrada usa PostgreSQL e executa testes unitarios e todos os Feature Tests, incluindo um fluxo completo da OS pela API:
 
@@ -83,7 +115,7 @@ A validacao integrada usa PostgreSQL e executa testes unitarios e todos os Featu
 docker compose exec app ./vendor/bin/phpunit -c phpunit.integration.xml --coverage-text --coverage-clover build/coverage-integration.xml
 ```
 
-Na medicao final do Dia 24, os 131 testes executaram 466 assercoes. As oito classes criticas atingiram 100% de classes, metodos e linhas durante a suite integrada. O relatorio Clover e gerado localmente em `build/coverage-integration.xml` e nao e versionado.
+As suites de dominio e integracao devem ser executadas no container com PostgreSQL; os numeros observados por etapa ficam registrados no progresso do projeto. O teste opt-in do Mailpit e pulado no modo padrao. Os relatorios Clover sao gerados localmente em `build/coverage-domain.xml` e `build/coverage-integration.xml` e nao sao versionados.
 
 ## Encerramento
 
@@ -99,13 +131,19 @@ docker compose down -v
 
 ## Analise de vulnerabilidades
 
-O Dia 23 executou um scan real do codigo-fonte com Semgrep 1.89.0 e um audit de dependencias com Composer.
+Em 2026-10-10, a revisao do Dia 28 repetiu Semgrep 1.89.0 e `composer audit --locked` no estado atual. A revisao anterior corrigiu quatro avisos com atualizacoes de Laravel, CommonMark e Flysystem. A imagem com esse lockfile passou nos testes e no deploy remoto do Dia 26.
 
 - Relatorio tecnico: `docs/vulnerability-report.md`
-- Semgrep: 201 arquivos rastreados, 27 regras executadas, 0 findings
-- Composer audit: nenhuma advisory encontrada
+- Semgrep: 114 regras em 287 arquivos, zero achados; oito arquivos tiveram analise parcial e duas regras excederam o tempo no PDF historico
+- Composer: nenhum aviso de vulnerabilidade ou pacote abandonado na auditoria atual
 
 Os resultados nao substituem revisao manual e testes de comportamento.
+
+## E-mail e Mailpit
+
+O Compose inicia o Mailpit `v1.30.6` para desenvolvimento local, com SMTP em `localhost:1025` e interface web em `http://localhost:8025`. O adapter `LaravelEmailNotificationSender` envia a mensagem de status usando `NOTIFICATION_MAILER` e o template `resources/views/mail/service-order-status.blade.php`.
+
+O `.env.example` usa SMTP apontando para `mailpit`. Em producao, configure `MAIL_MAILER`, `MAIL_HOST`, `MAIL_PORT`, `MAIL_SCHEME`, `MAIL_USERNAME`, `MAIL_PASSWORD`, `MAIL_FROM_ADDRESS` e `MAIL_FROM_NAME` por variaveis de ambiente ou Secrets. Nenhuma credencial real deve ser versionada. O teste Mailpit real e opt-in com `MAILPIT_INTEGRATION_TEST=true`; a suite padrao usa `Mail::fake`.
 
 ## PostgreSQL
 
@@ -115,13 +153,78 @@ PostgreSQL foi escolhido como banco unico da aplicacao e dos testes de integraca
 
 O monolito utiliza DDD pragmatico com as camadas de Dominio, Aplicacao, Infraestrutura e Interface HTTP. As regras de dependencia e as convencoes estao descritas em `docs/architecture.md`.
 
+```mermaid
+flowchart LR
+    HTTP["Interface HTTP: rotas, controllers e validacao"] --> APP["Aplicacao: casos de uso, DTOs e contratos"]
+    APP --> DOMAIN["Dominio: entidades, valores e regras"]
+    INFRA["Infraestrutura: adapters Eloquent, JWT, e-mail e SMS"] -. "implementa contratos" .-> APP
+    BOOT["Container Laravel"] -. "conecta implementacoes" .-> INFRA
+    INFRA --> PG["PostgreSQL"]
+    INFRA --> MAIL["Mailpit local ou SMTP configurado"]
+    INFRA --> SMS["Log local ou Twilio configurado"]
+```
+
+As setas internas representam dependencias de codigo. Persistencia e notificacoes chegam aos casos de uso por contratos; o Dominio permanece independente dos adapters.
+
 A documentacao do dominio inclui a [Linguagem Ubiqua](docs/ddd/ubiquitous-language.md), os [diagramas DDD](docs/ddd/diagrams.md) de Contexto Estrategico, Agregados, Classes de Dominio e Sequencia dos fluxos principais e o [Event Storming](docs/ddd/event-storming.md) da Ordem de Servico e da gestao de estoque.
 
 As rotas administrativas e do cliente estao separadas sob `/api/admin` e `/api/client`. Os CRUDs implementados usam casos de uso independentes do transporte HTTP e persistencia Eloquent implementada na camada de Infraestrutura.
 
+## Infraestrutura local e do runner
+
+```mermaid
+flowchart TB
+    subgraph COMPOSE["Docker Compose: desenvolvimento"]
+        CA["API Laravel"] --> CP["PostgreSQL com volume"]
+        CA --> CM["Mailpit"]
+    end
+    subgraph LOCAL["Kind local persistente"]
+        LB["Build Docker local"] --> LK["Deployment API"]
+        LT["Terraform"] --> LP
+        LT --> LM
+        LK --> LP["PostgreSQL StatefulSet e PVC"]
+        LM["Metrics Server"] --> LH["HPA por CPU e memoria"]
+        LH --> LK
+    end
+    subgraph RUNNER["GitHub Actions: runner hospedado"]
+        RT["Terraform"] --> RP
+        RT --> RM
+        RK["Deployment API"]
+        RK --> RP["PostgreSQL StatefulSet e PVC"]
+        RM["Metrics Server"] --> RH["HPA por CPU e memoria"]
+        RH --> RK
+        CLEAN["terraform destroy em always"] --> RK
+    end
+    GHCR["GHCR publico: imagem SHA"] --> RK
+```
+
+Compose e Kind sao alternativas de execucao local. No Kind, ConfigMap e Secrets fornecem configuracao, Services conectam os pods e probes verificam `/up`. O ambiente local preserva seu estado; a CD destroi o ambiente temporario mesmo depois de falhas. O HPA controla de uma a quatro replicas da API, com requests de 100m de CPU e 256Mi de memoria. A carga do Dia 27 comprovou subida de uma para quatro replicas e retorno a uma; o PostgreSQL preservou dados apos recriar seu pod.
+
+## CI/CD e GHCR
+
+O push para `fase-2` dispara a entrega continua; a CI tambem executa em pull requests e push para `main`. O fluxo reutiliza os workflows de validacao e publicacao, usa permissoes minimas e gera credenciais efemeras mascaradas no runner.
+
+```mermaid
+flowchart LR
+    START["Push fase-2 ou execucao manual"] --> CI["CI: testes PostgreSQL, cobertura, lints, audit e build"]
+    CI --> IMAGE["Publicar imagem GHCR com SHA"]
+    IMAGE --> KIND["Terraform: bootstrap Kind e apply completo"]
+    KIND --> CONFIG["ConfigMap, Secrets e manifestos"]
+    CONFIG --> MIGRATE["Job de migrations"]
+    MIGRATE --> API["Rollout API e Mailpit"]
+    API --> SMOKE["Smoke API, Swagger, OpenAPI e Mailpit"]
+    SMOKE --> EVIDENCE["Coletar e publicar evidencias em always"]
+    EVIDENCE --> DESTROY["Destruir Kind temporario em always"]
+    KIND -. "apos falha posterior" .-> EVIDENCE
+    MIGRATE -. "apos falha" .-> EVIDENCE
+    API -. "apos falha" .-> EVIDENCE
+```
+
+A [execucao validada do Dia 26](https://github.com/saranbruno/Tech-Challenge-Oficina/actions/runs/38092377887) completou o fluxo, incluindo quatro smoke tests HTTP 200 e destruicao dos 15 recursos Terraform. O download anonimo da imagem e o SHA implantado foram conferidos. A politica de tags, rollback e configuracao dos workflows esta em [CI/CD](docs/ci-cd.md); os resultados e limites estao nas [evidencias do Dia 26](docs/fase-2/evidence/day26-cd-kind.md). Os Dias 24 e 25 mantem fechamento separado, incluindo a verificacao de protecao de branch.
+
 ## OpenAPI e Swagger UI
 
-A especificacao OpenAPI 3.1 esta em `docs/openapi.yaml` e documenta as 37 operacoes realmente implementadas, incluindo autenticacao, parametros, requests, responses, erros, exemplos e os sete estados atuais da OS. O Swagger UI 5.32.1 fica disponivel em `http://localhost:8081/docs` depois que o ambiente Docker inicia. O documento bruto servido para o visualizador pode ser consultado em `http://localhost:8081/docs/openapi.yaml`.
+A [especificacao OpenAPI 3.1](docs/openapi.yaml) documenta as 40 operacoes HTTP, incluindo autenticacao, parametros, requests, responses, erros, exemplos e os sete estados atuais da OS. O [Swagger UI 5.32.1](http://localhost:8081/docs) fica disponivel depois que o ambiente Docker inicia. O [documento bruto servido](http://localhost:8081/docs/openapi.yaml) tambem pode ser consultado nesse ambiente.
 
 Valide o contrato localmente com:
 
@@ -149,7 +252,11 @@ O refresh usa o proprio JWT anterior. Depois do prazo de acesso ele nao autentic
 
 ## Clientes
 
-O cadastro minimo possui `name` e `document`. CPF e CNPJ podem ser enviados com ou sem pontuacao, sao normalizados para somente digitos e validados pelos digitos verificadores antes da persistencia. O PostgreSQL tambem impede documentos duplicados e restringe o tipo e o tamanho estrutural do documento.
+O cadastro minimo possui `name` e `document`. Os campos `email` e `phone` sao opcionais e podem estar ambos ausentes; nao existe `notification_channel`. E-mails sao normalizados em letras minusculas, e telefones sao armazenados no formato internacional E.164, com `+55` aplicado a numeros brasileiros informados sem codigo do pais. Contatos nao identificam o cliente e podem se repetir; o documento permanece unico.
+
+O nucleo de notificacoes aplica melhor esforco a todos os contatos disponiveis: tenta e-mail quando existe e-mail, SMS quando existe telefone e ambos quando os dois existem. Falhas sao isoladas e registradas sem destinatario ou conteudo sensivel. O e-mail usa Mailpit local ou SMTP por configuracao; o SMS usa adapter de log local/CI ou Twilio por configuracao externa, com limite de 160 caracteres. A notificacao e acionada depois das transicoes persistidas da OS. A politica detalhada esta em `docs/notifications.md`.
+
+CPF e CNPJ podem ser enviados com ou sem pontuacao, sao normalizados para somente digitos e validados pelos digitos verificadores antes da persistencia. O PostgreSQL tambem impede documentos duplicados, restringe o tipo e o tamanho estrutural do documento e protege o formato persistido do telefone.
 
 Todos os endpoints exigem JWT administrativo:
 
@@ -173,7 +280,7 @@ Todos os endpoints exigem JWT administrativo:
 
 ## Servicos
 
-O catalogo de servicos possui somente `name` e `unit_price`. O valor unitario e informado e persistido como um numero inteiro de centavos, sem `float`, e nao pode ser negativo. A quantidade de um servico sera definida futuramente no item da ordem de servico, sem fazer parte do catalogo.
+O catalogo de servicos possui somente `name` e `unit_price`. O valor unitario e informado e persistido como um numero inteiro de centavos, sem `float`, e nao pode ser negativo. A quantidade de um servico e definida no item da ordem de servico, sem fazer parte do catalogo.
 
 Todos os endpoints exigem JWT administrativo:
 
@@ -215,11 +322,16 @@ A criacao identifica o cliente por CPF ou CNPJ normalizado, confirma que o veicu
 
 Alteracoes posteriores nos catalogos nao modificam os valores registrados na OS. A criacao nao altera o saldo dos itens; a baixa ocorre atomicamente quando a aprovacao faz a OS entrar em `in_execution`.
 
-Endpoint protegido por JWT:
+O webhook de decisao aplica `approved` de `awaiting_approval` para `in_execution`, com baixa atomica do estoque, ou `rejected` diretamente para `cancelled`, sem alterar estoque. A mesma decisao repetida e idempotente; uma decisao conflitante retorna conflito.
+
+A listagem administrativa funciona como fila operacional: retorna somente OS em `in_execution`, `awaiting_approval`, `in_diagnosis` e `received`, nessa prioridade e com as mais antigas primeiro dentro de cada status. OS finalizadas, entregues e canceladas continuam disponiveis no detalhamento e nao sao excluidas fisicamente.
+
+As operacoes administrativas exigem JWT. As operacoes do cliente usam documento e token de acompanhamento; o webhook usa HMAC. Rotas do ciclo da OS:
 
 - `POST /api/admin/service-orders`
 - `GET /api/admin/service-orders`
 - `GET /api/admin/service-orders/{serviceOrder}`
+- `GET /api/admin/service-orders/{serviceOrder}/status`
 - `GET /api/admin/service-orders-metrics/execution-time`
 - `POST /api/admin/service-orders/{serviceOrder}/diagnosis/start`
 - `POST /api/admin/service-orders/{serviceOrder}/diagnosis/complete`
@@ -227,9 +339,13 @@ Endpoint protegido por JWT:
 - `POST /api/admin/service-orders/{serviceOrder}/finalize`
 - `POST /api/admin/service-orders/{serviceOrder}/deliver`
 - `POST /api/client/service-orders/approve`
+- `POST /api/client/service-orders/status`
 - `POST /api/admin/service-orders/{serviceOrder}/cancel`
+- `POST /api/webhooks/service-orders/budget-decision`
 
 Na criacao, a API administrativa retorna uma unica vez um token aleatorio de 64 caracteres. Somente o hash desse token e persistido. O cliente acompanha a OS enviando o token e seu CPF ou CNPJ para `POST /api/client/service-orders/tracking`; combinacoes incorretas retornam 404 e a resposta nao expoe identificadores do cliente ou veiculo.
+
+A consulta dedicada de status administrativa exige JWT e a consulta dedicada do cliente exige documento mais token. Ambas retornam somente `service_order_id`, `status`, `status_label` e `last_transition_at`; o detalhamento completo permanece em endpoint separado.
 
 Reparos adicionais podem incluir novos servicos somente em `awaiting_approval`, preservando snapshots e recalculando o total. A aprovacao explicita inicia `in_execution` e consome o estoque associado de forma transacional. O cancelamento e permitido somente em `received`, `in_diagnosis` ou `awaiting_approval`.
 
@@ -239,10 +355,14 @@ O monitoramento administrativo considera somente OS em `delivered` com todos os 
 
 ## Progresso
 
-O acompanhamento detalhado das etapas esta em `docs/project-progress.md`.
+O acompanhamento operacional local das etapas esta em `docs/project-progress.md`, ignorado pelo Git. A [matriz de requisitos](docs/requirements-phase-2.md) e as [evidencias publicadas](docs/fase-2/evidence/) preservam os resultados verificaveis no repositorio.
+
+Os workflows de integracao e entrega estao descritos em [docs/ci-cd.md](docs/ci-cd.md), a infraestrutura local e Kubernetes em [docs/infrastructure.md](docs/infrastructure.md), e a politica de notificacoes em [docs/notifications.md](docs/notifications.md).
 
 ## Entrega final
 
-O documento final esta em [docs/final-delivery.pdf](docs/final-delivery.pdf). Sua fonte renderizavel esta em `docs/final-delivery.html`.
+Os artefatos finais da Fase 1 permanecem em [docs/final-delivery.pdf](docs/final-delivery.pdf) e `docs/final-delivery.html`. A Fase 2 possui [documento HTML](docs/fase-2/final-delivery.html), [PDF com arquitetura incorporada](docs/fase-2/final-delivery.pdf), [roteiro de demonstracao](docs/fase-2/video-script.md) e [instrucoes dos artefatos](docs/fase-2/README.md).
+
+O video da Fase 2 ainda nao foi gravado. Seu link sera inserido aqui e no PDF apos publicacao no YouTube ou Vimeo e conferencia da duracao de ate 15 minutos. A [auditoria final](docs/fase-2/evidence/day30-final-audit.md) registra as condicoes que ainda impedem o encerramento.
 
 A documentacao DDD indicada na entrega esta reunida em [docs/ddd](docs/ddd), com Linguagem Ubiqua, diagramas e Event Storming alinhados ao codigo implementado.
