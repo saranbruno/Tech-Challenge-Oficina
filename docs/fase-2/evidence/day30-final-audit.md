@@ -35,7 +35,7 @@ Início: 2026-10-10. Estado: bloqueado para encerramento, com pendências extern
 ## Pendências de encerramento
 
 1. Dia 29 concluído: reprodução, carga, limpeza temporária e restauração do cluster persistente comprovadas.
-2. Enunciado e Dia 24 concluídos; critérios técnicos do Dia 25 atendidos, integrar a PR de documentação do fechamento.
+2. Enunciado e Dia 24 concluídos; critérios técnicos do Dia 25 atendidos; fechamento registrado na PR #3 para fase-2.
 3. Gravar vídeo, publicar como público ou não listado, verificar até 15:00, inserir e testar link no README e PDF.
 4. Acesso de `soat-architecture` conferido com permissão `write` em 2026-10-10.
 5. Preparar PR revisável e integrar somente depois de todas as condições, CI verde e autorização; validar clone da main.
