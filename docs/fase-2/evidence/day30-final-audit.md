@@ -2,9 +2,15 @@
 
 Início: 2026-10-10. Estado: bloqueado para encerramento, com pendências externas. A autorização do usuário abrange os Dias 29 e 30; a auditoria não representa encerramento da Fase 2.
 
+## Vídeo publicado em 2026-10-15
+
+O usuário informou a gravação e publicação de [Tech Challenge - Fase 2 - Grupo 55](https://youtu.be/NPmlpuqKr4Y). A página do YouTube foi consultada sem autenticação; os metadados retornaram `playabilityStatus.status=OK`, `isPrivate=false` e `lengthSeconds=233`, equivalentes a 3 minutos e 53 segundos, dentro do limite de 15 minutos.
+
+O link foi inserido no README principal, no índice dos artefatos e no relatório HTML/PDF da Fase 2. A disponibilidade e a duração foram verificadas; o conteúdo audiovisual não foi assistido nesta conferência. A revisão da presença de deploy, CI/CD, consumo das APIs e escala automática, a integração final autorizada e a reprodução da main continuam necessárias para encerrar a fase.
+
 ## Preparação local para a gravação em 2026-10-15
 
-O enunciado oficial no caminho Windows fornecido pelo usuário foi conferido pelo SHA-256 `f93a4a5cc91ddec19398302f6ad5a027ceaf2a8ee5c510258d9e291d28b34b0e`. O roteiro foi reduzido para 6 a 8 minutos, com falas completas, telas e comandos de demonstração. O vídeo ainda não foi gravado.
+O enunciado oficial no caminho Windows fornecido pelo usuário foi conferido pelo SHA-256 `f93a4a5cc91ddec19398302f6ad5a027ceaf2a8ee5c510258d9e291d28b34b0e`. O roteiro foi reduzido para 6 a 8 minutos, com falas completas, telas e comandos de demonstração. Na preparação inicial, o vídeo ainda não havia sido gravado.
 
 As execuções remotas do commit `759676493b014a58d06f6a78bb1baaad89818df9` falharam em `composer audit`: o lockfile continha `symfony/http-foundation` 8.1.1, afetado por `CVE-2026-108082`. A dependência foi atualizada isoladamente para 8.1.9, e uma nova auditoria local retornou listas vazias de avisos e pacotes abandonados. Build Docker, 84 testes de domínio com 152 asserções e cobertura de 211/211 linhas monitoradas, e 192 testes integrados em PostgreSQL com 693 asserções, um opt-in ignorado e cobertura de 221/221 linhas monitoradas passaram. Essa validação local não substitui uma nova CI/CD remota verde após a publicação da correção.
 
@@ -14,7 +20,7 @@ O Kind local existente manteve PostgreSQL/PVC e Metrics Server saudáveis. Uma c
 
 A [CI/CD remota do commit `6a90bb9`](https://github.com/saranbruno/Tech-Challenge-Oficina/actions/runs/38829886306) terminou com sucesso nos três jobs: validação, publicação da imagem e implantação no Kind temporário. A API passou nos smoke tests; coleta de evidências e destruição do cluster temporário também passaram. As duas execuções independentes da CI, por push e PR, concluíram com sucesso.
 
-Permanecem pendentes a gravação e publicação do vídeo, a inserção do link no README/PDF e a integração final autorizada. O resultado desta preparação não fecha o Dia 30.
+As pendências de gravação, publicação e inserção do link foram resolvidas posteriormente, conforme o registro acima. A revisão do conteúdo do vídeo e a integração final autorizada permanecem pendentes. O resultado desta preparação não fecha o Dia 30.
 
 ## Rastreabilidade
 
@@ -34,7 +40,7 @@ Permanecem pendentes a gravação e publicação do vídeo, a inserção do link
 | F2-CI-01 | CI completa verde e relatórios de cobertura. | Falha controlada 38096918016 comprovada; proteção de main/fase-2 conferida, check obrigatório para todos; registro final em PR de documentação. |
 | F2-CD-01 | Runner hospedado, GHCR, Kind, banco, migrations, smokes, artefatos e destroy always no Dia 26. | Reexecução manual da CI/CD 38094318659, tentativa 2, aprovada nos três jobs; quatro smokes HTTP 200 e 15 recursos destruídos. |
 | F2-DOC-01 | README, OpenAPI, arquitetura, DDD, notificações, infraestrutura e CI/CD; 15 diagramas aprovados no Dia 28. | Implementados; artefatos finais em preparação. |
-| F2-ENT-01 | HTML com arquitetura incorporada e roteiro alvo 13:30 preparados. | PDF aberto e arquitetura inspecionada; anotações de links conferidas. Gravação, publicação, duração e link do vídeo pendentes. |
+| F2-ENT-01 | HTML/PDF com arquitetura e link do vídeo publicado no YouTube. | Acesso anônimo e duração de 3:53 conferidos; revisão do conteúdo audiovisual pendente. |
 | F2-REP-01 | Clone público da branch fase-2 obtido em 2026-10-10. | Acesso do avaliador confirmado; PR #1 em rascunho aberta. Merge com CI verde, tag/release e clone da main pendentes. |
 
 ## Verificações externas
@@ -50,7 +56,7 @@ Permanecem pendentes a gravação e publicação do vídeo, a inserção do link
 
 1. Dia 29 concluído: reprodução, carga, limpeza temporária e restauração do cluster persistente comprovadas.
 2. Enunciado e Dia 24 concluídos; critérios técnicos do Dia 25 atendidos; fechamento registrado na PR #3 para fase-2.
-3. Gravar vídeo, publicar como público ou não listado, verificar até 15:00, inserir e testar link no README e PDF.
+3. Vídeo publicado, duração de 3:53 e acesso sem login conferidos; link inserido no README e HTML/PDF. Conferir o conteúdo audiovisual exigido pelo enunciado.
 4. Acesso de `soat-architecture` conferido com permissão `write` em 2026-10-10.
 5. Preparar PR revisável e integrar somente depois de todas as condições, CI verde e autorização; validar clone da main.
 6. Criar tag/release da Fase 2 após a integração validada.

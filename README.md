@@ -363,6 +363,6 @@ Os workflows de integracao e entrega estao descritos em [docs/ci-cd.md](docs/ci-
 
 Os artefatos finais da Fase 1 permanecem em [docs/final-delivery.pdf](docs/final-delivery.pdf) e `docs/final-delivery.html`. A Fase 2 possui [documento HTML](docs/fase-2/final-delivery.html), [PDF com arquitetura incorporada](docs/fase-2/final-delivery.pdf), [roteiro de demonstracao](docs/fase-2/video-script.md) e [instrucoes dos artefatos](docs/fase-2/README.md).
 
-O video da Fase 2 ainda nao foi gravado. Seu link sera inserido aqui e no PDF apos publicacao no YouTube ou Vimeo e conferencia da duracao de ate 15 minutos. A [auditoria final](docs/fase-2/evidence/day30-final-audit.md) registra as condicoes que ainda impedem o encerramento.
+O [video de demonstracao da Fase 2](https://youtu.be/NPmlpuqKr4Y) esta publicado no YouTube, com duracao de 3 minutos e 53 segundos, dentro do limite de 15 minutos. O link tambem consta no relatorio HTML e no PDF. A [auditoria final](docs/fase-2/evidence/day30-final-audit.md) registra as verificacoes e as condicoes restantes para o encerramento.
 
 A documentacao DDD indicada na entrega esta reunida em [docs/ddd](docs/ddd), com Linguagem Ubiqua, diagramas e Event Storming alinhados ao codigo implementado.
