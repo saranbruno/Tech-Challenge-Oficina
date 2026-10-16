@@ -4,7 +4,7 @@ Autor: Bruno da Silva Saran, Grupo 55. Duração sugerida: 6 a 8 minutos. Limite
 
 ## Antes de gravar
 
-Abra, nesta ordem, o [repositório](https://github.com/saranbruno/Tech-Challenge-Oficina), a [execução completa da CD](https://github.com/saranbruno/Tech-Challenge-Oficina/actions/runs/38100264338), o [Swagger local](http://127.0.0.1:8081/docs), o [Mailpit local](http://127.0.0.1:8025) e o [PDF da entrega](final-delivery.pdf). A execução indicada é a última CD aprovada antes da atualização de segurança do `composer.lock`; confira uma nova execução verde antes de apresentá-la como resultado do código atual. Não mostre `.env`, Secrets, JWT, token de acompanhamento, assinatura HMAC, logs completos nem configurações privadas.
+Abra, nesta ordem, o [repositório](https://github.com/saranbruno/Tech-Challenge-Oficina), a [execução completa da CD com o lockfile corrigido](https://github.com/saranbruno/Tech-Challenge-Oficina/actions/runs/38829886306), o [Swagger local](http://127.0.0.1:8081/docs), o [Mailpit local](http://127.0.0.1:8025) e o [PDF da entrega](final-delivery.pdf). Não mostre `.env`, Secrets, JWT, token de acompanhamento, assinatura HMAC, logs completos nem configurações privadas.
 
 O Compose de demonstração usa o projeto `oficina-video` e banco próprio. O Kind persistente usa o kubeconfig privado no caminho abaixo. Em um terminal, defina:
 

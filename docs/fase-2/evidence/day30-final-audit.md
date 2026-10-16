@@ -12,7 +12,9 @@ O projeto Compose isolado `oficina-video` foi criado com volume PostgreSQL próp
 
 O Kind local existente manteve PostgreSQL/PVC e Metrics Server saudáveis. Uma carga de 120 segundos com 64 workers produziu 4.071 respostas HTTP 200 e zero falhas; o HPA subiu de uma para quatro réplicas `Ready`. A imagem local reconstruída com `symfony/http-foundation` 8.1.9 foi carregada no Kind; o Deployment fez rollout e ficou 4/4 disponível. A API e o Swagger do Kind responderam HTTP 200. Saídas locais estão em `.local/evidence/video`, fora do Git. Os encaminhamentos de porta usam `8082` para API e `8026` para Mailpit do Kind; o Compose isolado usa `8081` e `8025`.
 
-Permanecem pendentes a nova execução remota da CI/CD com o lockfile corrigido, a gravação e publicação do vídeo, a inserção do link no README/PDF e a integração final autorizada. O resultado desta preparação não fecha o Dia 30.
+A [CI/CD remota do commit `6a90bb9`](https://github.com/saranbruno/Tech-Challenge-Oficina/actions/runs/38829886306) terminou com sucesso nos três jobs: validação, publicação da imagem e implantação no Kind temporário. A API passou nos smoke tests; coleta de evidências e destruição do cluster temporário também passaram. As duas execuções independentes da CI, por push e PR, concluíram com sucesso.
+
+Permanecem pendentes a gravação e publicação do vídeo, a inserção do link no README/PDF e a integração final autorizada. O resultado desta preparação não fecha o Dia 30.
 
 ## Rastreabilidade
 
