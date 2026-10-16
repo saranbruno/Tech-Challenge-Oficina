@@ -2,6 +2,18 @@
 
 Início: 2026-10-10. Estado: bloqueado para encerramento, com pendências externas. A autorização do usuário abrange os Dias 29 e 30; a auditoria não representa encerramento da Fase 2.
 
+## Preparação local para a gravação em 2026-10-15
+
+O enunciado oficial no caminho Windows fornecido pelo usuário foi conferido pelo SHA-256 `f93a4a5cc91ddec19398302f6ad5a027ceaf2a8ee5c510258d9e291d28b34b0e`. O roteiro foi reduzido para 6 a 8 minutos, com falas completas, telas e comandos de demonstração. O vídeo ainda não foi gravado.
+
+As execuções remotas do commit `759676493b014a58d06f6a78bb1baaad89818df9` falharam em `composer audit`: o lockfile continha `symfony/http-foundation` 8.1.1, afetado por `CVE-2026-108082`. A dependência foi atualizada isoladamente para 8.1.9, e uma nova auditoria local retornou listas vazias de avisos e pacotes abandonados. Build Docker, 84 testes de domínio com 152 asserções e cobertura de 211/211 linhas monitoradas, e 192 testes integrados em PostgreSQL com 693 asserções, um opt-in ignorado e cobertura de 221/221 linhas monitoradas passaram. Essa validação local não substitui uma nova CI/CD remota verde após a publicação da correção.
+
+O projeto Compose isolado `oficina-video` foi criado com volume PostgreSQL próprio, 13 migrations e seed administrativo. API, Swagger e Mailpit retornaram HTTP 200. O verificador HTTP passou após configurar SMTP/Mailpit no `.env` privado: 62 requisições, quatro casos de contato, oito e-mails recebidos e oito SMS simulados. A primeira tentativa falhou porque o `.env` ainda usava mailer `log`; o erro foi corrigido antes da repetição aprovada. Os dados de teste são fictícios e ficaram no volume isolado.
+
+O Kind local existente manteve PostgreSQL/PVC e Metrics Server saudáveis. Uma carga de 120 segundos com 64 workers produziu 4.071 respostas HTTP 200 e zero falhas; o HPA subiu de uma para quatro réplicas `Ready`. A imagem local reconstruída com `symfony/http-foundation` 8.1.9 foi carregada no Kind; o Deployment fez rollout e ficou 4/4 disponível. A API e o Swagger do Kind responderam HTTP 200. Saídas locais estão em `.local/evidence/video`, fora do Git. Os encaminhamentos de porta usam `8082` para API e `8026` para Mailpit do Kind; o Compose isolado usa `8081` e `8025`.
+
+Permanecem pendentes a nova execução remota da CI/CD com o lockfile corrigido, a gravação e publicação do vídeo, a inserção do link no README/PDF e a integração final autorizada. O resultado desta preparação não fecha o Dia 30.
+
 ## Rastreabilidade
 
 | Requisito | Evidência disponível | Situação para a entrega |

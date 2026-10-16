@@ -1,41 +1,91 @@
-# Roteiro de demonstração — Fase 2 — Grupo 55
+# Roteiro curto para o vídeo final — Fase 2
 
-Autor: Bruno da Silva Saran. Duração alvo: 13:30; limite obrigatório: 15:00.
+Autor: Bruno da Silva Saran, Grupo 55. Duração sugerida: 6 a 8 minutos. Limite do enunciado: 15 minutos.
 
-Estado: roteiro preparado; gravação e publicação ainda pendentes. O roteiro descreve ações a executar, não comprova que o vídeo foi gravado.
+## Antes de gravar
 
-## Preparação
+Abra, nesta ordem, o [repositório](https://github.com/saranbruno/Tech-Challenge-Oficina), a [execução completa da CD](https://github.com/saranbruno/Tech-Challenge-Oficina/actions/runs/38100264338), o [Swagger local](http://127.0.0.1:8081/docs), o [Mailpit local](http://127.0.0.1:8025) e o [PDF da entrega](final-delivery.pdf). A execução indicada é a última CD aprovada antes da atualização de segurança do `composer.lock`; confira uma nova execução verde antes de apresentá-la como resultado do código atual. Não mostre `.env`, Secrets, JWT, token de acompanhamento, assinatura HMAC, logs completos nem configurações privadas.
 
-- Usar ambiente temporário com dados fictícios e Secrets privados; não exibir `.env`, kubeconfig, tfstate, JWT, tracking tokens ou assinaturas HMAC.
-- Verificar áudio, legibilidade de terminal e navegador e remover notificações da tela.
-- Disparar a CD manualmente antes da gravação para disponibilizar as etapas reais. Mostrar a execução concluída e a origem real. Uma reexecução manual conserva o evento original `push`; identifique a tentativa reexecutada e não a apresente como `workflow_dispatch`.
-- Preparar Swagger, Actions, arquitetura, pods, HPA e Mailpit em abas separadas. Executar carga em uma sessão e observar HPA em outra.
-- Começar a carga antes do trecho de escalabilidade, preservando o início e a mudança real das réplicas na gravação. Não reduzir o tempo do vídeo com métricas inventadas.
-- Usar o roteiro de API de `scripts/validate-delivery.py` somente em ambiente descartável. Ele cria cadastros e OS fictícios; as credenciais são lidas do ambiente privado, sem serem impressas.
+O Compose de demonstração usa o projeto `oficina-video` e banco próprio. O Kind persistente usa o kubeconfig privado no caminho abaixo. Em um terminal, defina:
 
-## Sequência
+```bash
+cd /usr/src/Tech-Challenge-Oficina
+export KUBECONFIG="$HOME/.kube/tech-challenge-terraform-local.config"
+docker compose -p oficina-video ps
+kubectl -n oficina get deployment,statefulset,pods,hpa,pvc
+```
 
-| Tempo | Demonstração | Evidência visível |
-| --- | --- | --- |
-| 00:00–00:40 | Apresentar projeto, autor, grupo e objetivo da Fase 2. | Repositório público e branch da demonstração. |
-| 00:40–01:40 | Explicar dependências internas e adapters. | Diagrama da Clean Architecture e diretórios reais. |
-| 01:40–03:10 | Mostrar provisionamento e deploy. | Terraform Kind/PostgreSQL/Metrics Server, migrations Complete, API/Mailpit Ready e PVC Bound. |
-| 03:10–04:40 | Mostrar CI/CD completo. | Execução manual real; testes/cobertura, GHCR SHA, deployment e limpeza `always`. |
-| 04:40–06:10 | Cadastrar cliente, veículo, serviço e item; abrir OS. | HTTP 201, ID explícito e orçamento calculado pelo servidor. |
-| 06:10–07:10 | Consultar status como administrador e cliente. | JWT administrativo; resposta mínima do cliente; combinação inválida sem exposição de dados. |
-| 07:10–09:00 | Diagnosticar e enviar decisões externas. | HMAC inválido rejeitado; approved → in_execution; repetição sem baixa dupla; rejected → cancelled sem baixa. |
-| 09:00–10:20 | Mostrar notificações e fila operacional. | Mailpit, SMS simulado sem dados pessoais; clientes sem contatos, com um e com dois; ordenação e exclusão dos terminais. |
-| 10:20–12:20 | Mostrar carga e escalabilidade. | CPU e memória conhecidas; HPA 1 → múltiplas réplicas; pods Ready e resultados HTTP reais. Mostrar retorno ao mínimo se houver tempo ou evidência previamente capturada. |
-| 12:20–13:10 | Mostrar persistência e critérios de segurança. | PVC mantido após recriação do PostgreSQL; secrets externos; auditoria e limites do scan. |
-| 13:10–13:30 | Encerrar com links e rastreabilidade. | Repositório, PDF com arquitetura e link definitivo do vídeo. |
+Confirme `healthy`, pods `Ready`, PVC `Bound` e métricas conhecidas no HPA. Os acessos em `8082` e `8026` dependem dos encaminhamentos abaixo, cada um em seu próprio terminal:
 
-## Conferência após a gravação
+```bash
+kubectl -n oficina port-forward --address 127.0.0.1 service/oficina-api 8082:8000
+kubectl -n oficina port-forward --address 127.0.0.1 service/mailpit 8026:8025
+```
 
-1. Conferir duração real de até 15:00 e reprodução com áudio legível.
-2. Conferir presença de deploy, CI/CD, consumo de APIs e scale-up automático visíveis.
-3. Revisar quadros para garantir que nenhum segredo ou dado pessoal real foi exposto.
-4. Publicar no YouTube ou Vimeo como público ou não listado e testar acesso sem autenticação.
-5. Inserir o endereço definitivo no README e em `docs/fase-2/final-delivery.html`, regenerar o PDF e testar seus links.
-6. Registrar URL, duração e resultados em `docs/fase-2/evidence/day30-final-audit.md`.
+## Telas e falas
 
-A publicação do vídeo não é comprovada por este roteiro. O fechamento da Fase 2 exige também acesso do avaliador, matriz completa, CI verde e reprodução da main após integração autorizada.
+### 1. Apresentação — 30 segundos
+
+**Tela:** repositório, depois o desenho da arquitetura no README.
+
+**Fala:** “Sou Bruno da Silva Saran, do Grupo 55. Esta é a Fase 2 do sistema de oficina mecânica. A aplicação Laravel foi ampliada com novas APIs, notificações, Kubernetes, Terraform e integração e entrega contínuas.”
+
+### 2. Arquitetura e deploy — cerca de 1 minuto
+
+**Tela:** os três desenhos no README; depois terminal com os recursos Kubernetes. Para mostrar um rollout real, execute durante a gravação:
+
+```bash
+kubectl -n oficina rollout restart deployment/oficina-api
+kubectl -n oficina rollout status deployment/oficina-api --timeout=180s
+kubectl -n oficina get deployment,statefulset,pods,hpa,pvc
+```
+
+**Fala:** “A interface HTTP chama os casos de uso, que aplicam as regras do domínio. PostgreSQL e notificações ficam na infraestrutura. O Terraform provisiona o Kind e o banco persistente. Aqui a API acaba de ser implantada novamente; o PostgreSQL está pronto e o HPA acompanha CPU e memória.”
+
+Se o encaminhamento da API encerrar durante o rollout, reinicie o comando de `port-forward` antes da carga.
+
+### 3. CI/CD — cerca de 1 minuto
+
+**Tela:** execução verde do GitHub Actions; abra os jobs de validação, publicação e deploy. Mostre a imagem com tag SHA, migrations, smoke tests e destruição do cluster temporário.
+
+**Fala:** “O pipeline instala dependências, executa migrations, testes, cobertura e auditorias. Depois publica a imagem no GHCR e cria um Kind temporário, onde implanta banco e aplicação, valida a API e remove os recursos ao final. Esta execução mostra essas etapas concluídas.”
+
+### 4. APIs e notificações — cerca de 1 minuto
+
+**Tela:** Swagger; depois execute a validação com dados fictícios e mostre o resumo e o Mailpit:
+
+```bash
+COMPOSE_PROJECT_NAME=oficina-video python3 scripts/validate-delivery.py \
+  --env-file .env --compose-dir . \
+  --url http://127.0.0.1:8081 --mailpit-url http://127.0.0.1:8025 \
+  --output .local/evidence/video/recording-api.json --allow-fixtures
+```
+
+**Fala:** “O Swagger documenta as APIs. Nesta validação real, a ordem é aberta com identificação e total calculado pelo servidor. Consultamos o status e enviamos aprovação ou recusa pelo webhook assinado. A aprovação baixa o estoque uma vez; a recusa cancela sem baixa. As notificações seguem os contatos disponíveis: o e-mail aparece no Mailpit e o SMS é simulado localmente.”
+
+### 5. Escalabilidade — cerca de 2 a 3 minutos
+
+**Tela:** em um terminal, execute a carga; no outro, acompanhe HPA e pods. Mantenha a tela até aparecerem réplicas adicionais `Ready` e métricas válidas.
+
+```bash
+LOAD_TEST_URL=http://127.0.0.1:8082/up \
+LOAD_TEST_DURATION_SECONDS=120 LOAD_TEST_CONCURRENCY=64 \
+LOAD_TEST_OUTPUT=.local/evidence/video/recording-load.csv \
+bash scripts/load-test.sh
+```
+
+```bash
+watch -n 5 'kubectl -n oficina get hpa oficina-api; kubectl -n oficina get deployment oficina-api; kubectl -n oficina get pods -l app.kubernetes.io/component=api'
+```
+
+**Fala:** “Esta carga envia requisições à API. O Metrics Server mede CPU e memória; o HPA aumenta automaticamente o número de réplicas. Aqui vemos os novos pods prontos, sem intervenção manual. O resumo da carga mostra as respostas recebidas.”
+
+### 6. Encerramento — 20 segundos
+
+**Tela:** PDF final com repositório e desenho da arquitetura.
+
+**Fala:** “O repositório contém código, Docker, manifestos Kubernetes, Terraform, pipelines e documentação das APIs. O PDF reúne a arquitetura e as evidências da entrega. Obrigado.”
+
+## Depois da gravação
+
+Confirme duração de até 15 minutos, áudio legível, deploy, CI/CD, consumo das APIs e escala automática visíveis. Publique no YouTube ou Vimeo como público ou não listado; teste o acesso sem login. Insira o link definitivo no README e em `docs/fase-2/final-delivery.html`, regenere o PDF pelo comando de `docs/fase-2/README.md` e confira os links. Registre a URL e a duração em `docs/fase-2/evidence/day30-final-audit.md`.

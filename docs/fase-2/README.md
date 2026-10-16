@@ -4,7 +4,7 @@ Os artefatos finais da Fase 1 permanecem em `docs/`. Estes arquivos pertencem so
 
 - [Relatório HTML](final-delivery.html): apresentação, arquitetura, resultados e referências da Fase 2.
 - [Relatório PDF](final-delivery.pdf): versão exportada do HTML, com links clicáveis.
-- [Roteiro do vídeo](video-script.md): duração alvo 13:30; gravação/publicação ainda pendentes.
+- [Roteiro do vídeo](video-script.md): falas completas e demonstração breve, com duração sugerida de 6 a 8 minutos; gravação/publicação ainda pendentes.
 - [Reprodução em ambiente limpo do Dia 29](evidence/day29-clean-environment.md).
 - [Imagem pública do Dia 24](evidence/day24-image-ghcr.md).
 - [Validação de CI do Dia 25](evidence/day25-ci.md) e [proteção de branch conferida](branch-protection.md).
