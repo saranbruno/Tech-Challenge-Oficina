@@ -41,6 +41,7 @@ Route::middleware('auth:api')->group(function (): void {
     Route::get('service-orders-metrics/execution-time', [ServiceOrderController::class, 'executionTime'])->name('service-orders.metrics.execution-time');
     Route::post('service-orders', [ServiceOrderController::class, 'store'])->name('service-orders.store');
     Route::get('service-orders/{serviceOrder}', [ServiceOrderController::class, 'show'])->name('service-orders.show');
+    Route::get('service-orders/{serviceOrder}/status', [ServiceOrderController::class, 'status'])->name('service-orders.status');
     Route::post('service-orders/{serviceOrder}/diagnosis/start', [ServiceOrderController::class, 'startDiagnosis'])->name('service-orders.diagnosis.start');
     Route::post('service-orders/{serviceOrder}/diagnosis/complete', [ServiceOrderController::class, 'completeDiagnosis'])->name('service-orders.diagnosis.complete');
     Route::post('service-orders/{serviceOrder}/finalize', [ServiceOrderController::class, 'finalize'])->name('service-orders.finalize');

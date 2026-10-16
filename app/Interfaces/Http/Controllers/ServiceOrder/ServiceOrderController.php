@@ -6,18 +6,23 @@ use App\Application\ServiceOrder\AddAdditionalRepairs;
 use App\Application\ServiceOrder\CancelServiceOrder;
 use App\Application\ServiceOrder\CompleteServiceOrderDiagnosis;
 use App\Application\ServiceOrder\CreateServiceOrder;
+use App\Application\ServiceOrder\Data\RequestedInventoryItemCollection;
 use App\Application\ServiceOrder\Data\RequestedInventoryItemData;
+use App\Application\ServiceOrder\Data\RequestedServiceCollection;
 use App\Application\ServiceOrder\Data\RequestedServiceData;
 use App\Application\ServiceOrder\DeliverServiceOrder;
 use App\Application\ServiceOrder\FinalizeServiceOrder;
 use App\Application\ServiceOrder\GetServiceOrder;
 use App\Application\ServiceOrder\GetServiceOrderExecutionTimeMetrics;
+use App\Application\ServiceOrder\GetServiceOrderStatus;
 use App\Application\ServiceOrder\ListServiceOrders;
 use App\Application\ServiceOrder\StartServiceOrderDiagnosis;
+use App\Interfaces\Http\Pagination\LengthAwarePaginatorFactory;
 use App\Interfaces\Http\Requests\ServiceOrder\AddAdditionalRepairsRequest;
 use App\Interfaces\Http\Requests\ServiceOrder\ServiceOrderExecutionTimeRequest;
 use App\Interfaces\Http\Requests\ServiceOrder\StoreServiceOrderRequest;
 use App\Interfaces\Http\Resources\ServiceOrderResource;
+use App\Interfaces\Http\Resources\ServiceOrderStatusResource;
 use DateTimeImmutable;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -34,6 +39,7 @@ class ServiceOrderController
         private readonly FinalizeServiceOrder $finalizeServiceOrder,
         private readonly GetServiceOrder $getServiceOrder,
         private readonly GetServiceOrderExecutionTimeMetrics $getServiceOrderExecutionTimeMetrics,
+        private readonly GetServiceOrderStatus $getServiceOrderStatus,
         private readonly ListServiceOrders $listServiceOrders,
         private readonly StartServiceOrderDiagnosis $startServiceOrderDiagnosis,
     ) {}
@@ -42,7 +48,10 @@ class ServiceOrderController
     {
         $perPage = min(max($request->integer('per_page', 15), 1), 100);
 
-        return ServiceOrderResource::collection($this->listServiceOrders->execute($perPage));
+        return ServiceOrderResource::collection(LengthAwarePaginatorFactory::make(
+            $this->listServiceOrders->execute($perPage),
+            $request,
+        ));
     }
 
     public function executionTime(ServiceOrderExecutionTimeRequest $request): JsonResponse
@@ -50,11 +59,17 @@ class ServiceOrderController
         $deliveredFrom = $request->validated('delivered_from');
         $deliveredTo = $request->validated('delivered_to');
 
-        return response()->json(['data' => $this->getServiceOrderExecutionTimeMetrics->execute(
+        $metrics = $this->getServiceOrderExecutionTimeMetrics->execute(
             $deliveredFrom === null ? null : new DateTimeImmutable($deliveredFrom),
             $deliveredTo === null ? null : new DateTimeImmutable($deliveredTo),
             $request->validated('service_id'),
-        )]);
+        );
+
+        return response()->json(['data' => [
+            'eligible_orders' => $metrics->eligibleOrders,
+            'average_total_seconds' => $metrics->averageTotalSeconds,
+            'average_seconds_by_status' => $metrics->averageSecondsByStatus,
+        ]]);
     }
 
     public function store(StoreServiceOrderRequest $request): JsonResponse
@@ -62,20 +77,20 @@ class ServiceOrderController
         $order = $this->createServiceOrder->execute(
             $request->string('customer_document')->toString(),
             $request->integer('vehicle_id'),
-            array_map(
+            new RequestedServiceCollection(...array_map(
                 fn (array $service): RequestedServiceData => new RequestedServiceData(
                     $service['service_id'],
                     $service['quantity'],
                 ),
                 $request->validated('services'),
-            ),
-            array_map(
+            )),
+            new RequestedInventoryItemCollection(...array_map(
                 fn (array $inventoryItem): RequestedInventoryItemData => new RequestedInventoryItemData(
                     $inventoryItem['inventory_item_id'],
                     $inventoryItem['quantity'],
                 ),
                 $request->validated('inventory_items'),
-            ),
+            )),
             new DateTimeImmutable,
         );
 
@@ -93,6 +108,11 @@ class ServiceOrderController
     public function show(int $serviceOrder): ServiceOrderResource
     {
         return new ServiceOrderResource($this->getServiceOrder->execute($serviceOrder));
+    }
+
+    public function status(int $serviceOrder): ServiceOrderStatusResource
+    {
+        return new ServiceOrderStatusResource($this->getServiceOrderStatus->execute($serviceOrder));
     }
 
     public function completeDiagnosis(int $serviceOrder): ServiceOrderResource
@@ -130,13 +150,13 @@ class ServiceOrderController
     ): ServiceOrderResource {
         return new ServiceOrderResource($this->addAdditionalRepairs->execute(
             $serviceOrder,
-            array_map(
+            new RequestedServiceCollection(...array_map(
                 fn (array $service): RequestedServiceData => new RequestedServiceData(
                     $service['service_id'],
                     $service['quantity'],
                 ),
                 $request->validated('services'),
-            ),
+            )),
         ));
     }
 }

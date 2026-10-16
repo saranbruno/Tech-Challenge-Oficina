@@ -29,6 +29,10 @@ flowchart LR
     Available --> Approve["Comando: Aprovar orçamento"]
     Client --> Approve
     Approve --> Execution["Evento: Execução iniciada e estoque consumido"]
+    External["Ator: integração externa"] --> Decision["Comando: Decidir orçamento via webhook HMAC"]
+    Available --> Decision
+    Decision -->|approved| Execution
+    Decision -->|rejected| Cancelled
     Execution --> Finalize["Comando: Finalizar execução"]
     Admin --> Finalize
     Finalize --> Finalized["Evento: OS finalizada"]
@@ -93,9 +97,11 @@ flowchart TB
 | Diagnóstico iniciado | `status = in_diagnosis`, `diagnosis_started_at` | `StartServiceOrderDiagnosis` |
 | Orçamento disponibilizado | `status = awaiting_approval`, `awaiting_approval_at` | `CompleteServiceOrderDiagnosis` |
 | Reparos adicionais incluídos | novos Serviços e total recalculado | `AddAdditionalRepairs` |
-| Ordem de Serviço cancelada | `status = cancelled`, `cancelled_at` | `CancelServiceOrder` |
+| Ordem de Serviço cancelada | `status = cancelled`, `cancelled_at` | `CancelServiceOrder` ou `ProcessServiceOrderBudgetDecision` com `rejected` |
 
 ## Acompanhamento, aprovação e ciclo operacional
+
+O webhook externo usa o comando `ProcessServiceOrderBudgetDecision` depois da validação HMAC. A decisão aprovada segue o mesmo bloqueio transacional e consumo único de estoque da aprovação do Cliente. A decisão recusada gera diretamente o evento `OS cancelada`, sem movimentação de estoque; a repetição da mesma decisão não gera novo evento nem nova notificação.
 
 ```mermaid
 flowchart TB
@@ -203,15 +209,16 @@ flowchart TB
 
 ## Sistemas externos
 
-Não existe sistema externo participante dos fluxos modelados. O PostgreSQL é infraestrutura interna de persistência. Não há integração com e-mail, SMS, WhatsApp, pagamentos, fornecedores, filas, WebSocket ou SSE. A API REST reflete imediatamente o estado persistido.
+Os provedores de e-mail e SMS são sistemas externos opcionais acionados após a persistência das transições. O PostgreSQL é infraestrutura interna de persistência. Não há integração com WhatsApp, pagamentos, fornecedores, filas, WebSocket ou SSE. A API REST reflete imediatamente o estado persistido, mesmo quando um provedor de notificação falha.
 
 ## Hotspots e limites do MVP
 
 | Hotspot | Tratamento atual |
 | --- | --- |
 | Evento de domínio versus implementação | Os eventos são fatos de modelagem; não há classes de evento, mensageria ou processamento assíncrono. |
-| Disponibilização do orçamento | O orçamento fica disponível pela API; não existe notificação externa. |
-| Recusa do orçamento | A recusa usa o cancelamento administrativo nos estados anteriores à execução; não existe comando público de recusa nem status adicional. |
+| Notificação de status | Após cada transição persistida, o dispatcher tenta e-mail e SMS conforme os contatos disponíveis; falhas são isoladas e registradas sem reverter a OS. |
+| Disponibilização do orçamento | O orçamento fica disponível pela API e a transição para `awaiting_approval` tenta notificar os contatos disponíveis. |
+| Recusa do orçamento | O webhook HMAC aceita `rejected` somente em `awaiting_approval` e cancela a OS sem baixa de estoque; o cancelamento administrativo continua disponível nos estados anteriores à execução. Não existe status adicional. |
 | Reparos adicionais | Somente Serviços podem ser acrescentados em `awaiting_approval`; não há versionamento formal do orçamento. |
 | Disponibilidade antes da aprovação | A composição não reserva estoque; a disponibilidade definitiva é verificada transacionalmente na aprovação. |
 | Acompanhamento em tempo real | Não há canal push; cada consulta REST lê o estado persistido mais recente. |

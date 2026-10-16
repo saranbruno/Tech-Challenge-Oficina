@@ -4,14 +4,10 @@ namespace App\Domain\ServiceOrder;
 
 final class ServiceOrderExecutionTimeCalculator
 {
-    public function calculate(array $serviceOrders): array
+    public function calculate(array $serviceOrders): ServiceOrderExecutionTimeMetrics
     {
         if ($serviceOrders === []) {
-            return [
-                'eligible_orders' => 0,
-                'average_total_seconds' => null,
-                'average_seconds_by_status' => $this->emptyStatusDurations(),
-            ];
+            return $this->emptyMetrics();
         }
 
         $totalDurations = [];
@@ -39,18 +35,19 @@ final class ServiceOrderExecutionTimeCalculator
         }
 
         if ($totalDurations === []) {
-            return [
-                'eligible_orders' => 0,
-                'average_total_seconds' => null,
-                'average_seconds_by_status' => $this->emptyStatusDurations(),
-            ];
+            return $this->emptyMetrics();
         }
 
-        return [
-            'eligible_orders' => count($totalDurations),
-            'average_total_seconds' => $this->average($totalDurations),
-            'average_seconds_by_status' => array_map($this->average(...), $statusDurations),
-        ];
+        return new ServiceOrderExecutionTimeMetrics(
+            count($totalDurations),
+            $this->average($totalDurations),
+            array_map($this->average(...), $statusDurations),
+        );
+    }
+
+    private function emptyMetrics(): ServiceOrderExecutionTimeMetrics
+    {
+        return new ServiceOrderExecutionTimeMetrics(0, null, $this->emptyStatusDurations());
     }
 
     private function emptyStatusDurations(): array

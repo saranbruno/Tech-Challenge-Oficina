@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: oficina-config
+  namespace: oficina
+data:
+  APP_ENV: testing
+  APP_DEBUG: "false"
+  APP_URL: http://oficina-api
+  MAIL_HOST: mailpit
+  NOTIFICATION_SMS_DRIVER: log

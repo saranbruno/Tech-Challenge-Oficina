@@ -1,7 +1,13 @@
 .git
+.gitignore
 .github
+infra
+k8s
 .env
+.env.*
 vendor
+build
+.phpunit.result.cache
 storage/logs
 storage/framework/cache
 storage/framework/sessions
@@ -9,3 +15,7 @@ storage/framework/views
 docs/*
 !docs/openapi.yaml
 README.md
+
+.local
+__pycache__/
+*.py[cod]

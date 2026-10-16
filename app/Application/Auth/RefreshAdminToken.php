@@ -11,10 +11,6 @@ final readonly class RefreshAdminToken
 
     public function execute(string $token): TokenData
     {
-        return new TokenData(
-            $this->tokens->refresh($token),
-            config('jwt.ttl') * 60,
-            config('jwt.refresh_ttl') * 60,
-        );
+        return $this->tokens->refresh($token);
     }
 }

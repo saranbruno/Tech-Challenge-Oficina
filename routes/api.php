@@ -9,3 +9,7 @@ Route::prefix('admin')
 Route::prefix('client')
     ->name('client.')
     ->group(base_path('routes/api/client.php'));
+
+Route::prefix('webhooks')
+    ->name('webhooks.')
+    ->group(base_path('routes/api/webhooks.php'));

@@ -8,13 +8,19 @@ use DateTimeImmutable;
 
 final readonly class FinalizeServiceOrder
 {
-    public function __construct(private ServiceOrderRepository $serviceOrders) {}
+    public function __construct(
+        private ServiceOrderRepository $serviceOrders,
+        private NotifyServiceOrderStatus $statusNotifications,
+    ) {}
 
     public function execute(int $serviceOrderId, DateTimeImmutable $occurredAt): ServiceOrder
     {
         $serviceOrder = $this->serviceOrders->findOrFail($serviceOrderId);
         $serviceOrder->finalize($occurredAt);
 
-        return $this->serviceOrders->update($serviceOrder);
+        $updatedServiceOrder = $this->serviceOrders->update($serviceOrder);
+        $this->statusNotifications->execute($updatedServiceOrder);
+
+        return $updatedServiceOrder;
     }
 }

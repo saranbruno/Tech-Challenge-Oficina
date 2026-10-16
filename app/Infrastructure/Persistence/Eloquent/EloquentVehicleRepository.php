@@ -2,6 +2,8 @@
 
 namespace App\Infrastructure\Persistence\Eloquent;
 
+use App\Application\Shared\Data\PaginatedResult;
+use App\Application\Shared\Exceptions\ResourceNotFound;
 use App\Application\Vehicle\Contracts\VehicleRepository;
 use App\Domain\Vehicle\ValueObjects\LicensePlate;
 use App\Domain\Vehicle\Vehicle;
@@ -9,14 +11,17 @@ use App\Infrastructure\Persistence\Eloquent\Models\VehicleModel;
 
 class EloquentVehicleRepository implements VehicleRepository
 {
-    public function paginate(int $perPage): mixed
+    public function paginate(int $perPage): PaginatedResult
     {
-        return VehicleModel::query()->orderBy('id')->paginate($perPage);
+        return PaginatedResultFactory::make(
+            VehicleModel::query()->orderBy('id')->paginate($perPage),
+            fn (VehicleModel $model): Vehicle => $this->toDomain($model),
+        );
     }
 
     public function findOrFail(int $id): Vehicle
     {
-        return $this->toDomain(VehicleModel::query()->findOrFail($id));
+        return $this->toDomain($this->findModel($id));
     }
 
     public function licensePlateExists(string $licensePlate, ?int $exceptId = null): bool
@@ -31,7 +36,7 @@ class EloquentVehicleRepository implements VehicleRepository
     {
         $model = $vehicle->id === null
             ? new VehicleModel
-            : VehicleModel::query()->findOrFail($vehicle->id);
+            : $this->findModel($vehicle->id);
 
         $model->fill([
             'customer_id' => $vehicle->customerId,
@@ -46,7 +51,18 @@ class EloquentVehicleRepository implements VehicleRepository
 
     public function delete(int $id): void
     {
-        VehicleModel::query()->findOrFail($id)->delete();
+        $this->findModel($id)->delete();
+    }
+
+    private function findModel(int $id): VehicleModel
+    {
+        $model = VehicleModel::query()->find($id);
+
+        if ($model === null) {
+            throw new ResourceNotFound;
+        }
+
+        return $model;
     }
 
     private function toDomain(VehicleModel $model): Vehicle

@@ -2,11 +2,12 @@
 
 namespace App\Application\Customer\Contracts;
 
+use App\Application\Shared\Data\PaginatedResult;
 use App\Domain\Customer\Customer;
 
 interface CustomerRepository
 {
-    public function paginate(int $perPage): mixed;
+    public function paginate(int $perPage): PaginatedResult;
 
     public function findOrFail(int $id): Customer;
 

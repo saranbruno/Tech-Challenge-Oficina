@@ -1,0 +1,499 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Relatório final - Tech-Challenge-Oficina - Fase 2</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 0;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        :root {
+            --ink: #13231f;
+            --muted: #53645f;
+            --paper: #f5f1e8;
+            --cream: #fffdf7;
+            --green: #0b5b48;
+            --green-dark: #073c32;
+            --lime: #b7d63d;
+            --orange: #e46f3f;
+            --line: #ced5c9;
+        }
+
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+            color: var(--ink);
+            background: #d8ddd7;
+            font-family: "DejaVu Sans", "Liberation Sans", sans-serif;
+            font-size: 10.5pt;
+            line-height: 1.5;
+        }
+
+        .page {
+            position: relative;
+            width: 210mm;
+            height: 297mm;
+            padding: 18mm 18mm 16mm;
+            overflow: hidden;
+            background:
+                radial-gradient(circle at 92% 8%, rgba(183, 214, 61, 0.18) 0 24mm, transparent 24.5mm),
+                linear-gradient(135deg, rgba(11, 91, 72, 0.05), transparent 42%),
+                var(--paper);
+            page-break-after: always;
+        }
+
+        .page:last-child {
+            page-break-after: auto;
+        }
+
+        .cover {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            color: #fff;
+            background:
+                linear-gradient(120deg, transparent 58%, rgba(183, 214, 61, 0.92) 58% 60%, transparent 60%),
+                radial-gradient(circle at 82% 18%, rgba(228, 111, 63, 0.92) 0 21mm, transparent 21.5mm),
+                linear-gradient(148deg, #073c32 0%, #0b5b48 58%, #12372f 100%);
+        }
+
+        .cover::after {
+            content: "";
+            position: absolute;
+            right: -21mm;
+            bottom: -28mm;
+            width: 100mm;
+            height: 100mm;
+            border: 1.8mm solid rgba(255, 255, 255, 0.12);
+            border-radius: 50%;
+        }
+
+        .eyebrow {
+            margin: 0 0 6mm;
+            color: var(--orange);
+            font-size: 9pt;
+            font-weight: 700;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+        }
+
+        .cover .eyebrow {
+            color: var(--lime);
+        }
+
+        h1,
+        h2,
+        h3,
+        p {
+            margin-top: 0;
+        }
+
+        h1,
+        h2 {
+            font-family: "DejaVu Serif", "Liberation Serif", serif;
+            line-height: 1.08;
+        }
+
+        h1 {
+            max-width: 155mm;
+            margin-bottom: 7mm;
+            font-size: 34pt;
+            font-weight: 700;
+            letter-spacing: -0.025em;
+        }
+
+        h2 {
+            margin-bottom: 7mm;
+            color: var(--green-dark);
+            font-size: 24pt;
+            letter-spacing: -0.02em;
+        }
+
+        h3 {
+            margin-bottom: 2.5mm;
+            color: var(--green);
+            font-size: 11.5pt;
+            letter-spacing: 0.02em;
+        }
+
+        .subtitle {
+            max-width: 135mm;
+            color: rgba(255, 255, 255, 0.82);
+            font-size: 14pt;
+        }
+
+        .cover-card {
+            position: relative;
+            z-index: 1;
+            width: 148mm;
+            padding: 8mm 9mm;
+            border: 0.4mm solid rgba(255, 255, 255, 0.22);
+            border-radius: 4mm;
+            background: rgba(5, 42, 34, 0.58);
+        }
+
+        .identity-grid {
+            display: grid;
+            grid-template-columns: 37mm 1fr;
+            gap: 2.5mm 5mm;
+            margin: 0;
+        }
+
+        .identity-grid dt {
+            color: var(--lime);
+            font-size: 8.5pt;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        .identity-grid dd {
+            margin: 0;
+            color: #fff;
+            font-weight: 600;
+        }
+
+        .section-number {
+            position: absolute;
+            top: 15mm;
+            right: 18mm;
+            color: rgba(11, 91, 72, 0.16);
+            font-family: "DejaVu Serif", serif;
+            font-size: 41pt;
+            font-weight: 700;
+        }
+
+        .lead {
+            max-width: 158mm;
+            margin-bottom: 8mm;
+            color: var(--muted);
+            font-size: 12pt;
+        }
+
+        .link-stack {
+            display: grid;
+            gap: 4mm;
+            margin: 8mm 0;
+        }
+
+        .link-card {
+            padding: 5mm 6mm;
+            border-left: 1.5mm solid var(--lime);
+            border-radius: 0 3mm 3mm 0;
+            background: rgba(255, 253, 247, 0.78);
+            box-shadow: 0 1mm 4mm rgba(19, 35, 31, 0.06);
+        }
+
+        .link-card span {
+            display: block;
+            margin-bottom: 1mm;
+            color: var(--muted);
+            font-size: 8.5pt;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        a {
+            color: var(--green);
+            text-decoration: none;
+            overflow-wrap: anywhere;
+        }
+
+        .cover a {
+            color: #fff;
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 5mm;
+        }
+
+        .feature-card {
+            min-height: 34mm;
+            padding: 5mm;
+            border: 0.3mm solid var(--line);
+            border-radius: 3mm;
+            background: rgba(255, 253, 247, 0.72);
+        }
+
+        .feature-card p {
+            margin: 0;
+            color: var(--muted);
+            font-size: 9.4pt;
+        }
+
+        .flow {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 2mm;
+            margin-top: 8mm;
+        }
+
+        .flow div {
+            display: flex;
+            min-height: 22mm;
+            align-items: center;
+            justify-content: center;
+            padding: 2.5mm 1.5mm;
+            border-radius: 2mm;
+            color: #fff;
+            background: var(--green);
+            font-size: 8pt;
+            font-weight: 700;
+            line-height: 1.2;
+            text-align: center;
+        }
+
+        .flow div:nth-child(even) {
+            background: var(--green-dark);
+        }
+
+        .metric-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 4mm;
+            margin: 7mm 0;
+        }
+
+        .metric {
+            padding: 6mm 4mm;
+            border-radius: 3mm;
+            color: #fff;
+            background: var(--green-dark);
+            text-align: center;
+        }
+
+        .metric strong {
+            display: block;
+            margin-bottom: 1.5mm;
+            color: var(--lime);
+            font-family: "DejaVu Serif", serif;
+            font-size: 22pt;
+            line-height: 1;
+        }
+
+        .metric span {
+            font-size: 8.5pt;
+        }
+
+        .check-list {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 3mm 6mm;
+            padding: 0;
+            list-style: none;
+        }
+
+        .check-list li {
+            position: relative;
+            padding: 3.5mm 3.5mm 3.5mm 10mm;
+            border-bottom: 0.3mm solid var(--line);
+            color: var(--muted);
+        }
+
+        .check-list li::before {
+            content: "✓";
+            position: absolute;
+            left: 2mm;
+            color: var(--green);
+            font-weight: 700;
+        }
+
+        .security-result {
+            margin: 8mm 0;
+            padding: 8mm;
+            border-radius: 4mm;
+            color: #fff;
+            background: linear-gradient(135deg, var(--green-dark), var(--green));
+        }
+
+        .security-result strong {
+            display: block;
+            margin-bottom: 2mm;
+            color: var(--lime);
+            font-family: "DejaVu Serif", serif;
+            font-size: 24pt;
+        }
+
+        .security-result p {
+            margin: 0;
+            color: rgba(255, 255, 255, 0.86);
+        }
+
+        .note {
+            padding: 5mm 6mm;
+            border: 0.3mm solid rgba(228, 111, 63, 0.45);
+            border-radius: 3mm;
+            background: rgba(228, 111, 63, 0.08);
+            color: var(--muted);
+        }
+
+        .references {
+            display: grid;
+            gap: 2.5mm;
+            margin-top: 7mm;
+        }
+
+        .references a {
+            display: block;
+            padding-bottom: 2mm;
+            border-bottom: 0.3mm solid var(--line);
+            font-size: 9pt;
+        }
+
+        .footer {
+            position: absolute;
+            right: 18mm;
+            bottom: 8mm;
+            left: 18mm;
+            display: flex;
+            justify-content: space-between;
+            color: rgba(83, 100, 95, 0.72);
+            font-size: 8pt;
+        }
+
+        .cover .footer {
+            color: rgba(255, 255, 255, 0.58);
+        }
+
+        .architecture {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 4mm;
+            margin: 8mm 0;
+        }
+        .architecture .feature-card { min-height: 39mm; }
+        .architecture .arrow {
+            grid-column: 1 / -1;
+            color: var(--green);
+            font-size: 11pt;
+            font-weight: 700;
+            text-align: center;
+        }
+        .architecture .wide { grid-column: 1 / -1; min-height: 25mm; }
+        .architecture .center { grid-column: 2; }
+        .architecture .feature-card p { font-size: 9pt; }
+        .compact .feature-card { min-height: 30mm; }
+        .compact .feature-card p { font-size: 9pt; }
+        .small-note { color: var(--muted); font-size: 9pt; }
+        .references a { overflow-wrap: anywhere; }
+    </style>
+</head>
+<body>
+    <section class="page cover">
+        <div>
+            <p class="eyebrow">FIAP · 15SOAT · Fase 2</p>
+            <h1>Tech-Challenge-Oficina</h1>
+            <p class="subtitle">Sistema Integrado de Atendimento e Execução de Serviços para oficina mecânica</p>
+        </div>
+        <div class="cover-card">
+            <dl class="identity-grid">
+                <dt>Grupo</dt><dd>55</dd>
+                <dt>Participante</dt><dd>Bruno da Silva Saran</dd>
+                <dt>Discord</dt><dd>saranbruno</dd>
+                <dt>Repositório</dt><dd><a href="https://github.com/saranbruno/Tech-Challenge-Oficina">github.com/saranbruno/Tech-Challenge-Oficina</a></dd>
+            </dl>
+        </div>
+        <div class="footer"><span>Relatório final de entrega</span><span>Fase 2</span></div>
+    </section>
+
+    <section class="page">
+        <span class="section-number">01</span>
+        <p class="eyebrow">Sistema e funcionalidades</p>
+        <h2>Evolução da API da oficina</h2>
+        <p class="lead">A Fase 2 amplia o sistema Laravel e PostgreSQL existente com APIs para consulta, aprovação e recusa de orçamentos, comunicação com clientes e operação em Kubernetes.</p>
+        <div class="grid-2">
+            <article class="feature-card"><h3>Ordem de Serviço</h3><p>A abertura utiliza cadastros existentes, calcula o orçamento no servidor e retorna a identificação da OS. A criação e os registros relacionados são persistidos em transação.</p></article>
+            <article class="feature-card"><h3>Consulta de status</h3><p>Administradores consultam a situação por API autenticada com JWT. O cliente utiliza documento e token de acompanhamento para obter uma resposta restrita.</p></article>
+            <article class="feature-card"><h3>Orçamento e estoque</h3><p>O webhook assinado por HMAC aceita aprovação e recusa. A aprovação inicia a execução e realiza baixa única do estoque; a recusa cancela a OS sem baixa.</p></article>
+            <article class="feature-card"><h3>Notificações e fila</h3><p>Transições persistidas acionam e-mail e SMS conforme os contatos disponíveis. A fila prioriza execução, aprovação, diagnóstico e recebimento; em cada estado, a OS mais antiga vem primeiro.</p></article>
+        </div>
+        <h3>Fluxo da Ordem de Serviço</h3>
+        <div class="flow"><div>Recebida</div><div>Em diagnóstico</div><div>Aguardando aprovação</div><div>Em execução</div><div>Finalizada</div><div>Entregue</div></div>
+        <p class="small-note">A recusa do orçamento ou o cancelamento da oficina encerram a ordem no estado cancelada. Estados encerrados permanecem disponíveis para consulta histórica.</p>
+        <div class="link-stack">
+            <div class="link-card">
+                <span>Vídeo de demonstração</span>
+                <a href="https://youtu.be/NPmlpuqKr4Y">https://youtu.be/NPmlpuqKr4Y</a>
+            </div>
+        </div>
+        <div class="footer"><span>Tech-Challenge-Oficina</span><span>2 / 5</span></div>
+    </section>
+
+    <section class="page">
+        <span class="section-number">02</span>
+        <p class="eyebrow">Arquitetura</p>
+        <h2>Componentes e implantação</h2>
+        <p class="lead">A aplicação mantém as regras de negócio no Domínio. A camada de Aplicação coordena os casos de uso; as interfaces HTTP e os adaptadores de infraestrutura conectam a API aos serviços externos.</p>
+        <div class="architecture">
+            <article class="feature-card"><h3>Interface HTTP</h3><p>Rotas, autenticação, validação de entrada e respostas REST.</p></article>
+            <article class="feature-card"><h3>Aplicação</h3><p>Casos de uso, resultados e contratos de persistência e integração.</p></article>
+            <article class="feature-card"><h3>Domínio</h3><p>Entidades, valores, orçamento e transições da Ordem de Serviço.</p></article>
+            <div class="arrow">Interface HTTP → Aplicação → Domínio</div>
+            <article class="feature-card wide"><h3>Infraestrutura</h3><p>Implementações dos contratos: Eloquent e PostgreSQL, JWT, e-mail por Mailpit ou SMTP e SMS por log local ou Twilio configurado.</p></article>
+        </div>
+        <div class="grid-2 compact">
+            <article class="feature-card"><h3>Desenvolvimento local</h3><p>Docker Compose executa API, PostgreSQL persistente e Mailpit. O mesmo Dockerfile é utilizado no build da imagem para Kind e CI.</p></article>
+            <article class="feature-card"><h3>Execução em Kubernetes</h3><p>Terraform provisiona Kind e Metrics Server. A API usa Deployment e HPA por CPU e memória. PostgreSQL usa StatefulSet e volume persistente.</p></article>
+        </div>
+        <p class="small-note">O cluster local permanece disponível para desenvolvimento. A entrega contínua cria um cluster temporário no runner do GitHub Actions e o destrói ao final da execução.</p>
+        <div class="footer"><span>Tech-Challenge-Oficina</span><span>3 / 5</span></div>
+    </section>
+
+    <section class="page">
+        <span class="section-number">03</span>
+        <p class="eyebrow">Qualidade comprovada</p>
+        <h2>Testes, APIs e escalabilidade</h2>
+        <p class="lead">Em um clone público do repositório, a aplicação foi construída com Docker e testada com PostgreSQL. A cobertura informada corresponde às classes críticas configuradas para medição.</p>
+        <div class="metric-grid">
+            <div class="metric"><strong>84</strong><span>testes de domínio<br>152 asserções</span></div>
+            <div class="metric"><strong>192</strong><span>testes de integração<br>693 asserções</span></div>
+            <div class="metric"><strong>100%</strong><span>das linhas monitoradas<br>nas duas suítes</span></div>
+        </div>
+        <ul class="check-list">
+            <li>Build Docker e Compose aprovados</li>
+            <li>13 migrations aplicadas</li>
+            <li>Swagger e OpenAPI acessíveis</li>
+            <li>62 requisições HTTP validadas</li>
+            <li>Webhook e estoque verificados</li>
+            <li>Quatro cenários de contato testados</li>
+            <li>CI/CD executada em runner hospedado</li>
+            <li>Imagem publicada no GHCR</li>
+        </ul>
+        <div class="note"><h3>Escalabilidade e persistência</h3><p>Uma carga de 120 segundos gerou 4.674 respostas HTTP 200, sem falhas. O HPA elevou a API de uma para quatro réplicas prontas, com métricas de CPU e memória disponíveis. Em verificação separada, o banco preservou dados após a recriação do pod com o mesmo PVC.</p></div>
+        <p class="small-note">O teste de envio SMTP pelo Mailpit passou separadamente. Na validação HTTP, foram recebidos oito e-mails no Mailpit e registrados oito SMS simulados, sem contato com serviço pago.</p>
+        <div class="footer"><span>Tech-Challenge-Oficina</span><span>4 / 5</span></div>
+    </section>
+
+    <section class="page">
+        <span class="section-number">04</span>
+        <p class="eyebrow">Segurança e referências</p>
+        <h2>Verificações e documentação técnica</h2>
+        <p class="lead">O código e as dependências foram avaliados com Semgrep 1.89.0 e Composer Audit. As credenciais de execução são fornecidas por configuração privada, fora do repositório.</p>
+        <div class="security-result"><strong>0 achados</strong><p>O Semgrep executou 114 regras em 287 arquivos rastreados. O Composer Audit não reportou avisos de vulnerabilidade nas dependências verificadas.</p></div>
+        <div class="grid-2 compact">
+            <article class="feature-card"><h3>Proteção dos contratos</h3><p>JWT protege os endpoints administrativos; o webhook valida assinatura HMAC sobre o corpo da requisição. Testes verificaram assinaturas ausentes e inválidas.</p></article>
+            <article class="feature-card"><h3>Limites da análise</h3><p>Oito arquivos tiveram análise parcial e duas regras excederam o tempo no PDF histórico. A ausência de achados não garante ausência de falhas.</p></article>
+        </div>
+        <div class="references">
+            <h3>Referências técnicas</h3>
+            <a href="https://github.com/saranbruno/Tech-Challenge-Oficina">Repositório do projeto</a>
+            <a href="https://github.com/saranbruno/Tech-Challenge-Oficina/blob/fase-2/README.md">README: execução, arquitetura e infraestrutura</a>
+            <a href="https://github.com/saranbruno/Tech-Challenge-Oficina/blob/fase-2/docs/openapi.yaml">Especificação OpenAPI 3.1</a>
+            <a href="https://github.com/saranbruno/Tech-Challenge-Oficina/blob/fase-2/docs/vulnerability-report.md">Relatório técnico de vulnerabilidades</a>
+            <a href="https://github.com/saranbruno/Tech-Challenge-Oficina/actions/runs/38094318659">Execução da integração e entrega contínuas</a>
+        </div>
+        <div class="footer"><span>Bruno da Silva Saran · saranbruno</span><span>5 / 5</span></div>
+    </section>
+</body>
+</html>

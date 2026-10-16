@@ -2,6 +2,7 @@
 
 namespace App\Interfaces\Http\Resources;
 
+use App\Application\Inventory\Data\StockMovementData;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -9,16 +10,23 @@ class StockMovementResource extends JsonResource
 {
     public function toArray(Request $request): array
     {
+        $movement = $this->movement();
+
         return [
-            'id' => $this->resource->getKey(),
-            'inventory_item_id' => $this->resource->inventory_item_id,
-            'admin_user_id' => $this->resource->admin_user_id,
-            'service_order_id' => $this->resource->service_order_id,
-            'type' => $this->resource->type,
-            'quantity_change' => $this->resource->quantity_change,
-            'quantity_before' => $this->resource->quantity_before,
-            'quantity_after' => $this->resource->quantity_after,
-            'created_at' => $this->resource->created_at,
+            'id' => $movement->id,
+            'inventory_item_id' => $movement->inventoryItemId,
+            'admin_user_id' => $movement->adminUserId,
+            'service_order_id' => $movement->serviceOrderId,
+            'type' => $movement->type,
+            'quantity_change' => $movement->quantityChange,
+            'quantity_before' => $movement->quantityBefore,
+            'quantity_after' => $movement->quantityAfter,
+            'created_at' => $movement->createdAt,
         ];
+    }
+
+    private function movement(): StockMovementData
+    {
+        return $this->resource;
     }
 }

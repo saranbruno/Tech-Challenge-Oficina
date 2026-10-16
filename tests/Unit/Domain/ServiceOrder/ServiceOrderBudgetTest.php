@@ -4,6 +4,7 @@ namespace Tests\Unit\Domain\ServiceOrder;
 
 use App\Domain\Inventory\Enums\InventoryItemType;
 use App\Domain\Service\ValueObjects\UnitPrice;
+use App\Domain\ServiceOrder\Enums\ServiceOrderStatus;
 use App\Domain\ServiceOrder\ServiceOrder;
 use App\Domain\ServiceOrder\ServiceOrderInventoryItem;
 use App\Domain\ServiceOrder\ServiceOrderService;
@@ -27,6 +28,32 @@ class ServiceOrderBudgetTest extends TestCase
         self::assertSame(30000, $service->subtotal());
         self::assertSame(7500, $part->subtotal());
         self::assertSame(40500, $order->totalAmount());
+    }
+
+    public function test_reconstitutes_persisted_service_and_inventory_snapshots(): void
+    {
+        $service = new ServiceOrderService(1, 2, new UnitPrice(15000));
+        $part = new ServiceOrderInventoryItem(1, InventoryItemType::Part, 3, new UnitPrice(2500));
+
+        $order = ServiceOrder::reconstitute(
+            1,
+            1,
+            1,
+            ServiceOrderStatus::Received,
+            new DateTimeImmutable,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            [$service],
+            [$part],
+        );
+
+        self::assertSame([$service], $order->services());
+        self::assertSame([$part], $order->inventoryItems());
+        self::assertSame(37500, $order->totalAmount());
     }
 
     public function test_duplicate_inventory_item_is_rejected(): void

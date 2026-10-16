@@ -1,0 +1,23 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: oficina-config
+  namespace: oficina
+data:
+  APP_ENV: production
+  APP_DEBUG: "false"
+  APP_URL: http://oficina-api
+  LOG_CHANNEL: stderr
+  DB_CONNECTION: pgsql
+  DB_HOST: postgres
+  DB_PORT: "5432"
+  DB_DATABASE: tech_challenge_oficina
+  MAIL_MAILER: smtp
+  MAIL_HOST: mailpit
+  MAIL_PORT: "1025"
+  MAIL_FROM_ADDRESS: hello@example.com
+  MAIL_FROM_NAME: Tech-Challenge-Oficina
+  NOTIFICATION_MAILER: smtp
+  NOTIFICATION_SMS_DRIVER: log
+  TWILIO_TIMEOUT: "10"
+  TWILIO_BASE_URL: https://api.twilio.com/2010-04-01
